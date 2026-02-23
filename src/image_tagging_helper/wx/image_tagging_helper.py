@@ -17,34 +17,58 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# メインパネル
 		main_panel = wx.Panel(self)
 		
-		# 水平方向に並べるサイザー
-		hbox = wx.BoxSizer(wx.HORIZONTAL)
+		# スプリッターウィンドウの作成（入れ子構造）
+		# splitter_1
+		# |- thumbnail_list
+		# |- splitter_2
+		#   |- image_tags_list
+		#   |- splitter_3
+		#     |- tag_palette_panel
+		#     |- dataset_tags_list
+		self.splitter_1 = wx.SplitterWindow(main_panel, style=wx.SP_LIVE_UPDATE)
+		self.splitter_2 = wx.SplitterWindow(self.splitter_1, style=wx.SP_LIVE_UPDATE)
+		self.splitter_3 = wx.SplitterWindow(self.splitter_2, style=wx.SP_LIVE_UPDATE)
+		
+		# ダブルクリックで折りたたまないようにイベントをバインド
+		self.splitter_1.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
+		self.splitter_2.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
+		self.splitter_3.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
 		
 		# 1番目のパネル: 画像のサムネイルリスト
-		self.thumbnail_list = wx.ListCtrl(main_panel, style=wx.LC_ICON | wx.LC_AUTOARRANGE)
+		self.thumbnail_list = wx.ListCtrl(self.splitter_1, style=wx.LC_ICON | wx.LC_AUTOARRANGE)
 		# ImageListの初期化
 		self.image_list = wx.ImageList(self.image_size[0], self.image_size[1])
 		self.thumbnail_list.AssignImageList(self.image_list, wx.IMAGE_LIST_NORMAL)
 		
-		hbox.Add(self.thumbnail_list, 1, wx.EXPAND | wx.ALL, 5)
-		
 		# 2番目のパネル: 画像のタグ一覧
-		self.image_tags_list = wx.ListCtrl(main_panel, style=wx.LC_REPORT)
+		self.image_tags_list = wx.ListCtrl(self.splitter_2, style=wx.LC_REPORT)
 		self.image_tags_list.InsertColumn(0, 'Tag', width=150)
-		hbox.Add(self.image_tags_list, 1, wx.EXPAND | wx.ALL, 5)
 		
 		# 3番目のパネル: 空のパネル（将来的に実装）
-		self.center_panel = wx.Panel(main_panel)
-		self.center_panel.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_APPWORKSPACE))
-		hbox.Add(self.center_panel, 2, wx.EXPAND | wx.ALL, 5)
+		self.tag_palette_panel = wx.Panel(self.splitter_3)
+		self.tag_palette_panel.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_APPWORKSPACE))
 		
 		# 4番目のパネル: データセット全体のタグ一覧
-		self.dataset_tags_list = wx.ListCtrl(main_panel, style=wx.LC_REPORT)
+		self.dataset_tags_list = wx.ListCtrl(self.splitter_3, style=wx.LC_REPORT)
 		self.dataset_tags_list.InsertColumn(0, 'Tag', width=150)
 		self.dataset_tags_list.InsertColumn(1, 'Count', width=50)
-		hbox.Add(self.dataset_tags_list, 1, wx.EXPAND | wx.ALL, 5)
 		
-		main_panel.SetSizer(hbox)
+		# スプリッターの分割設定
+		# 初期サイズ(1200)に基づく比率 1:1:2:1 -> 240:240:480:240
+		self.splitter_3.SplitVertically(self.tag_palette_panel, self.dataset_tags_list, 480)
+		self.splitter_2.SplitVertically(self.image_tags_list, self.splitter_3, 240)
+		self.splitter_1.SplitVertically(self.thumbnail_list, self.splitter_2, 240)
+		
+		# ウィンドウリサイズ時の挙動を設定
+		# tag_palette_panel以外の3つのパネルが均等に伸縮するように調整
+		self.splitter_1.SetSashGravity(1.0/3.0)
+		self.splitter_2.SetSashGravity(0.5)
+		# splitter_3はデフォルト(0.0)のままで、左パネル(tag_palette_panel)のサイズを固定
+		
+		# メインパネルのレイアウト
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(self.splitter_1, 1, wx.EXPAND | wx.ALL, 5)
+		main_panel.SetSizer(sizer)
 		self.Centre()
 	
 	def _init_menubar(self):
@@ -63,6 +87,10 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# イベントバインド
 		self.Bind(wx.EVT_MENU, self.on_open_folder, open_folder_item)
 		self.Bind(wx.EVT_MENU, self.on_exit, exit_item)
+	
+	def on_splitter_dclick(self, event):
+		"""スプリッターのダブルクリックによる折りたたみを防止"""
+		event.Veto()
 	
 	def on_exit(self, event):
 		self.Close()
