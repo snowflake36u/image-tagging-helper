@@ -30,7 +30,7 @@ class ImageVListBox(wx.VListBox):
 		
 		# データセットが変更されたら、選択をクリア
 		if self.GetSelection() >= item_count:
-			self.Select(wx.NOT_FOUND)
+			self.SetSelection(wx.NOT_FOUND)
 		
 		self.Refresh()
 	

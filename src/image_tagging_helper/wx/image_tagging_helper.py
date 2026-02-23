@@ -17,6 +17,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.caption_format_config = CaptionFormatConfig()
 		self.caption_exts = '.caption'
 		self.dataset: Dataset | None = None
+		self.last_thumbnail_selection: int = wx.NOT_FOUND
 		
 		# メニューバーの設定
 		self._init_menubar()
@@ -43,6 +44,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		# 1番目のパネル: 画像のサムネイルリスト
 		self.thumbnail_list = ImageVListBox(self.splitter_1)
+		self.thumbnail_list.Bind(wx.EVT_LISTBOX, self.on_thumbnail_select)
 		
 		# 2番目のパネル: 画像のタグ一覧
 		self.image_tags_list = wx.ListCtrl(self.splitter_2, style=wx.LC_REPORT)
@@ -106,6 +108,21 @@ class ImageTaggingHelperFrame(wx.Frame):
 				path = dlg.GetPath()
 				self.load_dataset(path)
 	
+	def on_thumbnail_select(self, event):
+		"""
+		サムネイルリストの選択が変更されたときの処理。
+		常に単一の選択を維持する。
+		"""
+		selection = self.thumbnail_list.GetSelection()
+		
+		if selection == wx.NOT_FOUND:
+			# 選択が解除された場合、最後の選択状態に戻す
+			if self.last_thumbnail_selection != wx.NOT_FOUND:
+				self.thumbnail_list.SetSelection(self.last_thumbnail_selection)
+			return
+		
+		self.last_thumbnail_selection = selection
+		
 	def load_dataset(self, folder_path: str):
 		"""指定されたフォルダからデータセットを構築する"""
 		# 画像ファイルの検索
@@ -124,6 +141,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		self.dataset = Dataset(items=dataset_items)
 		self.thumbnail_list.set_dataset(self.dataset)
+		
+		if self.dataset and len(self.dataset) > 0:
+			self.thumbnail_list.SetSelection(0)
 	
 	def create_item(self, image_path):
 		caption_path = os.path.splitext(image_path)[0] + self.caption_exts
