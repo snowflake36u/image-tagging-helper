@@ -26,6 +26,15 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# メインパネル
 		main_panel = wx.Panel(self)
 		
+		# ファイルパス表示
+		path_panel = wx.Panel(main_panel)
+		path_sizer = wx.BoxSizer(wx.HORIZONTAL)
+		path_label = wx.StaticText(path_panel, label='ファイルパス')
+		self.path_text = wx.TextCtrl(path_panel, style=wx.TE_READONLY)
+		path_sizer.Add(path_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+		path_sizer.Add(self.path_text, 1, wx.EXPAND)
+		path_panel.SetSizer(path_sizer)
+		
 		# スプリッターウィンドウの作成（入れ子構造）
 		# splitter_1
 		# |- thumbnail_list
@@ -84,7 +93,8 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		# メインパネルのレイアウト
 		sizer = wx.BoxSizer(wx.VERTICAL)
-		sizer.Add(self.splitter_1, 1, wx.EXPAND | wx.ALL, 5)
+		sizer.Add(path_panel, 0, wx.EXPAND | wx.ALL, 5)
+		sizer.Add(self.splitter_1, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 		main_panel.SetSizer(sizer)
 		self.Centre()
 	
@@ -137,6 +147,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 			return
 		
 		self.last_thumbnail_selection = selection
+		self._update_image_path_view(selection)
 		self._update_image_tags_view(selection)
 	
 	def on_grid_select_cell(self, event):
@@ -148,6 +159,15 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.image_tags_grid.ClearSelection()  # 現在の選択をすべてクリア
 		self.image_tags_grid.SelectRow(row)  # クリックされた行のみを選択
 		event.Skip()  # 他のイベントハンドラにも処理を渡す
+	
+	def _update_image_path_view(self, selection: int):
+		"""選択された画像のパスを表示する"""
+		if not self.dataset or selection == wx.NOT_FOUND:
+			self.path_text.SetValue('')
+			return
+		
+		item = self.dataset[selection]
+		self.path_text.SetValue(item.path)
 	
 	def _update_image_tags_view(self, selection: int):
 		"""選択された画像のタグをリストに表示する"""
@@ -191,6 +211,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 			self.thumbnail_list.SetSelection(0)
 			# SetSelectionはイベントを発生させないため、手動で更新処理を呼び出す
 			self.last_thumbnail_selection = 0
+			self._update_image_path_view(0)
 			self._update_image_tags_view(0)
 	
 	def create_item(self, image_path):
