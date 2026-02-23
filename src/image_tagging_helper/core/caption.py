@@ -1,14 +1,39 @@
 from typing import List
 from dataclasses import dataclass
 
+class CaptionConfig:
+	def __init__(
+			self,
+			delimiter=',',
+			posi_weight_ratio=1.1,
+			nega_weight_ratio=0.9,
+			ommittable_levels=5,
+	):
+		self.delimiter = delimiter
+		self.posi_weight_ratio = posi_weight_ratio
+		self.nega_weight_ratio = nega_weight_ratio
+		
+		self.omittable_weights = {
+			**{ posi_weight_ratio ** i: i for i in range(ommittable_levels) },
+			**{ nega_weight_ratio ** i: -i for i in range(ommittable_levels) },
+		}
+
 @dataclass
 class TagHolder:
 	text: str
 	weight: float
 	
-	def format(self):
+	def format(self, config: CaptionConfig):
 		if self.weight == 1:
 			return self.text
+		
+		if self.weight in config.omittable_weights:
+			level = config.omittable_weights[self.weight]
+			if level < 0:
+				return f"{'[' * -level}{self.text}{']' * -level}"
+			else:
+				return f"({self.text}:{self.weight})"
+		
 		return f"({self.text}:{self.weight})"
 	
 	def clone(self) -> 'TagHolder':
@@ -33,16 +58,64 @@ class Caption:
 	def format(self, delimiter=', '):
 		return delimiter.join([tag.format() for tag in self.tags])
 	
-	def parse(self, text: str, delimiter=',', positive_amp=1.1, negative_scale=0.9):
-		# タグ構文
-		#   tag            : 1倍
-		#   (tag)          : positive_amp 倍
-		#   [tag]          : negative_amp 倍
-		#   (tag:weight)   : weight 倍
-		# 括弧は入れ子可能。
-		# 異なる括弧内のテキストは異なるタグとして扱われる。
-		# タグのテキスト両端にあるスペースは削除される。
-		pass
+	@staticmethod
+	def parse(text: str, config: CaptionConfig) -> 'Caption':
+		tags = []
+		if not text:
+			return Caption()
+		
+		# トークナイズ
+		tokens = []
+		buffer = ""
+		for char in text:
+			if char in ('(', ')', '[', ']') or char == config.delimiter:
+				if buffer.strip():
+					tokens.append(buffer.strip())
+				tokens.append(char)
+				buffer = ""
+			else:
+				buffer += char
+		if buffer.strip():
+			tokens.append(buffer.strip())
+		
+		# パース
+		iterator = iter(tokens)
+		
+		def recursive_parse(current_weight):
+			while True:
+				try:
+					token = next(iterator)
+				except StopIteration:
+					break
+				
+				if token == '(':
+					recursive_parse(current_weight * config.posi_weight_ratio)
+				elif token == '[':
+					recursive_parse(current_weight * config.nega_weight_ratio)
+				elif token == ')' or token == ']':
+					return
+				elif token == config.delimiter:
+					continue
+				else:
+					# タグテキスト
+					weight = current_weight
+					tag_text = token
+					
+					# (tag:weight) のような明示的な重み指定のチェック
+					if ':' in token:
+						parts = token.rsplit(':', 1)
+						try:
+							explicit_weight = float(parts[1])
+							tag_text = parts[0]
+							weight = explicit_weight
+						except ValueError:
+							pass
+					
+					tags.append(TagHolder(tag_text, weight))
+		
+		recursive_parse(1.0)
+		
+		return Caption(tags)
 	
 	def add(self, tags: List[TagHolder]):
 		self.tags.extend(TagHolder.clone_list(tags))

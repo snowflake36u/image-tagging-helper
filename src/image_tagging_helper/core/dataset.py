@@ -1,9 +1,8 @@
 from typing import List
-from abc import ABC
 
 from src.image_tagging_helper.core.caption import Caption
 
-class DatasetItem(ABC):
+class DatasetItem:
 	"""
 	データセット内の個々の画像ファイルを表すクラス。
 

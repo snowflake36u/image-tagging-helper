@@ -118,7 +118,8 @@ class ImageTaggingHelperFrame(wx.Frame):
 		dataset_items = []
 		for image_path in image_files:
 			caption_path = os.path.splitext(image_path)[0] + '.txt'
-			caption = Caption.from_file(caption_path) if os.path.exists(caption_path) else Caption()
+			caption = Caption() if os.path.exists(caption_path) \
+				else Caption()  # TODO: キャプションファイルの読み込み
 			dataset_items.append(DatasetItem(path=image_path, caption=caption))
 		
 		self.dataset = Dataset(items=dataset_items)
