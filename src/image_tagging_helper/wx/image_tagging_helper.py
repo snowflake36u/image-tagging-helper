@@ -2,7 +2,7 @@ import os
 import glob
 import wx
 import wx.grid
-from win32ctypes.core import ctypes
+import ctypes
 
 from src.image_tagging_helper.core.caption import Caption, CaptionFormatConfig
 from src.image_tagging_helper.core.dataset import Dataset, DatasetItem
