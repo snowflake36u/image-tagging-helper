@@ -1,8 +1,9 @@
 import os
 import glob
 import wx
+from win32ctypes.core import ctypes
 
-class MainFrame(wx.Frame):
+class ImageTaggingHelperFrame(wx.Frame):
 	"""メインウィンドウのフレーム"""
 	
 	def __init__(self, parent, title):
@@ -137,12 +138,29 @@ class MainFrame(wx.Frame):
 			
 			except Exception as e:
 				print(f"Error loading image {file_path}: {e}")
+	
+	@staticmethod
+	def launch():
+		app = wx.App()
+		frame = ImageTaggingHelperFrame(None, "Image Tagging Helper")
+		frame.Show()
+		app.MainLoop()
 
 def main():
-	app = wx.App()
-	frame = MainFrame(None, "Image Tagging Helper")
-	frame.Show()
-	app.MainLoop()
+	# 高DPI対応を有効にする
+	try:
+		# Windows 8.1以降: Per-Monitor DPI Aware V2
+		# これにより、モニターごとのDPI設定に対応できる
+		ctypes.windll.shcore.SetProcessDpiAwareness(2)
+	except (AttributeError, OSError):
+		try:
+			# Windows Vista以降: System DPI Aware
+			# アプリケーション全体で単一のDPI設定を使用する
+			ctypes.windll.user32.SetProcessDPIAware()
+		except (AttributeError, OSError):
+			# DPI設定に対応していないOSの場合は何もしない
+			pass
+	ImageTaggingHelperFrame.launch()
 
 if __name__ == "__main__":
 	main()
