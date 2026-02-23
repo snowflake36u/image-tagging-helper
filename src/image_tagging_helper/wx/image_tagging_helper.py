@@ -37,12 +37,20 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		# スプリッターウィンドウの作成（入れ子構造）
 		# splitter_1
-		# |- thumbnail_list
+		# |- thumbnail_panel
+		#   |- toolbar
+		#   |- thumbnail_list
 		# |- splitter_2
-		#   |- image_tags_grid
+		#   |- image_tags_panel
+		#     |- toolbar
+		#     |- image_tags_grid
 		#   |- splitter_3
 		#     |- tag_palette_panel
-		#     |- dataset_tags_list
+		#       |- toolbar
+		#       |- content
+		#     |- dataset_tags_panel
+		#       |- toolbar
+		#       |- dataset_tags_list
 		self.splitter_1 = wx.SplitterWindow(main_panel, style=wx.SP_LIVE_UPDATE)
 		self.splitter_2 = wx.SplitterWindow(self.splitter_1, style=wx.SP_LIVE_UPDATE)
 		self.splitter_3 = wx.SplitterWindow(self.splitter_2, style=wx.SP_LIVE_UPDATE)
@@ -53,11 +61,28 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.splitter_3.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
 		
 		# 1番目のパネル: 画像のサムネイルリスト
-		self.thumbnail_list = ImageVListBox(self.splitter_1, style=wx.VSCROLL | wx.ALWAYS_SHOW_SB)
+		self.thumbnail_panel = wx.Panel(self.splitter_1)
+		self.thumbnail_toolbar = wx.ToolBar(self.thumbnail_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
+		self.thumbnail_toolbar.AddControl(wx.StaticText(self.thumbnail_toolbar, label="Images"))
+		self.thumbnail_toolbar.AddSeparator()
+		self.thumbnail_toolbar.Realize()
+		
+		self.thumbnail_list = ImageVListBox(self.thumbnail_panel, style=wx.VSCROLL | wx.ALWAYS_SHOW_SB)
 		self.thumbnail_list.Bind(wx.EVT_LISTBOX, self.on_thumbnail_select)
 		
+		thumbnail_sizer = wx.BoxSizer(wx.VERTICAL)
+		thumbnail_sizer.Add(self.thumbnail_toolbar, 0, wx.EXPAND)
+		thumbnail_sizer.Add(self.thumbnail_list, 1, wx.EXPAND)
+		self.thumbnail_panel.SetSizer(thumbnail_sizer)
+		
 		# 2番目のパネル: 画像のタグ一覧
-		self.image_tags_grid = wx.grid.Grid(self.splitter_2)
+		self.image_tags_panel = wx.Panel(self.splitter_2)
+		self.image_tags_toolbar = wx.ToolBar(self.image_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
+		self.image_tags_toolbar.AddControl(wx.StaticText(self.image_tags_toolbar, label="Image Tags"))
+		self.image_tags_toolbar.AddSeparator()
+		self.image_tags_toolbar.Realize()
+		
+		self.image_tags_grid = wx.grid.Grid(self.image_tags_panel)
 		self.image_tags_grid.CreateGrid(0, 2)
 		self.image_tags_grid.SetColLabelValue(0, 'Tag')
 		self.image_tags_grid.SetColLabelValue(1, 'Weight')
@@ -70,20 +95,47 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# 複数選択を無効にするためにイベントをバインド
 		self.image_tags_grid.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_grid_select_cell)
 		
+		image_tags_sizer = wx.BoxSizer(wx.VERTICAL)
+		image_tags_sizer.Add(self.image_tags_toolbar, 0, wx.EXPAND)
+		image_tags_sizer.Add(self.image_tags_grid, 1, wx.EXPAND)
+		self.image_tags_panel.SetSizer(image_tags_sizer)
+		
 		# 3番目のパネル: 空のパネル（将来的に実装）
 		self.tag_palette_panel = wx.Panel(self.splitter_3)
-		self.tag_palette_panel.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_APPWORKSPACE))
+		self.tag_palette_toolbar = wx.ToolBar(self.tag_palette_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
+		self.tag_palette_toolbar.AddControl(wx.StaticText(self.tag_palette_toolbar, label="Tag Palette"))
+		self.tag_palette_toolbar.AddSeparator()
+		self.tag_palette_toolbar.Realize()
+		
+		self.tag_palette_content = wx.Panel(self.tag_palette_panel)
+		self.tag_palette_content.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_APPWORKSPACE))
+		
+		tag_palette_sizer = wx.BoxSizer(wx.VERTICAL)
+		tag_palette_sizer.Add(self.tag_palette_toolbar, 0, wx.EXPAND)
+		tag_palette_sizer.Add(self.tag_palette_content, 1, wx.EXPAND)
+		self.tag_palette_panel.SetSizer(tag_palette_sizer)
 		
 		# 4番目のパネル: データセット全体のタグ一覧
-		self.dataset_tags_list = wx.ListCtrl(self.splitter_3, style=wx.LC_REPORT)
+		self.dataset_tags_panel = wx.Panel(self.splitter_3)
+		self.dataset_tags_toolbar = wx.ToolBar(self.dataset_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
+		self.dataset_tags_toolbar.AddControl(wx.StaticText(self.dataset_tags_toolbar, label="Dataset Tags"))
+		self.dataset_tags_toolbar.AddSeparator()
+		self.dataset_tags_toolbar.Realize()
+		
+		self.dataset_tags_list = wx.ListCtrl(self.dataset_tags_panel, style=wx.LC_REPORT)
 		self.dataset_tags_list.InsertColumn(0, 'Tag', width=150)
 		self.dataset_tags_list.InsertColumn(1, 'Count', width=50)
 		
+		dataset_tags_sizer = wx.BoxSizer(wx.VERTICAL)
+		dataset_tags_sizer.Add(self.dataset_tags_toolbar, 0, wx.EXPAND)
+		dataset_tags_sizer.Add(self.dataset_tags_list, 1, wx.EXPAND)
+		self.dataset_tags_panel.SetSizer(dataset_tags_sizer)
+		
 		# スプリッターの分割設定
 		# 初期サイズ(1200)に基づく比率 1:1:2:1 -> 240:240:480:240
-		self.splitter_3.SplitVertically(self.tag_palette_panel, self.dataset_tags_list, 480)
-		self.splitter_2.SplitVertically(self.image_tags_grid, self.splitter_3, 240)
-		self.splitter_1.SplitVertically(self.thumbnail_list, self.splitter_2, 240)
+		self.splitter_3.SplitVertically(self.tag_palette_panel, self.dataset_tags_panel, 480)
+		self.splitter_2.SplitVertically(self.image_tags_panel, self.splitter_3, 240)
+		self.splitter_1.SplitVertically(self.thumbnail_panel, self.splitter_2, 240)
 		
 		# ウィンドウリサイズ時の挙動を設定
 		# tag_palette_panel以外の3つのパネルが均等に伸縮するように調整
