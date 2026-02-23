@@ -15,6 +15,9 @@ class ImageVListBox(wx.VListBox):
 		self.dataset: Dataset | None = None
 		self.thumbnail_cache: Dict[tuple[str, tuple[int, int]], wx.Bitmap] = { }
 		self.image_cache: Dict[str, wx.Image] = { }
+		self._thumbnail_display_width = 64  # デフォルト値
+		self.padding_h = 5
+		self.padding_v = 5
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""
@@ -108,10 +111,8 @@ class ImageVListBox(wx.VListBox):
 		# 背景を描画
 		if self.IsSelected(n):
 			bg_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
-			text_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
 		else:
 			bg_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
-			text_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
 		
 		dc.SetBrush(wx.Brush(bg_colour))
 		dc.SetPen(wx.TRANSPARENT_PEN)
@@ -120,8 +121,8 @@ class ImageVListBox(wx.VListBox):
 		item = self.dataset[n]
 		
 		# サムネイルを取得して描画
-		# 左右に5pxずつのマージン
-		thumbnail_width = rect.width - 10
+		# OnMeasureItemで計算された幅を使用
+		thumbnail_width = self._thumbnail_display_width
 		if thumbnail_width < 16:
 			thumbnail_width = 16
 		thumbnail_size = (thumbnail_width, thumbnail_width)
@@ -130,7 +131,7 @@ class ImageVListBox(wx.VListBox):
 			bmp = self._get_thumbnail(item, thumbnail_size)
 			# 中央に配置
 			x = rect.x + (rect.width - bmp.GetWidth()) // 2
-			y = rect.y + 5  # 上マージン
+			y = rect.y + self.padding_v  # 上パディング
 			dc.DrawBitmap(bmp, x, y, True)  # useMask=True
 		except Exception as e:
 			# エラー発生時は代替テキストを描画
@@ -143,16 +144,6 @@ class ImageVListBox(wx.VListBox):
 			dc.DrawText(error_text, rect.x + (rect.width - tw) // 2, rect.y + (rect.height - th) // 2)
 			print(f'Error rendering thumbnail for {item.path}: {e}')  # ログにも出力
 			return  # エラー時はファイル名を描画しない
-		
-		# ファイル名を描画
-		dc.SetTextForeground(text_colour)
-		
-		filename = os.path.basename(item.path)
-		
-		tw, th = dc.GetTextExtent(filename)
-		# 画像の下に描画
-		text_y = y + thumbnail_width + 5  # 画像の下に5pxのマージン
-		dc.DrawText(filename, rect.x + (rect.width - tw) // 2, text_y)
 	
 	def OnMeasureItem(self, n: int) -> int:
 		"""
@@ -162,22 +153,22 @@ class ImageVListBox(wx.VListBox):
 			return 0
 		
 		# コントロールの幅から画像の幅を決定
+		# スクロールバーが表示されている場合、その幅は含まれない。
 		width = self.GetClientSize().width
 		
-		# スクロールバーが表示されていると仮定して、その幅を常に考慮する
-		scrollbar_width = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
-		image_width = width - scrollbar_width - 10  # 左右マージン
+		# 画像幅 = 全体の幅 - 左右パディング
+		image_width = width - self.padding_h * 2
 		
 		if image_width < 64:
 			image_width = 64
 		
+		# 計算した幅を保存してOnDrawItemで使用する
+		self._thumbnail_display_width = image_width
+		
 		# 画像の高さ (正方形)
 		image_height = image_width
 		
-		# ファイル名の高さを取得
-		text_height = self.GetTextExtent('X')[1]  # 1行分の高さを取得
-		
-		# 全体の高さ = 上マージン + 画像の高さ + 画像とテキストの間マージン + テキストの高さ + 下マージン
-		total_height = 5 + image_height + 5 + text_height + 5
+		# 全体の高さ = 画像の高さ + 上下パディング
+		total_height = image_height + self.padding_v * 2
 		
 		return int(total_height)

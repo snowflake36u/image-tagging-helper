@@ -53,7 +53,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.splitter_3.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
 		
 		# 1番目のパネル: 画像のサムネイルリスト
-		self.thumbnail_list = ImageVListBox(self.splitter_1)
+		self.thumbnail_list = ImageVListBox(self.splitter_1, style=wx.VSCROLL | wx.ALWAYS_SHOW_SB)
 		self.thumbnail_list.Bind(wx.EVT_LISTBOX, self.on_thumbnail_select)
 		
 		# 2番目のパネル: 画像のタグ一覧
