@@ -1,6 +1,7 @@
 import os
 import glob
 import wx
+import wx.grid
 from win32ctypes.core import ctypes
 
 from src.image_tagging_helper.core.caption import Caption, CaptionFormatConfig
@@ -29,7 +30,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# splitter_1
 		# |- thumbnail_list
 		# |- splitter_2
-		#   |- image_tags_list
+		#   |- image_tags_grid
 		#   |- splitter_3
 		#     |- tag_palette_panel
 		#     |- dataset_tags_list
@@ -47,8 +48,18 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.thumbnail_list.Bind(wx.EVT_LISTBOX, self.on_thumbnail_select)
 		
 		# 2番目のパネル: 画像のタグ一覧
-		self.image_tags_list = wx.ListCtrl(self.splitter_2, style=wx.LC_REPORT)
-		self.image_tags_list.InsertColumn(0, 'Tag', width=150)
+		self.image_tags_grid = wx.grid.Grid(self.splitter_2)
+		self.image_tags_grid.CreateGrid(0, 2)
+		self.image_tags_grid.SetColLabelValue(0, 'Tag')
+		self.image_tags_grid.SetColLabelValue(1, 'Weight')
+		self.image_tags_grid.SetColSize(0, 150)
+		self.image_tags_grid.SetColSize(1, 50)
+		self.image_tags_grid.SetRowLabelSize(0)
+		
+		# 行のリサイズを不可にする
+		self.image_tags_grid.EnableDragRowSize(False)
+		# 複数選択を無効にするためにイベントをバインド
+		self.image_tags_grid.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_grid_select_cell)
 		
 		# 3番目のパネル: 空のパネル（将来的に実装）
 		self.tag_palette_panel = wx.Panel(self.splitter_3)
@@ -62,7 +73,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# スプリッターの分割設定
 		# 初期サイズ(1200)に基づく比率 1:1:2:1 -> 240:240:480:240
 		self.splitter_3.SplitVertically(self.tag_palette_panel, self.dataset_tags_list, 480)
-		self.splitter_2.SplitVertically(self.image_tags_list, self.splitter_3, 240)
+		self.splitter_2.SplitVertically(self.image_tags_grid, self.splitter_3, 240)
 		self.splitter_1.SplitVertically(self.thumbnail_list, self.splitter_2, 240)
 		
 		# ウィンドウリサイズ時の挙動を設定
@@ -121,8 +132,42 @@ class ImageTaggingHelperFrame(wx.Frame):
 				self.thumbnail_list.SetSelection(self.last_thumbnail_selection)
 			return
 		
-		self.last_thumbnail_selection = selection
+		# 同じアイテムが再度選択された場合は何もしない
+		if selection == self.last_thumbnail_selection:
+			return
 		
+		self.last_thumbnail_selection = selection
+		self._update_image_tags_view(selection)
+	
+	def on_grid_select_cell(self, event):
+		"""
+		グリッドのセルが選択されたときの処理。
+		複数選択を無効にし、常に単一の行のみが選択されるようにする。
+		"""
+		row = event.GetRow()
+		self.image_tags_grid.ClearSelection()  # 現在の選択をすべてクリア
+		self.image_tags_grid.SelectRow(row)  # クリックされた行のみを選択
+		event.Skip()  # 他のイベントハンドラにも処理を渡す
+	
+	def _update_image_tags_view(self, selection: int):
+		"""選択された画像のタグをリストに表示する"""
+		if self.image_tags_grid.GetNumberRows() > 0:
+			self.image_tags_grid.DeleteRows(0, self.image_tags_grid.GetNumberRows())
+		
+		if not self.dataset or selection == wx.NOT_FOUND:
+			return
+		
+		item = self.dataset[selection]
+		caption = item.caption
+		
+		self.image_tags_grid.AppendRows(len(caption.tags))
+		
+		for i, tag in enumerate(caption.tags):
+			self.image_tags_grid.SetCellValue(i, 0, tag.text)
+			# 小数点以下2桁まで表示、Noneの場合は空文字
+			weight_str = f'{tag.weight:.2f}' if tag.weight is not None else ''
+			self.image_tags_grid.SetCellValue(i, 1, weight_str)
+	
 	def load_dataset(self, folder_path: str):
 		"""指定されたフォルダからデータセットを構築する"""
 		# 画像ファイルの検索
@@ -144,6 +189,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		if self.dataset and len(self.dataset) > 0:
 			self.thumbnail_list.SetSelection(0)
+			# SetSelectionはイベントを発生させないため、手動で更新処理を呼び出す
+			self.last_thumbnail_selection = 0
+			self._update_image_tags_view(0)
 	
 	def create_item(self, image_path):
 		caption_path = os.path.splitext(image_path)[0] + self.caption_exts
