@@ -3,13 +3,17 @@ import glob
 import wx
 from win32ctypes.core import ctypes
 
+from src.image_tagging_helper.core.caption import Caption
+from src.image_tagging_helper.core.dataset import Dataset, DatasetItem
+from src.image_tagging_helper.wx.image_list import ImageVListBox
+
 class ImageTaggingHelperFrame(wx.Frame):
 	"""メインウィンドウのフレーム"""
 	
 	def __init__(self, parent, title):
 		super().__init__(parent, title=title, size=(1200, 800))
 		
-		self.image_size = (256, 256)  # サムネイルサイズ
+		self.dataset: Dataset | None = None
 		
 		# メニューバーの設定
 		self._init_menubar()
@@ -35,10 +39,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.splitter_3.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
 		
 		# 1番目のパネル: 画像のサムネイルリスト
-		self.thumbnail_list = wx.ListCtrl(self.splitter_1, style=wx.LC_ICON | wx.LC_AUTOARRANGE)
-		# ImageListの初期化
-		self.image_list = wx.ImageList(self.image_size[0], self.image_size[1])
-		self.thumbnail_list.AssignImageList(self.image_list, wx.IMAGE_LIST_NORMAL)
+		self.thumbnail_list = ImageVListBox(self.splitter_1)
 		
 		# 2番目のパネル: 画像のタグ一覧
 		self.image_tags_list = wx.ListCtrl(self.splitter_2, style=wx.LC_REPORT)
@@ -61,7 +62,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		# ウィンドウリサイズ時の挙動を設定
 		# tag_palette_panel以外の3つのパネルが均等に伸縮するように調整
-		self.splitter_1.SetSashGravity(1.0/3.0)
+		self.splitter_1.SetSashGravity(1.0 / 3.0)
 		self.splitter_2.SetSashGravity(0.5)
 		# splitter_3はデフォルト(0.0)のままで、左パネル(tag_palette_panel)のサイズを固定
 		
@@ -96,76 +97,32 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.Close()
 	
 	def on_open_folder(self, event):
-		"""フォルダ選択ダイアログを表示し、画像を読み込む"""
+		"""フォルダ選択ダイアログを表示し、データセットを読み込む"""
 		with wx.DirDialog(self, "Choose a directory", style=wx.DD_DEFAULT_STYLE) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				path = dlg.GetPath()
-				self.load_images(path)
+				self.load_dataset(path)
 	
-	def load_images(self, folder_path):
-		"""指定されたフォルダから画像を読み込み、サムネイルリストを更新する"""
-		self.thumbnail_list.DeleteAllItems()
-		self.image_list.RemoveAll()
-		
-		# 画像ファイルの検索 (簡易的に拡張子でフィルタ)
+	def load_dataset(self, folder_path: str):
+		"""指定されたフォルダからデータセットを構築する"""
+		# 画像ファイルの検索
 		extensions = ['*.jpg', '*.jpeg', '*.png', '*.webp']
 		image_files = []
 		for ext in extensions:
-			# 大文字小文字を区別しない検索が望ましいが、ここではglobで簡易実装
-			# Windowsでは通常大文字小文字を区別しない
+			# Windowsではglobはデフォルトで大文字小文字を区別しない
 			image_files.extend(glob.glob(os.path.join(folder_path, ext)))
-			image_files.extend(glob.glob(os.path.join(folder_path, ext.upper())))
 		
 		# 重複除去とソート
 		image_files = sorted(list(set(image_files)))
 		
-		for i, file_path in enumerate(image_files):
-			try:
-				# 画像読み込み
-				img = wx.Image(file_path, wx.BITMAP_TYPE_ANY)
-				
-				# サムネイル用にリサイズ（アスペクト比維持）
-				w, h = img.GetWidth(), img.GetHeight()
-				aspect = w / h
-				
-				target_w, target_h = self.image_size
-				
-				if aspect > 1:
-					new_w = target_w
-					new_h = int(target_w / aspect)
-				else:
-					new_h = target_h
-					new_w = int(target_h * aspect)
-				
-				img = img.Scale(new_w, new_h, wx.IMAGE_QUALITY_HIGH)
-				
-				# 256x256の背景に描画してサイズを統一
-				bmp = wx.Bitmap(target_w, target_h)
-				dc = wx.MemoryDC(bmp)
-				# 背景色（白）
-				dc.SetBackground(wx.Brush(wx.WHITE))
-				dc.Clear()
-				
-				# 中央に描画
-				x = (target_w - new_w) // 2
-				y = (target_h - new_h) // 2
-				dc.DrawBitmap(wx.Bitmap(img), x, y, True)
-				dc.SelectObject(wx.NullBitmap)
-				
-				# ImageListに追加
-				img_idx = self.image_list.Add(bmp)
-				
-				# ListCtrlに追加
-				item = wx.ListItem()
-				item.SetId(i)
-				item.SetText(os.path.basename(file_path))
-				item.SetImage(img_idx)
-				# 実際のファイルパスをデータとして保持させたい場合は別途管理が必要だが、
-				# ここでは簡易表示のみとする
-				self.thumbnail_list.InsertItem(item)
-			
-			except Exception as e:
-				print(f"Error loading image {file_path}: {e}")
+		dataset_items = []
+		for image_path in image_files:
+			caption_path = os.path.splitext(image_path)[0] + '.txt'
+			caption = Caption.from_file(caption_path) if os.path.exists(caption_path) else Caption()
+			dataset_items.append(DatasetItem(path=image_path, caption=caption))
+		
+		self.dataset = Dataset(items=dataset_items)
+		self.thumbnail_list.set_dataset(self.dataset)
 	
 	@staticmethod
 	def launch():
