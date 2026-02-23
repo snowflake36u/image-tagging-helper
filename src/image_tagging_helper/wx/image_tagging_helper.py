@@ -33,7 +33,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		# === UIの初期化 ===
 		self._init_ui()
-		self.Centre()
 	
 	def _init_ui(self):
 		"""UI全体の初期化"""
