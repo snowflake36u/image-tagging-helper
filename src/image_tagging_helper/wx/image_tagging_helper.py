@@ -3,7 +3,7 @@ import glob
 import wx
 from win32ctypes.core import ctypes
 
-from src.image_tagging_helper.core.caption import Caption
+from src.image_tagging_helper.core.caption import Caption, CaptionFormatConfig
 from src.image_tagging_helper.core.dataset import Dataset, DatasetItem
 from src.image_tagging_helper.wx.image_list import ImageVListBox
 
@@ -13,6 +13,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def __init__(self, parent, title):
 		super().__init__(parent, title=title, size=(1200, 800))
 		
+		self.caption_parse_config = CaptionFormatConfig(delimiter=', ')
+		self.caption_format_config = CaptionFormatConfig()
+		self.caption_exts = '.caption'
 		self.dataset: Dataset | None = None
 		
 		# メニューバーの設定
@@ -117,13 +120,21 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		dataset_items = []
 		for image_path in image_files:
-			caption_path = os.path.splitext(image_path)[0] + '.txt'
-			caption = Caption() if os.path.exists(caption_path) \
-				else Caption()  # TODO: キャプションファイルの読み込み
-			dataset_items.append(DatasetItem(path=image_path, caption=caption))
+			dataset_items.append(self.create_item(image_path))
 		
 		self.dataset = Dataset(items=dataset_items)
 		self.thumbnail_list.set_dataset(self.dataset)
+	
+	def create_item(self, image_path):
+		caption_path = os.path.splitext(image_path)[0] + self.caption_exts
+		if os.path.exists(caption_path):
+			with open(caption_path, 'r', encoding='utf-8') as f:
+				caption_text = f.read()
+				caption = Caption.parse(caption_text, config=self.caption_format_config)
+		else:
+			caption = Caption()  # 空のキャプションで初期化
+		
+		return DatasetItem(path=image_path, caption=caption)
 	
 	@staticmethod
 	def launch():

@@ -1,9 +1,10 @@
 from typing import List
 from dataclasses import dataclass
 
-class CaptionConfig:
+class CaptionFormatConfig:
 	def __init__(
 			self,
+			*,
 			delimiter=',',
 			posi_weight_ratio=1.1,
 			nega_weight_ratio=0.9,
@@ -23,7 +24,7 @@ class TagHolder:
 	text: str
 	weight: float
 	
-	def format(self, config: CaptionConfig):
+	def format(self, config: CaptionFormatConfig):
 		if self.weight == 1:
 			return self.text
 		
@@ -55,11 +56,11 @@ class Caption:
 	def __len__(self):
 		return len(self.tags)
 	
-	def format(self, delimiter=', '):
-		return delimiter.join([tag.format() for tag in self.tags])
+	def format(self, config: CaptionFormatConfig):
+		return config.delimiter.join([tag.format(config) for tag in self.tags])
 	
 	@staticmethod
-	def parse(text: str, config: CaptionConfig) -> 'Caption':
+	def parse(text: str, config: CaptionFormatConfig) -> 'Caption':
 		tags = []
 		if not text:
 			return Caption()
@@ -116,6 +117,26 @@ class Caption:
 		recursive_parse(1.0)
 		
 		return Caption(tags)
+	
+	def clean(self, remove_blanks=True, remove_dups=True) -> None:
+		tags = self.tags
+		
+		if remove_blanks:
+			for i in reversed(range(len(self.tags))):
+				if not tags[i].text:
+					del self.remove[i]
+		
+		if remove_dups:
+			seen = set()
+			i = 0
+			n = len(self.tags)
+			while i < n:
+				if tags[i].text in seen:
+					del self.remove[i]
+					n -= 1
+				else:
+					seen.add(tags[i].text)
+					i += 1
 	
 	def add(self, tags: List[TagHolder]):
 		self.tags.extend(TagHolder.clone_list(tags))
