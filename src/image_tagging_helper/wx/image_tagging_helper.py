@@ -60,6 +60,11 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.splitter_2.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
 		self.splitter_3.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
 		
+		# 最小ペインサイズを設定
+		self.splitter_1.SetMinimumPaneSize(100)
+		self.splitter_2.SetMinimumPaneSize(100)
+		self.splitter_3.SetMinimumPaneSize(100)
+		
 		# 1番目のパネル: 画像のサムネイルリスト
 		self.thumbnail_panel = wx.Panel(self.splitter_1)
 		self.thumbnail_toolbar = wx.ToolBar(self.thumbnail_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
