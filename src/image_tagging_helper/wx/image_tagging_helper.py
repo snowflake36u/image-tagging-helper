@@ -54,15 +54,31 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menubar = wx.MenuBar()
 		
 		file_menu = wx.Menu()
-		open_folder_item = file_menu.Append(wx.ID_OPEN, 'Open Folder...\tCtrl+O', 'Open a folder containing images')
+		
+		open_folder_item = self._append_menu_item(
+			file_menu, wx.ID_OPEN, 'Open Folder...', 'Ctrl+O', 'Open a folder containing images'
+		)
+		
 		file_menu.AppendSeparator()
-		exit_item = file_menu.Append(wx.ID_EXIT, 'Exit', 'Exit the application')
+		
+		exit_item = self._append_menu_item(
+			file_menu, wx.ID_EXIT, 'Exit', '', 'Exit the application'
+		)
 		
 		menubar.Append(file_menu, '&File')
 		self.SetMenuBar(menubar)
 		
 		self.Bind(wx.EVT_MENU, self.on_open_folder, open_folder_item)
 		self.Bind(wx.EVT_MENU, self.on_exit, exit_item)
+	
+	@staticmethod
+	def _append_menu_item(menu: wx.Menu, item_id: int, label: str, accel: str, help_str: str) -> wx.MenuItem:
+		"""
+		メニュー項目を追加するためのヘルパーメソッド。
+		ラベルとアクセラレータを結合してメニュー項目を作成します。
+		"""
+		text = f"{label}\t{accel}" if accel else label
+		return menu.Append(item_id, text, help_str)
 	
 	def _create_path_panel(self, parent: wx.Window) -> wx.Window:
 		"""
