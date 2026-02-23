@@ -47,7 +47,8 @@ class ImageVListBox(wx.VListBox):
 		
 		# 画像読み込み（キャッシュがあればそれを使用）
 		if item.path not in self.image_cache:
-			img = wx.Image(item.path, wx.BITMAP_TYPE_ANY)
+			with wx.LogNull():
+				img = wx.Image(item.path, wx.BITMAP_TYPE_ANY)
 			if not img.IsOk():
 				# 読み込み失敗時はエラー用のビットマップを生成してキャッシュ
 				bmp = wx.Bitmap(size[0], size[1])
