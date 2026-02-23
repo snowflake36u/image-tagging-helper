@@ -9,64 +9,114 @@ from src.image_tagging_helper.core.dataset import Dataset, DatasetItem
 from src.image_tagging_helper.wx.image_list import ImageVListBox
 
 class ImageTaggingHelperFrame(wx.Frame):
-	"""メインウィンドウのフレーム"""
+	"""
+	メインウィンドウのフレーム。
+	UIコンポーネントの配置とイベント処理、データセットの管理を行います。
+	"""
 	
-	def __init__(self, parent, title):
+	def __init__(self, parent: wx.Window | None, title: str):
+		"""
+		フレームを初期化します。
+		
+		Args:
+			parent: 親ウィンドウ。
+			title: ウィンドウのタイトル。
+		"""
 		super().__init__(parent, title=title, size=(1200, 800))
 		
+		# === データメンバーの初期化 ===
 		self.caption_parse_config = CaptionFormatConfig(delimiter=', ')
 		self.caption_format_config = CaptionFormatConfig()
 		self.caption_exts = '.caption'
 		self.dataset: Dataset | None = None
 		self.last_thumbnail_selection: int = wx.NOT_FOUND
 		
-		# メニューバーの設定
+		# === UIの初期化 ===
+		self._init_ui()
+		self.Centre()
+	
+	def _init_ui(self):
+		"""UI全体の初期化"""
 		self._init_menubar()
 		
-		# メインパネル
 		main_panel = wx.Panel(self)
 		
-		# ファイルパス表示
-		path_panel = wx.Panel(main_panel)
+		path_panel = self._create_path_panel(main_panel)
+		self._create_main_sash_layout(main_panel)
+		
+		# メインパネルのレイアウト
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(path_panel, 0, wx.EXPAND | wx.ALL, 5)
+		sizer.Add(self.splitter_1, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+		main_panel.SetSizer(sizer)
+	
+	def _init_menubar(self):
+		"""メニューバーを初期化します。"""
+		menubar = wx.MenuBar()
+		
+		file_menu = wx.Menu()
+		open_folder_item = file_menu.Append(wx.ID_OPEN, 'Open Folder...\tCtrl+O', 'Open a folder containing images')
+		file_menu.AppendSeparator()
+		exit_item = file_menu.Append(wx.ID_EXIT, 'Exit', 'Exit the application')
+		
+		menubar.Append(file_menu, '&File')
+		self.SetMenuBar(menubar)
+		
+		self.Bind(wx.EVT_MENU, self.on_open_folder, open_folder_item)
+		self.Bind(wx.EVT_MENU, self.on_exit, exit_item)
+	
+	def _create_path_panel(self, parent: wx.Window) -> wx.Window:
+		"""
+		ファイルパス表示パネルを作成します。
+		
+		Args:
+			parent: 親となるウィンドウ。
+		
+		Returns:
+			作成されたパネル。
+		"""
+		path_panel = wx.Panel(parent)
 		path_sizer = wx.BoxSizer(wx.HORIZONTAL)
 		path_label = wx.StaticText(path_panel, label='ファイルパス')
 		self.path_text = wx.TextCtrl(path_panel, style=wx.TE_READONLY)
 		path_sizer.Add(path_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 		path_sizer.Add(self.path_text, 1, wx.EXPAND)
 		path_panel.SetSizer(path_sizer)
-		
-		# スプリッターウィンドウの作成（入れ子構造）
-		# splitter_1
-		# |- thumbnail_panel
-		#   |- toolbar
-		#   |- thumbnail_list
-		# |- splitter_2
-		#   |- image_tags_panel
-		#     |- toolbar
-		#     |- image_tags_grid
-		#   |- splitter_3
-		#     |- tag_palette_panel
-		#       |- toolbar
-		#       |- content
-		#     |- dataset_tags_panel
-		#       |- toolbar
-		#       |- dataset_tags_list
-		self.splitter_1 = wx.SplitterWindow(main_panel, style=wx.SP_LIVE_UPDATE)
+		return path_panel
+	
+	def _create_main_sash_layout(self, parent: wx.Window):
+		"""
+		入れ子になったスプリッターウィンドウでメインレイアウトを作成します。
+		"""
+		# スプリッターウィンドウの作成
+		self.splitter_1 = wx.SplitterWindow(parent, style=wx.SP_LIVE_UPDATE)
 		self.splitter_2 = wx.SplitterWindow(self.splitter_1, style=wx.SP_LIVE_UPDATE)
 		self.splitter_3 = wx.SplitterWindow(self.splitter_2, style=wx.SP_LIVE_UPDATE)
 		
-		# ダブルクリックで折りたたまないようにイベントをバインド
-		self.splitter_1.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
-		self.splitter_2.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
-		self.splitter_3.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
+		splitters = [self.splitter_1, self.splitter_2, self.splitter_3]
+		for splitter in splitters:
+			splitter.SetMinimumPaneSize(100)
+			splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
 		
-		# 最小ペインサイズを設定
-		self.splitter_1.SetMinimumPaneSize(100)
-		self.splitter_2.SetMinimumPaneSize(100)
-		self.splitter_3.SetMinimumPaneSize(100)
+		# 各ペインの作成
+		self._create_thumbnail_panel(self.splitter_1)
+		self._create_image_tags_panel(self.splitter_2)
+		self._create_tag_palette_panel(self.splitter_3)
+		self._create_dataset_tags_panel(self.splitter_3)
 		
-		# 1番目のパネル: 画像のサムネイルリスト
-		self.thumbnail_panel = wx.Panel(self.splitter_1)
+		# スプリッターの分割設定
+		# 初期サイズ(1200)に基づく比率 1:1:2:1 -> 240:240:480:240
+		self.splitter_3.SplitVertically(self.tag_palette_panel, self.dataset_tags_panel, 480)
+		self.splitter_2.SplitVertically(self.image_tags_panel, self.splitter_3, 240)
+		self.splitter_1.SplitVertically(self.thumbnail_panel, self.splitter_2, 240)
+		
+		# ウィンドウリサイズ時の挙動を設定
+		self.splitter_1.SetSashGravity(1.0 / 3.0)
+		self.splitter_2.SetSashGravity(0.5)
+	
+	def _create_thumbnail_panel(self, parent: wx.Window):
+		"""画像のサムネイルリストパネルを作成します。"""
+		self.thumbnail_panel = wx.Panel(parent)
 		self.thumbnail_toolbar = wx.ToolBar(self.thumbnail_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
 		self.thumbnail_toolbar.AddControl(wx.StaticText(self.thumbnail_toolbar, label="Images"))
 		self.thumbnail_toolbar.AddSeparator()
@@ -75,13 +125,14 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.thumbnail_list = ImageVListBox(self.thumbnail_panel, style=wx.VSCROLL | wx.ALWAYS_SHOW_SB)
 		self.thumbnail_list.Bind(wx.EVT_LISTBOX, self.on_thumbnail_select)
 		
-		thumbnail_sizer = wx.BoxSizer(wx.VERTICAL)
-		thumbnail_sizer.Add(self.thumbnail_toolbar, 0, wx.EXPAND)
-		thumbnail_sizer.Add(self.thumbnail_list, 1, wx.EXPAND)
-		self.thumbnail_panel.SetSizer(thumbnail_sizer)
-		
-		# 2番目のパネル: 画像のタグ一覧
-		self.image_tags_panel = wx.Panel(self.splitter_2)
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(self.thumbnail_toolbar, 0, wx.EXPAND)
+		sizer.Add(self.thumbnail_list, 1, wx.EXPAND)
+		self.thumbnail_panel.SetSizer(sizer)
+	
+	def _create_image_tags_panel(self, parent: wx.Window):
+		"""画像のタグ一覧パネルを作成します。"""
+		self.image_tags_panel = wx.Panel(parent)
 		self.image_tags_toolbar = wx.ToolBar(self.image_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
 		self.image_tags_toolbar.AddControl(wx.StaticText(self.image_tags_toolbar, label="Image Tags"))
 		self.image_tags_toolbar.AddSeparator()
@@ -94,19 +145,17 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.image_tags_grid.SetColSize(0, 150)
 		self.image_tags_grid.SetColSize(1, 50)
 		self.image_tags_grid.SetRowLabelSize(0)
-		
-		# 行のリサイズを不可にする
 		self.image_tags_grid.EnableDragRowSize(False)
-		# 複数選択を無効にするためにイベントをバインド
 		self.image_tags_grid.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_grid_select_cell)
 		
-		image_tags_sizer = wx.BoxSizer(wx.VERTICAL)
-		image_tags_sizer.Add(self.image_tags_toolbar, 0, wx.EXPAND)
-		image_tags_sizer.Add(self.image_tags_grid, 1, wx.EXPAND)
-		self.image_tags_panel.SetSizer(image_tags_sizer)
-		
-		# 3番目のパネル: 空のパネル（将来的に実装）
-		self.tag_palette_panel = wx.Panel(self.splitter_3)
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(self.image_tags_toolbar, 0, wx.EXPAND)
+		sizer.Add(self.image_tags_grid, 1, wx.EXPAND)
+		self.image_tags_panel.SetSizer(sizer)
+	
+	def _create_tag_palette_panel(self, parent: wx.Window):
+		"""タグパレットパネルを作成します。"""
+		self.tag_palette_panel = wx.Panel(parent)
 		self.tag_palette_toolbar = wx.ToolBar(self.tag_palette_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
 		self.tag_palette_toolbar.AddControl(wx.StaticText(self.tag_palette_toolbar, label="Tag Palette"))
 		self.tag_palette_toolbar.AddSeparator()
@@ -115,13 +164,14 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.tag_palette_content = wx.Panel(self.tag_palette_panel)
 		self.tag_palette_content.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_APPWORKSPACE))
 		
-		tag_palette_sizer = wx.BoxSizer(wx.VERTICAL)
-		tag_palette_sizer.Add(self.tag_palette_toolbar, 0, wx.EXPAND)
-		tag_palette_sizer.Add(self.tag_palette_content, 1, wx.EXPAND)
-		self.tag_palette_panel.SetSizer(tag_palette_sizer)
-		
-		# 4番目のパネル: データセット全体のタグ一覧
-		self.dataset_tags_panel = wx.Panel(self.splitter_3)
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(self.tag_palette_toolbar, 0, wx.EXPAND)
+		sizer.Add(self.tag_palette_content, 1, wx.EXPAND)
+		self.tag_palette_panel.SetSizer(sizer)
+	
+	def _create_dataset_tags_panel(self, parent: wx.Window):
+		"""データセット全体のタグ一覧パネルを作成します。"""
+		self.dataset_tags_panel = wx.Panel(parent)
 		self.dataset_tags_toolbar = wx.ToolBar(self.dataset_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
 		self.dataset_tags_toolbar.AddControl(wx.StaticText(self.dataset_tags_toolbar, label="Dataset Tags"))
 		self.dataset_tags_toolbar.AddSeparator()
@@ -131,65 +181,32 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.dataset_tags_list.InsertColumn(0, 'Tag', width=150)
 		self.dataset_tags_list.InsertColumn(1, 'Count', width=50)
 		
-		dataset_tags_sizer = wx.BoxSizer(wx.VERTICAL)
-		dataset_tags_sizer.Add(self.dataset_tags_toolbar, 0, wx.EXPAND)
-		dataset_tags_sizer.Add(self.dataset_tags_list, 1, wx.EXPAND)
-		self.dataset_tags_panel.SetSizer(dataset_tags_sizer)
-		
-		# スプリッターの分割設定
-		# 初期サイズ(1200)に基づく比率 1:1:2:1 -> 240:240:480:240
-		self.splitter_3.SplitVertically(self.tag_palette_panel, self.dataset_tags_panel, 480)
-		self.splitter_2.SplitVertically(self.image_tags_panel, self.splitter_3, 240)
-		self.splitter_1.SplitVertically(self.thumbnail_panel, self.splitter_2, 240)
-		
-		# ウィンドウリサイズ時の挙動を設定
-		# tag_palette_panel以外の3つのパネルが均等に伸縮するように調整
-		self.splitter_1.SetSashGravity(1.0 / 3.0)
-		self.splitter_2.SetSashGravity(0.5)
-		# splitter_3はデフォルト(0.0)のままで、左パネル(tag_palette_panel)のサイズを固定
-		
-		# メインパネルのレイアウト
 		sizer = wx.BoxSizer(wx.VERTICAL)
-		sizer.Add(path_panel, 0, wx.EXPAND | wx.ALL, 5)
-		sizer.Add(self.splitter_1, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
-		main_panel.SetSizer(sizer)
-		self.Centre()
+		sizer.Add(self.dataset_tags_toolbar, 0, wx.EXPAND)
+		sizer.Add(self.dataset_tags_list, 1, wx.EXPAND)
+		self.dataset_tags_panel.SetSizer(sizer)
 	
-	def _init_menubar(self):
-		"""メニューバーの初期化"""
-		menubar = wx.MenuBar()
-		
-		# Fileメニュー
-		file_menu = wx.Menu()
-		open_folder_item = file_menu.Append(wx.ID_OPEN, 'Open Folder...\tCtrl+O', 'Open a folder containing images')
-		file_menu.AppendSeparator()
-		exit_item = file_menu.Append(wx.ID_EXIT, 'Exit', 'Exit the application')
-		
-		menubar.Append(file_menu, '&File')
-		self.SetMenuBar(menubar)
-		
-		# イベントバインド
-		self.Bind(wx.EVT_MENU, self.on_open_folder, open_folder_item)
-		self.Bind(wx.EVT_MENU, self.on_exit, exit_item)
+	# === イベントハンドラ ===
 	
-	def on_splitter_dclick(self, event):
-		"""スプリッターのダブルクリックによる折りたたみを防止"""
+	def on_splitter_dclick(self, event: wx.SplitterEvent):
+		"""スプリッターのダブルクリックによる折りたたみを防止します。"""
 		event.Veto()
 	
-	def on_exit(self, event):
+	def on_exit(self, event: wx.CommandEvent):
+		"""アプリケーションを終了します。"""
 		self.Close()
 	
-	def on_open_folder(self, event):
-		"""フォルダ選択ダイアログを表示し、データセットを読み込む"""
+	def on_open_folder(self, event: wx.CommandEvent):
+		"""フォルダ選択ダイアログを表示し、データセットを読み込みます。"""
 		with wx.DirDialog(self, "Choose a directory", style=wx.DD_DEFAULT_STYLE) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				path = dlg.GetPath()
 				self.load_dataset(path)
 	
-	def on_thumbnail_select(self, event):
+	def on_thumbnail_select(self, event: wx.CommandEvent):
 		"""
 		サムネイルリストの選択が変更されたときの処理。
-		常に単一の選択を維持する。
+		常に単一の選択を維持します。
 		"""
 		selection = self.thumbnail_list.GetSelection()
 		
@@ -204,21 +221,27 @@ class ImageTaggingHelperFrame(wx.Frame):
 			return
 		
 		self.last_thumbnail_selection = selection
+		self._update_views_for_selection(selection)
+	
+	def on_grid_select_cell(self, event: wx.grid.GridEvent):
+		"""
+		グリッドのセルが選択されたときの処理。
+		複数選択を無効にし、常に単一の行のみが選択されるようにします。
+		"""
+		row = event.GetRow()
+		self.image_tags_grid.ClearSelection()
+		self.image_tags_grid.SelectRow(row)
+		event.Skip()
+	
+	# === UI更新メソッド ===
+	
+	def _update_views_for_selection(self, selection: int):
+		"""指定された選択に基づいて関連するビューを更新します。"""
 		self._update_image_path_view(selection)
 		self._update_image_tags_view(selection)
 	
-	def on_grid_select_cell(self, event):
-		"""
-		グリッドのセルが選択されたときの処理。
-		複数選択を無効にし、常に単一の行のみが選択されるようにする。
-		"""
-		row = event.GetRow()
-		self.image_tags_grid.ClearSelection()  # 現在の選択をすべてクリア
-		self.image_tags_grid.SelectRow(row)  # クリックされた行のみを選択
-		event.Skip()  # 他のイベントハンドラにも処理を渡す
-	
 	def _update_image_path_view(self, selection: int):
-		"""選択された画像のパスを表示する"""
+		"""選択された画像のパスを表示します。"""
 		if not self.dataset or selection == wx.NOT_FOUND:
 			self.path_text.SetValue('')
 			return
@@ -227,7 +250,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.path_text.SetValue(item.path)
 	
 	def _update_image_tags_view(self, selection: int):
-		"""選択された画像のタグをリストに表示する"""
+		"""選択された画像のタグをグリッドに表示します。"""
 		if self.image_tags_grid.GetNumberRows() > 0:
 			self.image_tags_grid.DeleteRows(0, self.image_tags_grid.GetNumberRows())
 		
@@ -237,29 +260,33 @@ class ImageTaggingHelperFrame(wx.Frame):
 		item = self.dataset[selection]
 		caption = item.caption
 		
+		if not caption.tags:
+			return
+		
 		self.image_tags_grid.AppendRows(len(caption.tags))
 		
 		for i, tag in enumerate(caption.tags):
 			self.image_tags_grid.SetCellValue(i, 0, tag.text)
-			# 小数点以下2桁まで表示、Noneの場合は空文字
 			weight_str = f'{tag.weight:.2f}' if tag.weight is not None else ''
 			self.image_tags_grid.SetCellValue(i, 1, weight_str)
 	
+	# === データ処理メソッド ===
+	
 	def load_dataset(self, folder_path: str):
-		"""指定されたフォルダからデータセットを構築する"""
-		# 画像ファイルの検索
+		"""
+		指定されたフォルダからデータセットを構築します。
+		
+		Args:
+			folder_path: 画像とキャプションファイルが含まれるフォルダのパス。
+		"""
 		extensions = ['*.jpg', '*.jpeg', '*.png', '*.webp']
 		image_files = []
 		for ext in extensions:
-			# Windowsではglobはデフォルトで大文字小文字を区別しない
 			image_files.extend(glob.glob(os.path.join(folder_path, ext)))
 		
-		# 重複除去とソート
 		image_files = sorted(list(set(image_files)))
 		
-		dataset_items = []
-		for image_path in image_files:
-			dataset_items.append(self.create_item(image_path))
+		dataset_items = [self.create_item(path) for path in image_files]
 		
 		self.dataset = Dataset(items=dataset_items)
 		self.thumbnail_list.set_dataset(self.dataset)
@@ -268,37 +295,44 @@ class ImageTaggingHelperFrame(wx.Frame):
 			self.thumbnail_list.SetSelection(0)
 			# SetSelectionはイベントを発生させないため、手動で更新処理を呼び出す
 			self.last_thumbnail_selection = 0
-			self._update_image_path_view(0)
-			self._update_image_tags_view(0)
+			self._update_views_for_selection(0)
 	
-	def create_item(self, image_path):
+	def create_item(self, image_path: str) -> DatasetItem:
+		"""
+		画像パスからキャプションを読み込み、DatasetItemを作成します。
+		
+		Args:
+			image_path: 画像ファイルのパス。
+		
+		Returns:
+			作成されたDatasetItemインスタンス。
+		"""
 		caption_path = os.path.splitext(image_path)[0] + self.caption_exts
+		caption = Caption()
 		if os.path.exists(caption_path):
 			with open(caption_path, 'r', encoding='utf-8') as f:
 				caption_text = f.read()
 				caption = Caption.parse(caption_text, config=self.caption_format_config)
-		else:
-			caption = Caption()  # 空のキャプションで初期化
 		
 		return DatasetItem(path=image_path, caption=caption)
 	
 	@staticmethod
 	def launch():
+		"""アプリケーションを起動します。"""
 		app = wx.App()
 		frame = ImageTaggingHelperFrame(None, "Image Tagging Helper")
 		frame.Show()
 		app.MainLoop()
 
 def main():
+	"""アプリケーションのエントリポイント。"""
 	# 高DPI対応を有効にする
 	try:
 		# Windows 8.1以降: Per-Monitor DPI Aware V2
-		# これにより、モニターごとのDPI設定に対応できる
 		ctypes.windll.shcore.SetProcessDpiAwareness(2)
 	except (AttributeError, OSError):
 		try:
 			# Windows Vista以降: System DPI Aware
-			# アプリケーション全体で単一のDPI設定を使用する
 			ctypes.windll.user32.SetProcessDPIAware()
 		except (AttributeError, OSError):
 			# DPI設定に対応していないOSの場合は何もしない
