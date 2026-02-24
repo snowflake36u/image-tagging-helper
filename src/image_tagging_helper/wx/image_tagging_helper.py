@@ -257,9 +257,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		入れ子になったスプリッターウィンドウでメインレイアウトを作成します。
 		"""
 		# スプリッターウィンドウの作成
-		self.splitter_1 = wx.SplitterWindow(parent, style=wx.SP_LIVE_UPDATE)
-		self.splitter_2 = wx.SplitterWindow(self.splitter_1, style=wx.SP_LIVE_UPDATE)
-		self.splitter_3 = wx.SplitterWindow(self.splitter_2, style=wx.SP_LIVE_UPDATE)
+		self.splitter_1 = wx.SplitterWindow(parent)
+		self.splitter_2 = wx.SplitterWindow(self.splitter_1)
+		self.splitter_3 = wx.SplitterWindow(self.splitter_2)
 		
 		splitters = [self.splitter_1, self.splitter_2, self.splitter_3]
 		for splitter in splitters:
