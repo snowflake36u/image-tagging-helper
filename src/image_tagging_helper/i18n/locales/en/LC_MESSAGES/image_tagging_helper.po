@@ -1,3 +1,12 @@
+msgid "title:preferences"
+msgstr "Preferences"
+
+msgid "label:language_settings"
+msgstr "Language Settings"
+
+msgid "label:language"
+msgstr "Language"
+
 msgid "ui_group:file"
 msgstr "&File"
 
@@ -189,6 +198,12 @@ msgstr "Count"
 
 msgid "title:choose_a_directory"
 msgstr "Choose a Directory"
+
+msgid "message:restart_to_apply_language"
+msgstr "Restart the application to apply the language change."
+
+msgid "title:restart_required"
+msgstr "Restart Required"
 
 msgid "title:app_main_window"
 msgstr "Image Tagging Helper"

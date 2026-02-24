@@ -5,13 +5,77 @@ import wx.grid
 import ctypes
 
 from src.image_tagging_helper.core.caption import Caption, CaptionFormatConfig
+from src.image_tagging_helper.core.config import Config
 from src.image_tagging_helper.core.dataset import Dataset, DatasetItem
 from src.image_tagging_helper.wx.image_list import ImageVListBox
 from src.image_tagging_helper.i18n import setup_translation, __
 
 # アプリケーションのドメイン名を設定
 APP_NAME = "image_tagging_helper"
-setup_translation(APP_NAME)
+
+class PreferencesDialog(wx.Dialog):
+	"""設定画面のダイアログ。"""
+	
+	def __init__(self, parent, config: Config):
+		super().__init__(parent, title=__("title:preferences"))
+		self.config = config
+		self.original_lang = self.config.get('language', 'en')
+		self._init_ui()
+	
+	def _init_ui(self):
+		dlg_sizer = wx.BoxSizer(wx.VERTICAL)
+		
+		panel = wx.Panel(self)
+		panel_sizer = wx.BoxSizer(wx.VERTICAL)
+		
+		# 言語設定
+		sb = wx.StaticBox(panel, label=__("label:language_settings"))
+		sbs = wx.StaticBoxSizer(sb, wx.VERTICAL)
+		
+		hbox = wx.BoxSizer(wx.HORIZONTAL)
+		st = wx.StaticText(panel, label=__("label:language"))
+		
+		self.languages = [("en", "English"), ("ja", "Japanese")]
+		choices = [lang[1] for lang in self.languages]
+		self.lang_choice = wx.Choice(panel, choices=choices)
+		
+		# 現在の設定を反映させる
+		current_lang_code = self.config.get('language', 'en')
+		lang_codes = [lang[0] for lang in self.languages]
+		try:
+			idx = lang_codes.index(current_lang_code)
+			self.lang_choice.SetSelection(idx)
+		except ValueError:
+			self.lang_choice.SetSelection(wx.NOT_FOUND)
+		
+		hbox.Add(st, flag=wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, border=8)
+		hbox.Add(self.lang_choice, proportion=1)
+		
+		sbs.Add(hbox, flag=wx.EXPAND | wx.ALL, border=5)
+		panel_sizer.Add(sbs, flag=wx.EXPAND | wx.ALL, border=10)
+		
+		panel.SetSizer(panel_sizer)
+		
+		dlg_sizer.Add(panel, 1, wx.EXPAND)
+		
+		# ボタン
+		btns = self.CreateButtonSizer(wx.OK | wx.CANCEL)
+		dlg_sizer.Add(btns, flag=wx.EXPAND | wx.ALL, border=10)
+		
+		self.SetSizer(dlg_sizer)
+		self.Fit()
+		self.CenterOnParent()
+	
+	def save(self) -> bool:
+		"""設定を保存します。言語が変更された場合はTrueを返します。"""
+		idx = self.lang_choice.GetSelection()
+		if idx != wx.NOT_FOUND:
+			lang_code = self.languages[idx][0]
+			self.config.set('language', lang_code)
+		
+		self.config.save()
+		
+		return self.original_lang != self.config.get('language', 'en')
 
 class ImageTaggingHelperFrame(wx.Frame):
 	"""
@@ -19,17 +83,19 @@ class ImageTaggingHelperFrame(wx.Frame):
 	UIコンポーネントの配置とイベント処理、データセットの管理を行います。
 	"""
 	
-	def __init__(self, parent: wx.Window | None, title: str):
+	def __init__(self, parent: wx.Window | None, title: str, config: Config):
 		"""
 		フレームを初期化します。
 		
 		Args:
 			parent: 親ウィンドウ。
 			title: ウィンドウのタイトル。
+			config: アプリケーション設定。
 		"""
 		super().__init__(parent, title=title, size=(1200, 800))
 		
 		# === データメンバーの初期化 ===
+		self.config = config
 		self.caption_parse_config = CaptionFormatConfig(delimiter=', ')
 		self.caption_format_config = CaptionFormatConfig()
 		self.caption_exts = '.caption'
@@ -142,6 +208,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menubar.Append(menu, __("ui_group:configure"))
 		
 		preferences_item = self._append_menu_item(menu, wx.ID_PREFERENCES, __("action:preferences"), __("tooltip:preferences"))
+		self.Bind(wx.EVT_MENU, self.on_preferences, preferences_item)
 	
 	@staticmethod
 	def _append_menu_item(menu: wx.Menu, item_id: int, label: str, help_str: str, accel: str = None) -> wx.MenuItem:
@@ -320,6 +387,18 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.image_tags_grid.SelectRow(row)
 		event.Skip()
 	
+	def on_preferences(self, event: wx.CommandEvent):
+		"""設定ダイアログを表示します。"""
+		with PreferencesDialog(self, self.config) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				lang_changed = dlg.save()
+				if lang_changed:
+					wx.MessageBox(
+						__("message:restart_to_apply_language"),
+						__("title:restart_required"),
+						wx.OK | wx.ICON_INFORMATION
+					)
+	
 	# === UI更新メソッド ===
 	
 	def _update_views_for_selection(self, selection: int):
@@ -404,15 +483,19 @@ class ImageTaggingHelperFrame(wx.Frame):
 		return DatasetItem(path=image_path, caption=caption)
 	
 	@staticmethod
-	def launch():
+	def launch(config: Config):
 		"""アプリケーションを起動します。"""
 		app = wx.App()
-		frame = ImageTaggingHelperFrame(None, __("title:app_main_window"))
+		frame = ImageTaggingHelperFrame(None, __("title:app_main_window"), config=config)
 		frame.Show()
 		app.MainLoop()
 
 def main():
 	"""アプリケーションのエントリポイント。"""
+	config = Config(APP_NAME)
+	lang = config.get('language', 'en')
+	setup_translation(APP_NAME, lang=lang)
+	
 	# 高DPI対応を有効にする
 	try:
 		# Windows 8.1以降: Per-Monitor DPI Aware V2
@@ -424,7 +507,7 @@ def main():
 		except (AttributeError, OSError):
 			# DPI設定に対応していないOSの場合は何もしない
 			pass
-	ImageTaggingHelperFrame.launch()
+	ImageTaggingHelperFrame.launch(config)
 
 if __name__ == "__main__":
 	main()

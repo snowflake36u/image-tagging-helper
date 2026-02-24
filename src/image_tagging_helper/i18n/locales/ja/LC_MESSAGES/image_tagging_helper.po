@@ -1,3 +1,12 @@
+msgid "title:preferences"
+msgstr "環境設定"
+
+msgid "label:language_settings"
+msgstr "言語設定"
+
+msgid "label:language"
+msgstr "言語"
+
 msgid "ui_group:file"
 msgstr "ファイル(&F)"
 
@@ -189,6 +198,12 @@ msgstr "該当数"
 
 msgid "title:choose_a_directory"
 msgstr "フォルダを選択"
+
+msgid "message:restart_to_apply_language"
+msgstr "言語の変更にはアプリの再起動が必要です。"
+
+msgid "title:restart_required"
+msgstr "再起動が必要"
 
 msgid "title:app_main_window"
 msgstr "Image Tagging Helper"
