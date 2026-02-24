@@ -203,8 +203,13 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:view"))
 		
-		toggle_tag_palette_item = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_tag_palette"), __("tooltip:toggle_tag_palette"))
-		toggle_dataset_tags_item = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_dataset_tags"), __("tooltip:toggle_dataset_tags"))
+		self.toggle_tag_palette_item = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_tag_palette"), __("tooltip:toggle_tag_palette"), kind=wx.ITEM_CHECK)
+		self.toggle_tag_palette_item.Check(True)
+		self.Bind(wx.EVT_MENU, self.on_toggle_tag_palette, self.toggle_tag_palette_item)
+		
+		self.toggle_dataset_tags_item = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_dataset_tags"), __("tooltip:toggle_dataset_tags"), kind=wx.ITEM_CHECK)
+		self.toggle_dataset_tags_item.Check(True)
+		self.Bind(wx.EVT_MENU, self.on_toggle_dataset_tags, self.toggle_dataset_tags_item)
 		
 		menu.AppendSeparator()
 		
@@ -218,13 +223,13 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.on_preferences, preferences_item)
 	
 	@staticmethod
-	def _append_menu_item(menu: wx.Menu, item_id: int, label: str, help_str: str, accel: str = None) -> wx.MenuItem:
+	def _append_menu_item(menu: wx.Menu, item_id: int, label: str, help_str: str, accel: str = None, kind: wx.ItemKind = wx.ITEM_NORMAL) -> wx.MenuItem:
 		"""
 		メニュー項目を追加するためのヘルパーメソッド。
 		ラベルとアクセラレータを結合してメニュー項目を作成します。
 		"""
 		text = f"{label}\t{accel}" if accel else label
-		return menu.Append(item_id, text, help_str)
+		return menu.Append(item_id, text, help_str, kind)
 	
 	def _create_path_panel(self, parent: wx.Window) -> wx.Window:
 		"""
@@ -415,8 +420,55 @@ class ImageTaggingHelperFrame(wx.Frame):
 						wx.OK | wx.ICON_INFORMATION
 					)
 	
+	def on_toggle_tag_palette(self, event: wx.CommandEvent):
+		"""タグパレットの表示/非表示を切り替えます。"""
+		self._update_layout_visibility()
+	
+	def on_toggle_dataset_tags(self, event: wx.CommandEvent):
+		"""データセットタグの表示/非表示を切り替えます。"""
+		self._update_layout_visibility()
+	
 	# === UI更新メソッド ===
 	
+	def _update_layout_visibility(self):
+		"""メニューのチェック状態に基づいてパネルの表示/非表示を更新します。"""
+		show_tag_palette = self.toggle_tag_palette_item.IsChecked()
+		show_dataset_tags = self.toggle_dataset_tags_item.IsChecked()
+		
+		# splitter_3 の状態更新
+		if show_tag_palette and show_dataset_tags:
+			if not self.splitter_3.IsSplit():
+				self.splitter_3.SplitVertically(self.tag_palette_panel, self.dataset_tags_panel)
+				# 位置を復元またはデフォルト値に設定
+				self.splitter_3.SetSashPosition(self.splitter_3.GetSize().GetWidth() // 2)
+		elif show_tag_palette:
+			if self.splitter_3.IsSplit():
+				self.splitter_3.Unsplit(self.dataset_tags_panel)
+			elif self.splitter_3.GetWindow1() != self.tag_palette_panel:
+				# 現在 dataset_tags_panel が表示されている場合、入れ替える
+				# Unsplit 状態では GetWindow1 が表示されているウィンドウ
+				# ただし、Unsplit(to_remove) を呼ぶと、残った方が GetWindow1 になるはず
+				# ここでは一度初期化しなおすのが確実
+				self.splitter_3.Initialize(self.tag_palette_panel)
+		elif show_dataset_tags:
+			if self.splitter_3.IsSplit():
+				self.splitter_3.Unsplit(self.tag_palette_panel)
+			elif self.splitter_3.GetWindow1() != self.dataset_tags_panel:
+				self.splitter_3.Initialize(self.dataset_tags_panel)
+		
+		# splitter_2 の状態更新 (splitter_3 の表示/非表示)
+		show_splitter_3 = show_tag_palette or show_dataset_tags
+		
+		if show_splitter_3:
+			if not self.splitter_2.IsSplit():
+				self.splitter_2.SplitVertically(self.image_tags_panel, self.splitter_3)
+				self.splitter_2.SetSashPosition(self.splitter_2.GetSize().GetWidth() * 2 // 3)
+		else:
+			if self.splitter_2.IsSplit():
+				self.splitter_2.Unsplit(self.splitter_3)
+		
+		self.Layout()
+
 	def save_ui_settings(self):
 		"""UIの状態（スプリッターの位置など）を保存します。"""
 		self.config.set('ui.splitter_1_pos', self.splitter_1.GetSashPosition())
