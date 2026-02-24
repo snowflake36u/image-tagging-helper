@@ -14,6 +14,8 @@ from src.image_tagging_helper.i18n import setup_translation, __
 APP_NAME = "Image Tagging Helper"
 APP_ID = "image_tagging_helper"
 
+SASH_MIN_WIDTH = 120
+
 class PreferencesDialog(wx.Dialog):
 	"""設定画面のダイアログ。"""
 	
@@ -261,8 +263,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		splitters = [self.splitter_1, self.splitter_2, self.splitter_3]
 		for splitter in splitters:
-			splitter.SetMinimumPaneSize(100)
 			splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
+			splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGING, self.on_splitter_sash_pos_changing)
+			splitter.Bind(wx.EVT_SIZE, self.on_splitter_resize)
 		
 		# 各ペインの作成
 		self._create_thumbnail_panel(self.splitter_1)
@@ -287,6 +290,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def _create_thumbnail_panel(self, parent: wx.Window):
 		"""画像のサムネイルリストパネルを作成します。"""
 		self.thumbnail_panel = wx.Panel(parent)
+		self.thumbnail_panel.SetMinSize((SASH_MIN_WIDTH, -1))
 		self.thumbnail_toolbar = wx.ToolBar(self.thumbnail_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
 		self.thumbnail_toolbar.AddControl(wx.StaticText(self.thumbnail_toolbar, label=__("label:image_list")))
 		self.thumbnail_toolbar.AddSeparator()
@@ -303,6 +307,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def _create_image_tags_panel(self, parent: wx.Window):
 		"""画像のタグ一覧パネルを作成します。"""
 		self.image_tags_panel = wx.Panel(parent)
+		self.image_tags_panel.SetMinSize((SASH_MIN_WIDTH, -1))
 		self.image_tags_toolbar = wx.ToolBar(self.image_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
 		self.image_tags_toolbar.AddControl(wx.StaticText(self.image_tags_toolbar, label=__("label:image_tags")))
 		self.image_tags_toolbar.AddSeparator()
@@ -326,6 +331,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def _create_tag_palette_panel(self, parent: wx.Window):
 		"""タグパレットパネルを作成します。"""
 		self.tag_palette_panel = wx.Panel(parent)
+		self.tag_palette_panel.SetMinSize((SASH_MIN_WIDTH, -1))
 		self.tag_palette_toolbar = wx.ToolBar(self.tag_palette_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
 		self.tag_palette_toolbar.AddControl(wx.StaticText(self.tag_palette_toolbar, label=__("label:tag_palette")))
 		self.tag_palette_toolbar.AddSeparator()
@@ -342,6 +348,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def _create_dataset_tags_panel(self, parent: wx.Window):
 		"""データセット全体のタグ一覧パネルを作成します。"""
 		self.dataset_tags_panel = wx.Panel(parent)
+		self.dataset_tags_panel.SetMinSize((SASH_MIN_WIDTH, -1))
 		self.dataset_tags_toolbar = wx.ToolBar(self.dataset_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
 		self.dataset_tags_toolbar.AddControl(wx.StaticText(self.dataset_tags_toolbar, label=__("label:dataset_tags")))
 		self.dataset_tags_toolbar.AddSeparator()
@@ -366,6 +373,83 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def on_splitter_dclick(self, event: wx.SplitterEvent):
 		"""スプリッターのダブルクリックによる折りたたみを防止します。"""
 		event.Veto()
+	
+	def on_splitter_sash_pos_changing(self, event: wx.SplitterEvent):
+		"""
+		スプリッターのサッシ位置が変更されるときの処理。
+		各パネルの最小サイズを下回らないように制限します。
+		"""
+		new_pos = event.GetSashPosition()
+		splitter = event.GetEventObject()
+		
+		adjusted_pos = self._adjust_splitter_sash(splitter, new_pos)
+		if adjusted_pos != new_pos:
+			event.SetSashPosition(adjusted_pos)
+	
+	def on_splitter_resize(self, event: wx.SizeEvent):
+		"""
+		スプリッターがリサイズされたときの処理。
+		サッシ位置を調整して最小サイズを維持します。
+		"""
+		splitter = event.GetEventObject()
+		if isinstance(splitter, wx.SplitterWindow) and splitter.IsSplit():
+			current_pos = splitter.GetSashPosition()
+			adjusted_pos = self._adjust_splitter_sash(splitter, current_pos)
+			if adjusted_pos != current_pos:
+				splitter.SetSashPosition(adjusted_pos)
+		event.Skip()
+	
+	def _adjust_splitter_sash(self, splitter: wx.SplitterWindow, new_pos: int) -> int:
+		"""
+		スプリッターのサッシ位置を調整して、各パネルの最小サイズを維持します。
+		
+		Args:
+			splitter: 対象のスプリッターウィンドウ。
+			new_pos: 提案された新しいサッシ位置。
+		
+		Returns:
+			調整後のサッシ位置。
+		"""
+		window1 = splitter.GetWindow1()
+		window2 = splitter.GetWindow2()
+		
+		if not window1 or not window2:
+			return new_pos
+		
+		# 垂直分割の場合、幅をチェック
+		if splitter.GetSplitMode() == wx.SPLIT_VERTICAL:
+			min_width1 = self._get_min_width(window1)
+			min_width2 = self._get_min_width(window2)
+			
+			total_width = splitter.GetClientSize().GetWidth()
+			
+			# 新しいサッシ位置が最小幅を侵害しないかチェック
+			if new_pos < min_width1:
+				return min_width1
+			elif new_pos > total_width - min_width2:
+				return total_width - min_width2
+		
+		return new_pos
+	
+	@staticmethod
+	def _get_min_width(window: wx.Window) -> int:
+		"""ウィンドウの最小幅を再帰的に計算します。非表示のウィンドウは0を返します。"""
+		if not window or not window.IsShown():
+			return 0
+		
+		if isinstance(window, wx.SplitterWindow):
+			# SplitterWindowの場合、2つの子の最小幅とサッシの幅を合計する
+			w1 = window.GetWindow1()
+			w2 = window.GetWindow2()
+			min_w = ImageTaggingHelperFrame._get_min_width(w1) + ImageTaggingHelperFrame._get_min_width(w2)
+			
+			if window.IsSplit():
+				min_w += window.GetSashSize()
+			return min_w
+		else:
+			# 通常のパネルの場合
+			min_size = window.GetMinSize()
+			return min_size.GetWidth() if min_size.GetWidth() != -1 else 0
 	
 	def on_exit(self, event: wx.CommandEvent):
 		"""アプリケーションを終了します。"""
