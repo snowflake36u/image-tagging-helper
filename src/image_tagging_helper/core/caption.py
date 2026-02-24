@@ -19,23 +19,29 @@ class CaptionFormatConfig:
 			**{ nega_weight_ratio ** i: -i for i in range(ommittable_levels) },
 		}
 
+def escape_for_tag(text):
+	return text.replace('(', r'\(').replace(')', r'\)') \
+		.replace('[', r'\[').replace(']', r'\]')
+
 @dataclass
 class TagHolder:
 	text: str
 	weight: float
 	
 	def format(self, config: CaptionFormatConfig):
+		text = escape_for_tag(self.text)
+		
 		if self.weight == 1:
-			return self.text
+			return text
 		
 		if self.weight in config.omittable_weights:
 			level = config.omittable_weights[self.weight]
 			if level < 0:
-				return f"{'[' * -level}{self.text}{']' * -level}"
+				return f"{'[' * -level}{text}{']' * -level}"
 			else:
-				return f"({self.text}:{self.weight})"
+				return f"({text}:{self.weight})"
 		
-		return f"({self.text}:{self.weight})"
+		return f"({text}:{self.weight})"
 	
 	def clone(self) -> 'TagHolder':
 		return TagHolder(self.text, self.weight)
@@ -68,24 +74,38 @@ class Caption:
 		# トークナイズ
 		tokens = []
 		buffer = ""
-		for char in text:
-			if char in ('(', ')', '[', ']') or char == config.delimiter:
+		iterator = iter(text)
+		
+		while True:
+			try:
+				char = next(iterator)
+			except StopIteration:
+				break
+			
+			if char == '\\':
+				try:
+					next_char = next(iterator)
+					buffer += next_char
+				except StopIteration:
+					buffer += char
+			elif char in ('(', ')', '[', ']') or char == config.delimiter:
 				if buffer.strip():
 					tokens.append(buffer.strip())
 				tokens.append(char)
 				buffer = ""
 			else:
 				buffer += char
+		
 		if buffer.strip():
 			tokens.append(buffer.strip())
 		
 		# パース
-		iterator = iter(tokens)
+		token_iterator = iter(tokens)
 		
 		def recursive_parse(current_weight):
 			while True:
 				try:
-					token = next(iterator)
+					token = next(token_iterator)
 				except StopIteration:
 					break
 				
