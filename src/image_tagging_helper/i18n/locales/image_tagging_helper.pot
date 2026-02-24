@@ -1,0 +1,195 @@
+msgid "ui_group:file"
+msgstr ""
+
+msgid "action:open_folder"
+msgstr ""
+
+msgid "tooltip:open_folder"
+msgstr ""
+
+msgid "action:reload"
+msgstr ""
+
+msgid "tooltip:reload"
+msgstr ""
+
+msgid "action:save"
+msgstr ""
+
+msgid "tooltip:save"
+msgstr ""
+
+msgid "action:exit"
+msgstr ""
+
+msgid "tooltip:exit"
+msgstr ""
+
+msgid "ui_group:edit"
+msgstr ""
+
+msgid "action:undo"
+msgstr ""
+
+msgid "tooltip:undo"
+msgstr ""
+
+msgid "action:redo"
+msgstr ""
+
+msgid "tooltip:redo"
+msgstr ""
+
+msgid "action:cut"
+msgstr ""
+
+msgid "tooltip:cut"
+msgstr ""
+
+msgid "action:copy"
+msgstr ""
+
+msgid "tooltip:copy"
+msgstr ""
+
+msgid "action:paste"
+msgstr ""
+
+msgid "tooltip:paste"
+msgstr ""
+
+msgid "action:add_tag"
+msgstr ""
+
+msgid "tooltip:add_tag"
+msgstr ""
+
+msgid "action:delete_tag"
+msgstr ""
+
+msgid "tooltip:delete_tag"
+msgstr ""
+
+msgid "action:replace_tag"
+msgstr ""
+
+msgid "tooltip:replace_tag"
+msgstr ""
+
+msgid "action:move_tag_up"
+msgstr ""
+
+msgid "tooltip:move_tag_up"
+msgstr ""
+
+msgid "action:move_tag_down"
+msgstr ""
+
+msgid "tooltip:move_tag_down"
+msgstr ""
+
+msgid "action:sort_tag"
+msgstr ""
+
+msgid "tooltip:sort_tag"
+msgstr ""
+
+msgid "ui_group:dataset"
+msgstr ""
+
+msgid "action:open_in_folder"
+msgstr ""
+
+msgid "tooltip:open_in_folder"
+msgstr ""
+
+msgid "action:view_image"
+msgstr ""
+
+msgid "tooltip:view_image"
+msgstr ""
+
+msgid "action:next_image"
+msgstr ""
+
+msgid "tooltip:next_image"
+msgstr ""
+
+msgid "action:prev_image"
+msgstr ""
+
+msgid "tooltip:prev_image"
+msgstr ""
+
+msgid "action:filter_images"
+msgstr ""
+
+msgid "tooltip:filter_images"
+msgstr ""
+
+msgid "action:clear_filter"
+msgstr ""
+
+msgid "tooltip:clear_filter"
+msgstr ""
+
+msgid "ui_group:view"
+msgstr ""
+
+msgid "action:toggle_tag_palette"
+msgstr ""
+
+msgid "tooltip:toggle_tag_palette"
+msgstr ""
+
+msgid "action:toggle_dataset_tags"
+msgstr ""
+
+msgid "tooltip:toggle_dataset_tags"
+msgstr ""
+
+msgid "action:fullscreen"
+msgstr ""
+
+msgid "tooltip:fullscreen"
+msgstr ""
+
+msgid "ui_group:configure"
+msgstr ""
+
+msgid "action:preferences"
+msgstr ""
+
+msgid "tooltip:preferences"
+msgstr ""
+
+msgid "label:file_path"
+msgstr ""
+
+msgid "label:image_list"
+msgstr ""
+
+msgid "label:image_tags"
+msgstr ""
+
+msgid "label:tag"
+msgstr ""
+
+msgid "label:weight"
+msgstr ""
+
+msgid "label:tag_palette"
+msgstr ""
+
+msgid "label:dataset_tags"
+msgstr ""
+
+msgid "label:count"
+msgstr ""
+
+msgid "title:choose_a_directory"
+msgstr ""
+
+msgid "title:app_main_window"
+msgstr ""
+

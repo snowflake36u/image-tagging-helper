@@ -7,6 +7,11 @@ import ctypes
 from src.image_tagging_helper.core.caption import Caption, CaptionFormatConfig
 from src.image_tagging_helper.core.dataset import Dataset, DatasetItem
 from src.image_tagging_helper.wx.image_list import ImageVListBox
+from src.image_tagging_helper.i18n import setup_translation, __
+
+# アプリケーションのドメイン名を設定
+APP_NAME = "image_tagging_helper"
+setup_translation(APP_NAME)
 
 class ImageTaggingHelperFrame(wx.Frame):
 	"""
@@ -53,26 +58,93 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""メニューバーを初期化します。"""
 		menubar = wx.MenuBar()
 		
-		file_menu = wx.Menu()
+		self._init_file_menu(menubar)
+		self._init_edit_menu(menubar)
+		self._init_dataset_menu(menubar)
+		self._init_view_menu(menubar)
+		self._init_configure_menu(menubar)
 		
-		open_folder_item = self._append_menu_item(
-			file_menu, wx.ID_OPEN, 'Open Folder...', 'Ctrl+O', 'Open a folder containing images'
-		)
-		
-		file_menu.AppendSeparator()
-		
-		exit_item = self._append_menu_item(
-			file_menu, wx.ID_EXIT, 'Exit', '', 'Exit the application'
-		)
-		
-		menubar.Append(file_menu, '&File')
 		self.SetMenuBar(menubar)
+	
+	def _init_file_menu(self, menubar):
+		menu = wx.Menu()
+		menubar.Append(menu, __("ui_group:file"))
 		
+		open_folder_item = self._append_menu_item(menu, wx.ID_OPEN, __("action:open_folder"), __("tooltip:open_folder"), 'Ctrl+O')
 		self.Bind(wx.EVT_MENU, self.on_open_folder, open_folder_item)
+		
+		reload_item = self._append_menu_item(menu, wx.ID_REFRESH, __("action:reload"), __("tooltip:reload"))
+		
+		menu.AppendSeparator()
+		
+		save_item = self._append_menu_item(menu, wx.ID_SAVE, __("action:save"), __("tooltip:save"), 'Ctrl+S')
+		
+		menu.AppendSeparator()
+		
+		exit_item = self._append_menu_item(menu, wx.ID_EXIT, __("action:exit"), __("tooltip:exit"))
 		self.Bind(wx.EVT_MENU, self.on_exit, exit_item)
 	
+	def _init_edit_menu(self, menubar):
+		menu = wx.Menu()
+		menubar.Append(menu, __("ui_group:edit"))
+		
+		undo_item = self._append_menu_item(menu, wx.ID_UNDO, __("action:undo"), __("tooltip:undo"), 'Ctrl+Z')
+		redo_item = self._append_menu_item(menu, wx.ID_REDO, __("action:redo"), __("tooltip:redo"), 'Ctrl+Y')
+		
+		menu.AppendSeparator()
+		
+		cut_item = self._append_menu_item(menu, wx.ID_CUT, __("action:cut"), __("tooltip:cut"), 'Ctrl+X')
+		copy_item = self._append_menu_item(menu, wx.ID_COPY, __("action:copy"), __("tooltip:copy"), 'Ctrl+C')
+		paste_item = self._append_menu_item(menu, wx.ID_PASTE, __("action:paste"), __("tooltip:paste"), 'Ctrl+V')
+		
+		menu.AppendSeparator()
+		
+		add_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:add_tag"), __("tooltip:add_tag"), 'Ctrl+E')
+		delete_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:delete_tag"), __("tooltip:delete_tag"), 'Ctrl+D')
+		replace_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:replace_tag"), __("tooltip:replace_tag"), 'Ctrl+H')
+		
+		menu.AppendSeparator()
+		
+		move_tag_up_item = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_up"), __("tooltip:move_tag_up"), 'Shift+W')
+		move_tag_down_item = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_down"), __("tooltip:move_tag_down"), 'Shift+S')
+		sort_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:sort_tag"), __("tooltip:sort_tag"), 'Ctrl+L')
+	
+	def _init_dataset_menu(self, menubar):
+		menu = wx.Menu()
+		menubar.Append(menu, __("ui_group:dataset"))
+		
+		open_in_folder_item = self._append_menu_item(menu, wx.ID_ANY, __("action:open_in_folder"), __("tooltip:open_in_folder"))
+		view_image_item = self._append_menu_item(menu, wx.ID_ANY, __("action:view_image"), __("tooltip:view_image"))
+		
+		menu.AppendSeparator()
+		
+		next_image_item = self._append_menu_item(menu, wx.ID_FORWARD, __("action:next_image"), __("tooltip:next_image"), 'Shift+C')
+		prev_image_item = self._append_menu_item(menu, wx.ID_BACKWARD, __("action:prev_image"), __("tooltip:prev_image"), 'Shift+X')
+		
+		menu.AppendSeparator()
+		
+		filter_images_item = self._append_menu_item(menu, wx.ID_FIND, __("action:filter_images"), __("tooltip:filter_images"), 'F3')
+		clear_filter_item = self._append_menu_item(menu, wx.ID_ANY, __("action:clear_filter"), __("tooltip:clear_filter"), 'Shift+F3')
+	
+	def _init_view_menu(self, menubar):
+		menu = wx.Menu()
+		menubar.Append(menu, __("ui_group:view"))
+		
+		toggle_tag_palette_item = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_tag_palette"), __("tooltip:toggle_tag_palette"))
+		toggle_dataset_tags_item = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_dataset_tags"), __("tooltip:toggle_dataset_tags"))
+		
+		menu.AppendSeparator()
+		
+		fullscreen_item = self._append_menu_item(menu, wx.ID_ANY, __("action:fullscreen"), __("tooltip:fullscreen"), 'F11')
+	
+	def _init_configure_menu(self, menubar):
+		menu = wx.Menu()
+		menubar.Append(menu, __("ui_group:configure"))
+		
+		preferences_item = self._append_menu_item(menu, wx.ID_PREFERENCES, __("action:preferences"), __("tooltip:preferences"))
+	
 	@staticmethod
-	def _append_menu_item(menu: wx.Menu, item_id: int, label: str, accel: str, help_str: str) -> wx.MenuItem:
+	def _append_menu_item(menu: wx.Menu, item_id: int, label: str, help_str: str, accel: str = None) -> wx.MenuItem:
 		"""
 		メニュー項目を追加するためのヘルパーメソッド。
 		ラベルとアクセラレータを結合してメニュー項目を作成します。
@@ -92,7 +164,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""
 		path_panel = wx.Panel(parent)
 		path_sizer = wx.BoxSizer(wx.HORIZONTAL)
-		path_label = wx.StaticText(path_panel, label='ファイルパス')
+		path_label = wx.StaticText(path_panel, label=__("label:file_path"))
 		self.path_text = wx.TextCtrl(path_panel, style=wx.TE_READONLY)
 		path_sizer.Add(path_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 		path_sizer.Add(self.path_text, 1, wx.EXPAND)
@@ -133,7 +205,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""画像のサムネイルリストパネルを作成します。"""
 		self.thumbnail_panel = wx.Panel(parent)
 		self.thumbnail_toolbar = wx.ToolBar(self.thumbnail_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
-		self.thumbnail_toolbar.AddControl(wx.StaticText(self.thumbnail_toolbar, label="Images"))
+		self.thumbnail_toolbar.AddControl(wx.StaticText(self.thumbnail_toolbar, label=__("label:image_list")))
 		self.thumbnail_toolbar.AddSeparator()
 		self.thumbnail_toolbar.Realize()
 		
@@ -149,14 +221,14 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""画像のタグ一覧パネルを作成します。"""
 		self.image_tags_panel = wx.Panel(parent)
 		self.image_tags_toolbar = wx.ToolBar(self.image_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
-		self.image_tags_toolbar.AddControl(wx.StaticText(self.image_tags_toolbar, label="Image Tags"))
+		self.image_tags_toolbar.AddControl(wx.StaticText(self.image_tags_toolbar, label=__("label:image_tags")))
 		self.image_tags_toolbar.AddSeparator()
 		self.image_tags_toolbar.Realize()
 		
 		self.image_tags_grid = wx.grid.Grid(self.image_tags_panel)
 		self.image_tags_grid.CreateGrid(0, 2)
-		self.image_tags_grid.SetColLabelValue(0, 'Tag')
-		self.image_tags_grid.SetColLabelValue(1, 'Weight')
+		self.image_tags_grid.SetColLabelValue(0, __("label:tag"))
+		self.image_tags_grid.SetColLabelValue(1, __("label:weight"))
 		self.image_tags_grid.SetColSize(0, 150)
 		self.image_tags_grid.SetColSize(1, 50)
 		self.image_tags_grid.SetRowLabelSize(0)
@@ -172,7 +244,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""タグパレットパネルを作成します。"""
 		self.tag_palette_panel = wx.Panel(parent)
 		self.tag_palette_toolbar = wx.ToolBar(self.tag_palette_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
-		self.tag_palette_toolbar.AddControl(wx.StaticText(self.tag_palette_toolbar, label="Tag Palette"))
+		self.tag_palette_toolbar.AddControl(wx.StaticText(self.tag_palette_toolbar, label=__("label:tag_palette")))
 		self.tag_palette_toolbar.AddSeparator()
 		self.tag_palette_toolbar.Realize()
 		
@@ -188,13 +260,13 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""データセット全体のタグ一覧パネルを作成します。"""
 		self.dataset_tags_panel = wx.Panel(parent)
 		self.dataset_tags_toolbar = wx.ToolBar(self.dataset_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
-		self.dataset_tags_toolbar.AddControl(wx.StaticText(self.dataset_tags_toolbar, label="Dataset Tags"))
+		self.dataset_tags_toolbar.AddControl(wx.StaticText(self.dataset_tags_toolbar, label=__("label:dataset_tags")))
 		self.dataset_tags_toolbar.AddSeparator()
 		self.dataset_tags_toolbar.Realize()
 		
 		self.dataset_tags_list = wx.ListCtrl(self.dataset_tags_panel, style=wx.LC_REPORT)
-		self.dataset_tags_list.InsertColumn(0, 'Tag', width=150)
-		self.dataset_tags_list.InsertColumn(1, 'Count', width=50)
+		self.dataset_tags_list.InsertColumn(0, __("label:tag"), width=150)
+		self.dataset_tags_list.InsertColumn(1, __("label:count"), width=50)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.dataset_tags_toolbar, 0, wx.EXPAND)
@@ -213,7 +285,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	def on_open_folder(self, event: wx.CommandEvent):
 		"""フォルダ選択ダイアログを表示し、データセットを読み込みます。"""
-		with wx.DirDialog(self, "Choose a directory", style=wx.DD_DEFAULT_STYLE) as dlg:
+		with wx.DirDialog(self, __("title:choose_a_directory"), style=wx.DD_DEFAULT_STYLE) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				path = dlg.GetPath()
 				self.load_dataset(path)
@@ -335,7 +407,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def launch():
 		"""アプリケーションを起動します。"""
 		app = wx.App()
-		frame = ImageTaggingHelperFrame(None, "Image Tagging Helper")
+		frame = ImageTaggingHelperFrame(None, __("title:app_main_window"))
 		frame.Show()
 		app.MainLoop()
 

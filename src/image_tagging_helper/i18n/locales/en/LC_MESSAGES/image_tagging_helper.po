@@ -1,0 +1,195 @@
+msgid "ui_group:file"
+msgstr "&File"
+
+msgid "action:open_folder"
+msgstr "&Open Folder"
+
+msgid "tooltip:open_folder"
+msgstr "Open Folder"
+
+msgid "action:reload"
+msgstr "&Reload"
+
+msgid "tooltip:reload"
+msgstr "Reload"
+
+msgid "action:save"
+msgstr "&Save"
+
+msgid "tooltip:save"
+msgstr "Save"
+
+msgid "action:exit"
+msgstr "E&xit"
+
+msgid "tooltip:exit"
+msgstr "Exit"
+
+msgid "ui_group:edit"
+msgstr "&Edit"
+
+msgid "action:undo"
+msgstr "&Undo"
+
+msgid "tooltip:undo"
+msgstr "Undo"
+
+msgid "action:redo"
+msgstr "&Redo"
+
+msgid "tooltip:redo"
+msgstr "Redo"
+
+msgid "action:cut"
+msgstr "Cu&t"
+
+msgid "tooltip:cut"
+msgstr "Cut"
+
+msgid "action:copy"
+msgstr "&Copy"
+
+msgid "tooltip:copy"
+msgstr "Copy"
+
+msgid "action:paste"
+msgstr "&Paste"
+
+msgid "tooltip:paste"
+msgstr "Paste"
+
+msgid "action:add_tag"
+msgstr "&Add Tag"
+
+msgid "tooltip:add_tag"
+msgstr "Add Tag"
+
+msgid "action:delete_tag"
+msgstr "&Delete"
+
+msgid "tooltip:delete_tag"
+msgstr "Delete"
+
+msgid "action:replace_tag"
+msgstr "&Replace"
+
+msgid "tooltip:replace_tag"
+msgstr "Replace"
+
+msgid "action:move_tag_up"
+msgstr "Move &Up"
+
+msgid "tooltip:move_tag_up"
+msgstr "Move Up"
+
+msgid "action:move_tag_down"
+msgstr "Move &Down"
+
+msgid "tooltip:move_tag_down"
+msgstr "Move Down"
+
+msgid "action:sort_tag"
+msgstr "&Sort"
+
+msgid "tooltip:sort_tag"
+msgstr "Sort"
+
+msgid "ui_group:dataset"
+msgstr "&Dataset"
+
+msgid "action:open_in_folder"
+msgstr "Open in &Folder"
+
+msgid "tooltip:open_in_folder"
+msgstr "Open in Folder"
+
+msgid "action:view_image"
+msgstr "&View Image"
+
+msgid "tooltip:view_image"
+msgstr "View Image"
+
+msgid "action:next_image"
+msgstr "&Next Image"
+
+msgid "tooltip:next_image"
+msgstr "Next Image"
+
+msgid "action:prev_image"
+msgstr "&Previous Image"
+
+msgid "tooltip:prev_image"
+msgstr "Previous Image"
+
+msgid "action:filter_images"
+msgstr "&Filter"
+
+msgid "tooltip:filter_images"
+msgstr "Filter Images"
+
+msgid "action:clear_filter"
+msgstr "&Clear Filter"
+
+msgid "tooltip:clear_filter"
+msgstr "Clear Filter"
+
+msgid "ui_group:view"
+msgstr "&View"
+
+msgid "action:toggle_tag_palette"
+msgstr "Toggle &Tag Palette"
+
+msgid "tooltip:toggle_tag_palette"
+msgstr "Toggle Tag Palette"
+
+msgid "action:toggle_dataset_tags"
+msgstr "Toggle D&ataset Tags"
+
+msgid "tooltip:toggle_dataset_tags"
+msgstr "Toggle Dataset Tags"
+
+msgid "action:fullscreen"
+msgstr "&Fullscreen"
+
+msgid "tooltip:fullscreen"
+msgstr "Fullscreen"
+
+msgid "ui_group:configure"
+msgstr "C&onfigure"
+
+msgid "action:preferences"
+msgstr "&Preferences..."
+
+msgid "tooltip:preferences"
+msgstr "Preferences"
+
+msgid "label:file_path"
+msgstr "File Path"
+
+msgid "label:image_list"
+msgstr "Image List"
+
+msgid "label:image_tags"
+msgstr "Image Tags"
+
+msgid "label:tag"
+msgstr "Tag"
+
+msgid "label:weight"
+msgstr "Weight"
+
+msgid "label:tag_palette"
+msgstr "Tag Palette"
+
+msgid "label:dataset_tags"
+msgstr "Dataset Tags"
+
+msgid "label:count"
+msgstr "Count"
+
+msgid "title:choose_a_directory"
+msgstr "Choose a Directory"
+
+msgid "title:app_main_window"
+msgstr "Image Tagging Helper"
+

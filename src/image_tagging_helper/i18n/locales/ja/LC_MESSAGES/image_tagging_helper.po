@@ -1,0 +1,195 @@
+msgid "ui_group:file"
+msgstr "ファイル(&F)"
+
+msgid "action:open_folder"
+msgstr "フォルダを開く(&O)"
+
+msgid "tooltip:open_folder"
+msgstr "フォルダを開く"
+
+msgid "action:reload"
+msgstr "再読み込み(&R)"
+
+msgid "tooltip:reload"
+msgstr "再読み込み"
+
+msgid "action:save"
+msgstr "保存(&S)"
+
+msgid "tooltip:save"
+msgstr "保存"
+
+msgid "action:exit"
+msgstr "終了(&X)"
+
+msgid "tooltip:exit"
+msgstr "終了"
+
+msgid "ui_group:edit"
+msgstr "編集(&E)"
+
+msgid "action:undo"
+msgstr "元に戻す(&U)"
+
+msgid "tooltip:undo"
+msgstr "元に戻す"
+
+msgid "action:redo"
+msgstr "やり直し(&R)"
+
+msgid "tooltip:redo"
+msgstr "やり直し"
+
+msgid "action:cut"
+msgstr "切り取り(&T)"
+
+msgid "tooltip:cut"
+msgstr "切り取り"
+
+msgid "action:copy"
+msgstr "コピー(&C)"
+
+msgid "tooltip:copy"
+msgstr "コピー"
+
+msgid "action:paste"
+msgstr "貼り付け(&P)"
+
+msgid "tooltip:paste"
+msgstr "貼り付け"
+
+msgid "action:add_tag"
+msgstr "タグを追加(&A)"
+
+msgid "tooltip:add_tag"
+msgstr "タグを追加"
+
+msgid "action:delete_tag"
+msgstr "削除(&D)"
+
+msgid "tooltip:delete_tag"
+msgstr "削除"
+
+msgid "action:replace_tag"
+msgstr "置換(&R)"
+
+msgid "tooltip:replace_tag"
+msgstr "置換"
+
+msgid "action:move_tag_up"
+msgstr "上へ移動(&U)"
+
+msgid "tooltip:move_tag_up"
+msgstr "上へ移動"
+
+msgid "action:move_tag_down"
+msgstr "下へ移動(&D)"
+
+msgid "tooltip:move_tag_down"
+msgstr "下へ移動"
+
+msgid "action:sort_tag"
+msgstr "並べ替え(&S)"
+
+msgid "tooltip:sort_tag"
+msgstr "並べ替え"
+
+msgid "ui_group:dataset"
+msgstr "データセット(&D)"
+
+msgid "action:open_in_folder"
+msgstr "ファイルの場所を開く(&F)"
+
+msgid "tooltip:open_in_folder"
+msgstr "ファイルが存在するフォルダを開く"
+
+msgid "action:view_image"
+msgstr "画像を表示(&V)"
+
+msgid "tooltip:view_image"
+msgstr "画像を表示"
+
+msgid "action:next_image"
+msgstr "次の画像(&N)"
+
+msgid "tooltip:next_image"
+msgstr "次の画像"
+
+msgid "action:prev_image"
+msgstr "前の画像(&P)"
+
+msgid "tooltip:prev_image"
+msgstr "前の画像"
+
+msgid "action:filter_images"
+msgstr "フィルタ(&F)"
+
+msgid "tooltip:filter_images"
+msgstr "画像をフィルタ"
+
+msgid "action:clear_filter"
+msgstr "フィルタを解除(&C)"
+
+msgid "tooltip:clear_filter"
+msgstr "フィルタを解除"
+
+msgid "ui_group:view"
+msgstr "表示(&V)"
+
+msgid "action:toggle_tag_palette"
+msgstr "タグパレット(&T)"
+
+msgid "tooltip:toggle_tag_palette"
+msgstr "タグパレットの表示切り替え"
+
+msgid "action:toggle_dataset_tags"
+msgstr "全タグ一覧(&A)"
+
+msgid "tooltip:toggle_dataset_tags"
+msgstr "全タグ一覧の表示切り替え"
+
+msgid "action:fullscreen"
+msgstr "全画面表示(&F)"
+
+msgid "tooltip:fullscreen"
+msgstr "全画面表示"
+
+msgid "ui_group:configure"
+msgstr "設定(&C)"
+
+msgid "action:preferences"
+msgstr "環境設定(&P)..."
+
+msgid "tooltip:preferences"
+msgstr "環境設定"
+
+msgid "label:file_path"
+msgstr "ファイルパス"
+
+msgid "label:image_list"
+msgstr "画像一覧"
+
+msgid "label:image_tags"
+msgstr "画像のタグ"
+
+msgid "label:tag"
+msgstr "タグ"
+
+msgid "label:weight"
+msgstr "重み"
+
+msgid "label:tag_palette"
+msgstr "タグパレット"
+
+msgid "label:dataset_tags"
+msgstr "全タグ一覧"
+
+msgid "label:count"
+msgstr "該当数"
+
+msgid "title:choose_a_directory"
+msgstr "フォルダを選択"
+
+msgid "title:app_main_window"
+msgstr "Image Tagging Helper"
+
