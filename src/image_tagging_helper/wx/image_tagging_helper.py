@@ -11,7 +11,8 @@ from src.image_tagging_helper.wx.image_list import ImageVListBox
 from src.image_tagging_helper.i18n import setup_translation, __
 
 # アプリケーションのドメイン名を設定
-APP_NAME = "image_tagging_helper"
+APP_NAME = "Image Tagging Helper"
+APP_ID = "image_tagging_helper"
 
 class PreferencesDialog(wx.Dialog):
 	"""設定画面のダイアログ。"""
@@ -92,10 +93,13 @@ class ImageTaggingHelperFrame(wx.Frame):
 			title: ウィンドウのタイトル。
 			config: アプリケーション設定。
 		"""
-		super().__init__(parent, title=title, size=(1200, 800))
+		self.config = config
+		
+		# ウィンドウサイズを復元
+		window_size = self.load_window_size_settings()
+		super().__init__(parent, title=title, size=window_size)
 		
 		# === データメンバーの初期化 ===
-		self.config = config
 		self.caption_parse_config = CaptionFormatConfig(delimiter=', ')
 		self.caption_format_config = CaptionFormatConfig()
 		self.caption_exts = '.caption'
@@ -104,6 +108,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		# === UIの初期化 ===
 		self._init_ui()
+		
+		# === イベントのバインド ===
+		self.Bind(wx.EVT_CLOSE, self.on_close)
 	
 	def _init_ui(self):
 		"""UI全体の初期化"""
@@ -259,14 +266,18 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self._create_dataset_tags_panel(self.splitter_3)
 		
 		# スプリッターの分割設定
-		# 初期サイズ(1200)に基づく比率 1:1:2:1 -> 240:240:480:240
-		self.splitter_3.SplitVertically(self.tag_palette_panel, self.dataset_tags_panel, 480)
-		self.splitter_2.SplitVertically(self.image_tags_panel, self.splitter_3, 240)
-		self.splitter_1.SplitVertically(self.thumbnail_panel, self.splitter_2, 240)
+		# 全体幅1200に対して各パネル300ずつ割り当てる
+		self.splitter_1.SplitVertically(self.thumbnail_panel, self.splitter_2, 300)
+		self.splitter_2.SplitVertically(self.image_tags_panel, self.splitter_3, 300)
+		self.splitter_3.SplitVertically(self.tag_palette_panel, self.dataset_tags_panel, 300)
+		
+		# UI設定を復元
+		wx.CallAfter(self.load_ui_settings)
 		
 		# ウィンドウリサイズ時の挙動を設定
-		self.splitter_1.SetSashGravity(1.0 / 3.0)
-		self.splitter_2.SetSashGravity(0.5)
+		self.splitter_1.SetSashGravity(0.25)
+		self.splitter_2.SetSashGravity(1.0 / 3.0)
+		self.splitter_3.SetSashGravity(0.5)
 	
 	def _create_thumbnail_panel(self, parent: wx.Window):
 		"""画像のサムネイルリストパネルを作成します。"""
@@ -342,6 +353,11 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	# === イベントハンドラ ===
 	
+	def on_close(self, event: wx.CloseEvent):
+		"""ウィンドウが閉じるときにUI設定を保存します。"""
+		self.save_ui_settings()
+		event.Skip()
+	
 	def on_splitter_dclick(self, event: wx.SplitterEvent):
 		"""スプリッターのダブルクリックによる折りたたみを防止します。"""
 		event.Veto()
@@ -400,6 +416,43 @@ class ImageTaggingHelperFrame(wx.Frame):
 					)
 	
 	# === UI更新メソッド ===
+	
+	def save_ui_settings(self):
+		"""UIの状態（スプリッターの位置など）を保存します。"""
+		self.config.set('ui.splitter_1_pos', self.splitter_1.GetSashPosition())
+		self.config.set('ui.splitter_2_pos', self.splitter_2.GetSashPosition())
+		self.config.set('ui.splitter_3_pos', self.splitter_3.GetSashPosition())
+		
+		# ウィンドウサイズを保存
+		size = self.GetSize()
+		self.config.set('ui.window_width', size.width)
+		self.config.set('ui.window_height', size.height)
+		
+		self.config.save()
+	
+	def load_window_size_settings(self):
+		width = self.config.get('ui.window_width', 1200)
+		height = self.config.get('ui.window_height', 800)
+		return wx.Size(width, height)
+	
+	def load_ui_settings(self):
+		"""UIの状態（スプリッターの位置など）を復元します。"""
+		self.Freeze()
+		try:
+			# デフォルト値は初期レイアウトに基づく
+			# 初期サイズ(1200)に基づく比率 1:1:1:1 -> 300:300:300:300
+			s1_pos = self.config.get('ui.splitter_1_pos', 300)
+			s2_pos = self.config.get('ui.splitter_2_pos', 300)
+			s3_pos = self.config.get('ui.splitter_3_pos', 300)
+			
+			if s1_pos > 0:
+				self.splitter_1.SetSashPosition(s1_pos)
+			if s2_pos > 0:
+				self.splitter_2.SetSashPosition(s2_pos)
+			if s3_pos > 0:
+				self.splitter_3.SetSashPosition(s3_pos)
+		finally:
+			self.Thaw()
 	
 	def _update_views_for_selection(self, selection: int):
 		"""指定された選択に基づいて関連するビューを更新します。"""
@@ -494,7 +547,7 @@ def main():
 	"""アプリケーションのエントリポイント。"""
 	config = Config(APP_NAME)
 	lang = config.get('language', 'en')
-	setup_translation(APP_NAME, lang=lang)
+	setup_translation(APP_ID, lang=lang)
 	
 	# 高DPI対応を有効にする
 	try:
