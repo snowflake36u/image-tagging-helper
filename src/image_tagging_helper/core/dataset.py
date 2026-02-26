@@ -1,5 +1,5 @@
 from collections import defaultdict, Counter
-from typing import List
+from typing import List, Dict
 
 from src.image_tagging_helper.core.caption import Caption
 
@@ -53,3 +53,17 @@ class Dataset:
 	def __getitem__(self, index: int | slice) -> DatasetItem | List[DatasetItem]:
 		"""インデックスまたはスライスでDatasetItemを取得する。"""
 		return self.items[index]
+	
+	def get_all_tags_with_counts(self) -> Dict[str, int]:
+		"""
+		データセット内のすべてのタグとその出現回数を取得します。
+		
+		Returns:
+			Dict[str, int]: タグ名をキー、出現回数を値とする辞書。
+		"""
+		all_tags: Counter[str] = Counter()
+		for item in self.items:
+			for tag, cnt in item.caption.counter.items():
+				if cnt > 0:
+					all_tags[tag.text] += 1
+		return dict(all_tags)

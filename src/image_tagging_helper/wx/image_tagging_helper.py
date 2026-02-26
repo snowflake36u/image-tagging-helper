@@ -3,6 +3,7 @@ import glob
 import wx
 import wx.grid
 import ctypes
+from collections import Counter
 
 from src.image_tagging_helper.core.caption import Caption, CaptionFormatConfig
 from src.image_tagging_helper.core.config import Config
@@ -379,7 +380,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		各パネルの最小サイズを下回らないように制限します。
 		"""
 		new_pos = event.GetSashPosition()
-		splitter = event.GetEventObject()
+		splitter: wx.SplitterWindow = event.GetEventObject()
 		
 		adjusted_pos = self._adjust_splitter_sash(splitter, new_pos)
 		if adjusted_pos != new_pos:
@@ -551,7 +552,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 				self.splitter_2.Unsplit(self.splitter_3)
 		
 		self.Layout()
-
+	
 	def save_ui_settings(self):
 		"""UIの状態（スプリッターの位置など）を保存します。"""
 		self.config.set('ui.splitter_1_pos', self.splitter_1.GetSashPosition())
@@ -624,6 +625,29 @@ class ImageTaggingHelperFrame(wx.Frame):
 			weight_str = f'{tag.weight:.2f}' if tag.weight is not None else ''
 			self.image_tags_grid.SetCellValue(i, 1, weight_str)
 	
+	def _update_dataset_tags_view(self):
+		"""データセット全体のタグとその出現回数をリストに表示します。"""
+		self.dataset_tags_list.ClearAll()  # 既存の項目をクリア
+		self.dataset_tags_list.InsertColumn(0, __("label:tag"), width=150)
+		self.dataset_tags_list.InsertColumn(1, __("label:count"), width=50)
+		
+		if not self.dataset or len(self.dataset) == 0:
+			return
+		
+		all_tags = []
+		for item in self.dataset:
+			for tag in item.caption.tags:
+				all_tags.append(tag.text)
+		
+		tag_counts = Counter(all_tags)
+		
+		# タグをアルファベット順にソートして表示
+		sorted_tags = sorted(tag_counts.items())
+		
+		for i, (tag_text, count) in enumerate(sorted_tags):
+			self.dataset_tags_list.InsertItem(i, tag_text)
+			self.dataset_tags_list.SetItem(i, 1, str(count))
+	
 	# === データ処理メソッド ===
 	
 	def load_dataset(self, folder_path: str):
@@ -650,6 +674,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 			# SetSelectionはイベントを発生させないため、手動で更新処理を呼び出す
 			self.last_thumbnail_selection = 0
 			self._update_views_for_selection(0)
+		
+		# データセットタグのビューを更新
+		self._update_dataset_tags_view()
 	
 	def create_item(self, image_path: str) -> DatasetItem:
 		"""
