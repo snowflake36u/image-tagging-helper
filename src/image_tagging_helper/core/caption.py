@@ -6,11 +6,13 @@ class CaptionFormatConfig:
 			self,
 			*,
 			delimiter=',',
+			format_delimiter=', ',
 			posi_weight_ratio=1.1,
 			nega_weight_ratio=0.9,
 			ommittable_levels=5,
 	):
 		self.delimiter = delimiter
+		self.format_delimiter = format_delimiter
 		self.posi_weight_ratio = posi_weight_ratio
 		self.nega_weight_ratio = nega_weight_ratio
 		
@@ -63,7 +65,7 @@ class Caption:
 		return len(self.tags)
 	
 	def format(self, config: CaptionFormatConfig):
-		return config.delimiter.join([tag.format(config) for tag in self.tags])
+		return config.format_delimiter.join([tag.format(config) for tag in self.tags])
 	
 	@staticmethod
 	def parse(text: str, config: CaptionFormatConfig) -> 'Caption':

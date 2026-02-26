@@ -102,7 +102,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 		super().__init__(parent, title=title, size=window_size)
 		
 		# === データメンバーの初期化 ===
-		self.caption_parse_config = CaptionFormatConfig(delimiter=', ')
 		self.caption_format_config = CaptionFormatConfig()
 		self.caption_exts = '.caption'
 		self.dataset: Dataset | None = None
