@@ -1,3 +1,4 @@
+from collections import Counter
 from typing import List
 from dataclasses import dataclass
 
@@ -25,6 +26,9 @@ def escape_for_tag(text):
 	return text.replace('(', r'\(').replace(')', r'\)') \
 		.replace('[', r'\[').replace(']', r'\]')
 
+def clone_tag_list(tags: List['TagHolder']):
+	return [tag.clone() for tag in tags]
+
 @dataclass
 class TagHolder:
 	text: str
@@ -47,16 +51,13 @@ class TagHolder:
 	
 	def clone(self) -> 'TagHolder':
 		return TagHolder(self.text, self.weight)
-	
-	@staticmethod
-	def clone_list(set: List['TagHolder']) -> List['TagHolder']:
-		return [tag.clone() for tag in set]
 
 class Caption:
 	def __init__(self, tags: List[TagHolder] | None = None):
 		if tags is None:
 			tags = []
 		self.tags = tags
+		self.counter = Counter([tag.text for tag in tags])
 	
 	def __items__(self, index: int | slice):
 		return self.tags[index]
@@ -160,14 +161,28 @@ class Caption:
 					seen.add(tags[i].text)
 					i += 1
 	
-	def add(self, tags: List[TagHolder]):
+	def extend(self, tags: List[TagHolder]):
 		self.tags.extend(TagHolder.clone_list(tags))
+		for tag in tags:
+			self.counter[tag.text] += 1
 	
-	def insert(self, tags: List[TagHolder], index: int):
+	def insert(self, index: int, tags: List[TagHolder]):
 		self.tags[index:index] = TagHolder.clone_list(tags)
+		for tag in tags:
+			self.counter[tag.text] += 1
 	
 	def remove(self, index: int, count: int = 1):
+		tags = self.tags[index:index + count]
 		self.tags[index:index + count] = []
+		for tag in tags:
+			self.counter[tag.text] -= 1
 	
 	def move(self, from_index: int, to_index: int):
 		self.tags.insert(to_index, self.tags.pop(from_index))
+	
+	def set(self, index: int, tag: TagHolder):
+		old_tag = self.tags[index]
+		if tag.text != old_tag.text:
+			self.counter[old_tag.text] -= 1
+			self.counter[tag.text] += 1
+		self.tags[index] = tag

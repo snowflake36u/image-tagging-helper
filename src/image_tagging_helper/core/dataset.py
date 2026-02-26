@@ -1,3 +1,4 @@
+from collections import defaultdict, Counter
 from typing import List
 
 from src.image_tagging_helper.core.caption import Caption
