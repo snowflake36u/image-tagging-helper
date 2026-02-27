@@ -44,14 +44,14 @@ class ImageVListBox(wx.VListBox):
 
 		生成されたサムネイルはself.thumbnailsにキャッシュされる。
 		"""
-		cache_key = (item.path, size)
+		cache_key = (item.image_path, size)
 		if cache_key in self.thumbnail_cache:
 			return self.thumbnail_cache[cache_key]
 		
 		# 画像読み込み（キャッシュがあればそれを使用）
-		if item.path not in self.image_cache:
+		if item.image_path not in self.image_cache:
 			with wx.LogNull():
-				img = wx.Image(item.path, wx.BITMAP_TYPE_ANY)
+				img = wx.Image(item.image_path, wx.BITMAP_TYPE_ANY)
 			if not img.IsOk():
 				# 読み込み失敗時はエラー用のビットマップを生成してキャッシュ
 				bmp = wx.Bitmap(size[0], size[1])
@@ -61,9 +61,9 @@ class ImageVListBox(wx.VListBox):
 				dc.SelectObject(wx.NullBitmap)
 				self.thumbnail_cache[cache_key] = bmp
 				return bmp
-			self.image_cache[item.path] = img
+			self.image_cache[item.image_path] = img
 		
-		img = self.image_cache[item.path]
+		img = self.image_cache[item.image_path]
 		
 		# サムネイル用にリサイズ（アスペクト比維持）
 		w, h = img.GetWidth(), img.GetHeight()

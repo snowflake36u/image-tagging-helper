@@ -8,13 +8,14 @@ class DatasetItem:
 	データセット内の個々の画像ファイルを表すクラス。
 
 	Attributes:
-		  path (str): 画像ファイルのパス。
+		  image_path (str): 画像ファイルのパス。
 		  caption (Caption): 画像に関連付けられたキャプション。
 	"""
 	
 	def __init__(
 			self,
-			path: str,
+			image_path: str,
+			caption_path: str,
 			caption: Caption | None = None,
 	):
 		"""
@@ -24,7 +25,8 @@ class DatasetItem:
 			  path: 画像ファイルのパス。
 			  caption: 画像に関連付けられたキャプション。指定されない場合は空のCaptionが作成される。
 		"""
-		self.path = path
+		self.image_path = image_path
+		self.caption_path = caption_path
 		self.caption = caption or Caption()
 
 class Dataset:
@@ -44,7 +46,7 @@ class Dataset:
 			  items: データセットに含めるDatasetItemのリスト。
 		"""
 		self.items = items
-		self.item_index = { x.path: i for i, x in enumerate(items) }
+		self.item_index = { x.image_path: i for i, x in enumerate(items) }
 	
 	def __len__(self) -> int:
 		"""データセットのサイズ（含まれるアイテム数）を返す。"""

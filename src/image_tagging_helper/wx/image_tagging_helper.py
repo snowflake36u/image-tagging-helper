@@ -695,7 +695,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 				caption_text = f.read()
 				caption = Caption.parse(caption_text, config=self.caption_format_config)
 		
-		return DatasetItem(path=image_path, caption=caption)
+		return DatasetItem(path=image_path, caption_path=caption_path, caption=caption)
 	
 	@staticmethod
 	def launch(config: Config):
