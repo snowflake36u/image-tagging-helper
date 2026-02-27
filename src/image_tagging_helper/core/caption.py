@@ -31,8 +31,8 @@ def clone_tag_list(tags: List['TagHolder']):
 
 @dataclass
 class TagHolder:
-	text: str
-	weight: float
+	text: str = ''
+	weight: float = 1.0
 	
 	def format(self, config: CaptionFormatConfig):
 		text = escape_for_tag(self.text)

@@ -8,7 +8,9 @@ from collections import Counter
 from src.image_tagging_helper.core.caption import Caption, CaptionFormatConfig
 from src.image_tagging_helper.core.config import Config
 from src.image_tagging_helper.core.dataset import Dataset, DatasetItem
+from src.image_tagging_helper.core.manager import DatasetManager
 from src.image_tagging_helper.wx.image_list import ImageVListBox
+from src.image_tagging_helper.wx.image_tags_grid import ImageTagsGrid
 from src.image_tagging_helper.i18n import setup_translation, __
 
 # アプリケーションのドメイン名を設定
@@ -103,9 +105,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		super().__init__(parent, title=title, size=window_size)
 		
 		# === データメンバーの初期化 ===
-		self.caption_format_config = CaptionFormatConfig()
-		self.caption_exts = '.caption'
-		self.dataset: Dataset | None = None
+		self.image_exts = ['.jpg', '.jpeg', '.png', '.webp']
+		self.caption_ext = '.caption'
+		self.dataset_manager = DatasetManager(CaptionFormatConfig())
 		self.last_thumbnail_selection: int = wx.NOT_FOUND
 		
 		# === UIの初期化 ===
@@ -313,15 +315,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.image_tags_toolbar.AddSeparator()
 		self.image_tags_toolbar.Realize()
 		
-		self.image_tags_grid = wx.grid.Grid(self.image_tags_panel)
-		self.image_tags_grid.CreateGrid(0, 2)
-		self.image_tags_grid.SetColLabelValue(0, __("label:tag"))
-		self.image_tags_grid.SetColLabelValue(1, __("label:weight"))
-		self.image_tags_grid.SetColSize(0, 150)
-		self.image_tags_grid.SetColSize(1, 50)
-		self.image_tags_grid.SetRowLabelSize(0)
-		self.image_tags_grid.EnableDragRowSize(False)
-		self.image_tags_grid.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_grid_select_cell)
+		self.image_tags_grid = ImageTagsGrid(self.image_tags_panel, self.dataset_manager)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.image_tags_toolbar, 0, wx.EXPAND)
@@ -467,30 +461,20 @@ class ImageTaggingHelperFrame(wx.Frame):
 		サムネイルリストの選択が変更されたときの処理。
 		常に単一の選択を維持します。
 		"""
-		selection = self.thumbnail_list.GetSelection()
+		item_index = self.thumbnail_list.GetSelection()
 		
-		if selection == wx.NOT_FOUND:
+		if item_index == wx.NOT_FOUND:
 			# 選択が解除された場合、最後の選択状態に戻す
 			if self.last_thumbnail_selection != wx.NOT_FOUND:
 				self.thumbnail_list.SetSelection(self.last_thumbnail_selection)
 			return
 		
 		# 同じアイテムが再度選択された場合は何もしない
-		if selection == self.last_thumbnail_selection:
+		if item_index == self.last_thumbnail_selection:
 			return
 		
-		self.last_thumbnail_selection = selection
-		self._update_views_for_selection(selection)
-	
-	def on_grid_select_cell(self, event: wx.grid.GridEvent):
-		"""
-		グリッドのセルが選択されたときの処理。
-		複数選択を無効にし、常に単一の行のみが選択されるようにします。
-		"""
-		row = event.GetRow()
-		self.image_tags_grid.ClearSelection()
-		self.image_tags_grid.SelectRow(row)
-		event.Skip()
+		self.last_thumbnail_selection = item_index
+		self._update_views_for_item_selection(item_index)
 	
 	def on_preferences(self, event: wx.CommandEvent):
 		"""設定ダイアログを表示します。"""
@@ -590,40 +574,19 @@ class ImageTaggingHelperFrame(wx.Frame):
 		finally:
 			self.Thaw()
 	
-	def _update_views_for_selection(self, selection: int):
+	def _update_views_for_item_selection(self, selection: int):
 		"""指定された選択に基づいて関連するビューを更新します。"""
 		self._update_image_path_view(selection)
-		self._update_image_tags_view(selection)
+		self.image_tags_grid.switch_item(selection)
 	
 	def _update_image_path_view(self, selection: int):
 		"""選択された画像のパスを表示します。"""
-		if not self.dataset or selection == wx.NOT_FOUND:
+		if not self.dataset_manager.initialized or selection == wx.NOT_FOUND:
 			self.path_text.SetValue('')
 			return
 		
-		item = self.dataset[selection]
-		self.path_text.SetValue(item.path)
-	
-	def _update_image_tags_view(self, selection: int):
-		"""選択された画像のタグをグリッドに表示します。"""
-		if self.image_tags_grid.GetNumberRows() > 0:
-			self.image_tags_grid.DeleteRows(0, self.image_tags_grid.GetNumberRows())
-		
-		if not self.dataset or selection == wx.NOT_FOUND:
-			return
-		
-		item = self.dataset[selection]
-		caption = item.caption
-		
-		if not caption.tags:
-			return
-		
-		self.image_tags_grid.AppendRows(len(caption.tags))
-		
-		for i, tag in enumerate(caption.tags):
-			self.image_tags_grid.SetCellValue(i, 0, tag.text)
-			weight_str = f'{tag.weight:.2f}' if tag.weight is not None else ''
-			self.image_tags_grid.SetCellValue(i, 1, weight_str)
+		item = self.dataset_manager.dataset[selection]
+		self.path_text.SetValue(item.image_path)
 	
 	def _update_dataset_tags_view(self):
 		"""データセット全体のタグとその出現回数をリストに表示します。"""
@@ -631,11 +594,12 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.dataset_tags_list.InsertColumn(0, __("label:tag"), width=150)
 		self.dataset_tags_list.InsertColumn(1, __("label:count"), width=50)
 		
-		if not self.dataset or len(self.dataset) == 0:
+		dataset = self.dataset_manager.dataset
+		if not self.dataset_manager.initialized or len(dataset) == 0:
 			return
 		
 		all_tags = []
-		for item in self.dataset:
+		for item in dataset:
 			for tag in item.caption.tags:
 				all_tags.append(tag.text)
 		
@@ -657,45 +621,19 @@ class ImageTaggingHelperFrame(wx.Frame):
 		Args:
 			folder_path: 画像とキャプションファイルが含まれるフォルダのパス。
 		"""
-		extensions = ['*.jpg', '*.jpeg', '*.png', '*.webp']
-		image_files = []
-		for ext in extensions:
-			image_files.extend(glob.glob(os.path.join(folder_path, ext)))
+		self.dataset_manager.load(folder_path, self.image_exts, caption_ext=self.caption_ext)
+		dataset = self.dataset_manager.dataset
 		
-		image_files = sorted(list(set(image_files)))
+		self.thumbnail_list.set_dataset(dataset)
 		
-		dataset_items = [self.create_item(path) for path in image_files]
-		
-		self.dataset = Dataset(items=dataset_items)
-		self.thumbnail_list.set_dataset(self.dataset)
-		
-		if self.dataset and len(self.dataset) > 0:
+		if dataset and len(dataset) > 0:
 			self.thumbnail_list.SetSelection(0)
 			# SetSelectionはイベントを発生させないため、手動で更新処理を呼び出す
 			self.last_thumbnail_selection = 0
-			self._update_views_for_selection(0)
+			self._update_views_for_item_selection(0)
 		
 		# データセットタグのビューを更新
 		self._update_dataset_tags_view()
-	
-	def create_item(self, image_path: str) -> DatasetItem:
-		"""
-		画像パスからキャプションを読み込み、DatasetItemを作成します。
-		
-		Args:
-			image_path: 画像ファイルのパス。
-		
-		Returns:
-			作成されたDatasetItemインスタンス。
-		"""
-		caption_path = os.path.splitext(image_path)[0] + self.caption_exts
-		caption = Caption()
-		if os.path.exists(caption_path):
-			with open(caption_path, 'r', encoding='utf-8') as f:
-				caption_text = f.read()
-				caption = Caption.parse(caption_text, config=self.caption_format_config)
-		
-		return DatasetItem(path=image_path, caption_path=caption_path, caption=caption)
 	
 	@staticmethod
 	def launch(config: Config):

@@ -15,7 +15,7 @@ class HistoryAction(ABC):
 	def revert(self):
 		return NotImplemented
 
-class AddAction(HistoryAction):
+class AppendAction(HistoryAction):
 	def __init__(
 			self, dataset, targets: List[int], tags: List[TagHolder]
 	):

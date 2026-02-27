@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict, Counter
 from typing import List, Dict
 
@@ -28,6 +29,17 @@ class DatasetItem:
 		self.image_path = image_path
 		self.caption_path = caption_path
 		self.caption = caption or Caption()
+	
+	@staticmethod
+	def create(image_path, caption_ext, caption_format_config):
+		caption_path = os.path.splitext(image_path)[0] + caption_ext
+		caption = Caption()
+		if os.path.exists(caption_path):
+			with open(caption_path, 'r', encoding='utf-8') as f:
+				caption_text = f.read()
+				caption = Caption.parse(caption_text, config=caption_format_config)
+		
+		return DatasetItem(image_path=image_path, caption_path=caption_path, caption=caption)
 
 class Dataset:
 	"""
