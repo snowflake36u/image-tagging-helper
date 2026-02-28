@@ -29,6 +29,9 @@ class ImageTagsGrid(wx.grid.Grid):
 		self._init_grid()
 		
 		self.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.on_cell_changed)
+		self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.on_cell_left_click)
+		self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
+		self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.on_range_select)
 	
 	def _init_grid(self):
 		"""グリッドの初期設定を行います。
@@ -45,8 +48,11 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.SetColSize(1, 50)
 		self.SetRowLabelSize(0)
 		self.EnableDragRowSize(False)
-		# 選択モードを行選択にする
+		# 選択モードをセル選択にする
 		self.SetSelectionMode(wx.grid.Grid.SelectCells)
+		
+		# ドラッグによる範囲選択を防止するためにマウスイベントを監視
+		self.GetGridWindow().Bind(wx.EVT_MOTION, self.on_grid_motion)
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""表示対象のデータセットを設定します。
@@ -83,6 +89,50 @@ class ImageTagsGrid(wx.grid.Grid):
 		
 		evt.Skip()
 	
+	def on_cell_left_click(self, evt):
+		"""クリック時の複数選択・範囲選択を防止します。"""
+		row, col = evt.GetRow(), evt.GetCol()
+		
+		# 既存の選択をクリアし、クリックされたセルのみを選択する
+		self.ClearSelection()
+		self.SelectBlock(row, col, row, col)
+		self.SetGridCursor(row, col)
+	
+	# デフォルトの選択処理（Ctrl/Shiftでの追加選択など）を無効化するため、
+	# イベントをこれ以上伝播させない
+	
+	def on_key_down(self, evt):
+		"""キー操作による範囲選択を防止します。"""
+		if evt.ShiftDown():
+			key = evt.GetKeyCode()
+			# Shift + 矢印キーによる選択を無効化
+			if key in [wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT]:
+				# 選択なしでカーソルを移動する
+				if key == wx.WXK_UP:
+					self.MoveCursorUp(False)
+				elif key == wx.WXK_DOWN:
+					self.MoveCursorDown(False)
+				elif key == wx.WXK_LEFT:
+					self.MoveCursorLeft(False)
+				elif key == wx.WXK_RIGHT:
+					self.MoveCursorRight(False)
+				return  # イベント処理をここで終了
+		
+		evt.Skip()
+	
+	def on_range_select(self, evt):
+		"""範囲選択（ドラッグ、Shift+クリック）を無効化します。"""
+		if evt.Selecting():
+			# 範囲選択イベントをキャンセルする
+			evt.Veto()
+	
+	def on_grid_motion(self, evt):
+		"""ドラッグ操作による範囲選択を無効化します。"""
+		if evt.Dragging():
+			# ドラッグ中はイベントを処理せず終了することで、範囲選択を防ぐ
+			return
+		evt.Skip()
+
 	def on_model_changed(self, sender, diff: DatasetDiff):
 		"""Datasetからの変更通知を受け取った際の処理です。
 
