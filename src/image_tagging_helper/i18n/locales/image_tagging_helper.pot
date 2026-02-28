@@ -67,10 +67,10 @@ msgstr ""
 msgid "tooltip:paste"
 msgstr ""
 
-msgid "action:add_tag"
+msgid "action:insert_blank_tag"
 msgstr ""
 
-msgid "tooltip:add_tag"
+msgid "tooltip:insert_blank_tag"
 msgstr ""
 
 msgid "action:delete_tag"

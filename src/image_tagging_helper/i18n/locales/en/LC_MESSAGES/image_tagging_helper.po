@@ -67,11 +67,11 @@ msgstr "&Paste"
 msgid "tooltip:paste"
 msgstr "Paste"
 
-msgid "action:add_tag"
-msgstr "&Add Tag"
+msgid "action:insert_blank_tag"
+msgstr "Insert &Blank Tag"
 
-msgid "tooltip:add_tag"
-msgstr "Add Tag"
+msgid "tooltip:insert_blank_tag"
+msgstr "Insert Blank Tag"
 
 msgid "action:delete_tag"
 msgstr "&Delete"
@@ -207,4 +207,3 @@ msgstr "Restart Required"
 
 msgid "title:app_main_window"
 msgstr "Image Tagging Helper"
-

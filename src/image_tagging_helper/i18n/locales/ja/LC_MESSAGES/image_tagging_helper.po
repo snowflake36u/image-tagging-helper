@@ -67,11 +67,11 @@ msgstr "貼り付け(&P)"
 msgid "tooltip:paste"
 msgstr "貼り付け"
 
-msgid "action:add_tag"
-msgstr "タグを追加(&A)"
+msgid "action:insert_blank_tag"
+msgstr "空のタグを挿入(&B)"
 
-msgid "tooltip:add_tag"
-msgstr "タグを追加"
+msgid "tooltip:insert_blank_tag"
+msgstr "空のタグを挿入"
 
 msgid "action:delete_tag"
 msgstr "削除(&D)"
@@ -207,4 +207,3 @@ msgstr "再起動が必要"
 
 msgid "title:app_main_window"
 msgstr "Image Tagging Helper"
-

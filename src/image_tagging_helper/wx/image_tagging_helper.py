@@ -6,7 +6,7 @@ import ctypes
 from collections import Counter
 
 from src.image_tagging_helper.core.config import Config
-from src.image_tagging_helper.models.caption import CaptionFormatConfig
+from src.image_tagging_helper.models.caption import Caption, CaptionFormatConfig, Tag
 from src.image_tagging_helper.models.dataset import Dataset
 from src.image_tagging_helper.models.controller import DatasetController
 from src.image_tagging_helper.wx.image_list import ImageVListBox
@@ -176,21 +176,27 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		menu.AppendSeparator()
 		
-		cut_item = self._append_menu_item(menu, wx.ID_CUT, __("action:cut"), __("tooltip:cut"), 'Ctrl+X')
 		copy_item = self._append_menu_item(menu, wx.ID_COPY, __("action:copy"), __("tooltip:copy"), 'Ctrl+C')
 		paste_item = self._append_menu_item(menu, wx.ID_PASTE, __("action:paste"), __("tooltip:paste"), 'Ctrl+V')
+		self.Bind(wx.EVT_MENU, self.on_copy, copy_item)
+		self.Bind(wx.EVT_MENU, self.on_paste, paste_item)
 		
 		menu.AppendSeparator()
 		
-		add_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:add_tag"), __("tooltip:add_tag"), 'Ctrl+E')
+		insert_blank_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:insert_blank_tag"), __("tooltip:insert_blank_tag"), 'Ctrl+E')
 		delete_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:delete_tag"), __("tooltip:delete_tag"), 'Ctrl+D')
 		replace_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:replace_tag"), __("tooltip:replace_tag"), 'Ctrl+H')
+		self.Bind(wx.EVT_MENU, self.on_insert_blank_tag, insert_blank_tag_item)
+		self.Bind(wx.EVT_MENU, self.on_delete_tag, delete_tag_item)
+		# self.Bind(wx.EVT_MENU, self.on_replace_tag, replace_tag_item)
 		
 		menu.AppendSeparator()
 		
 		move_tag_up_item = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_up"), __("tooltip:move_tag_up"), 'Shift+W')
 		move_tag_down_item = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_down"), __("tooltip:move_tag_down"), 'Shift+S')
 		sort_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:sort_tag"), __("tooltip:sort_tag"), 'Ctrl+L')
+		self.Bind(wx.EVT_MENU, self.on_move_tag_up, move_tag_up_item)
+		self.Bind(wx.EVT_MENU, self.on_move_tag_down, move_tag_down_item)
 	
 	def _init_dataset_menu(self, menubar):
 		menu = wx.Menu()
@@ -521,6 +527,78 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""リドゥメニュー項目のUIを更新します。"""
 		can_redo = self.controller.can_redo() if self.controller else False
 		event.Enable(can_redo)
+	
+	def on_copy(self, event: wx.CommandEvent):
+		row = self.image_tags_grid.GetGridCursorRow()
+		if row < 0:
+			return
+		
+		tag_text = self.image_tags_grid.GetCellValue(row, 0)
+		if not tag_text:
+			return
+		
+		if wx.TheClipboard.Open():
+			wx.TheClipboard.SetData(wx.TextDataObject(tag_text))
+			wx.TheClipboard.Close()
+	
+	def on_paste(self, event: wx.CommandEvent):
+		if not self.controller or self.image_tags_grid.item_index is None:
+			return
+		
+		text = ""
+		if wx.TheClipboard.Open():
+			if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DFTEXT)):
+				data = wx.TextDataObject()
+				wx.TheClipboard.GetData(data)
+				text = data.GetText()
+			wx.TheClipboard.Close()
+		
+		if text:
+			caption = Caption.parse(text, self.caption_format_config)
+			if caption.tags:
+				self.controller.append_tags(self.image_tags_grid.item_index, tuple(caption.tags))
+	
+	def on_insert_blank_tag(self, event: wx.CommandEvent):
+		if not self.controller or self.image_tags_grid.item_index is None:
+			return
+		
+		row = self.image_tags_grid.GetGridCursorRow()
+		self.controller.insert_tags(self.image_tags_grid.item_index, row + 1, [Tag()])
+	
+	def on_delete_tag(self, event: wx.CommandEvent):
+		if not self.controller or self.image_tags_grid.item_index is None:
+			return
+		
+		row = self.image_tags_grid.GetGridCursorRow()
+		if row < 0:
+			return
+		
+		self.controller.delete_tags(self.image_tags_grid.item_index, (row,))
+		wx.CallAfter(self.image_tags_grid.SetGridCursor, row + 1, 0)
+	
+	def on_move_tag_up(self, event: wx.CommandEvent):
+		if not self.controller or self.image_tags_grid.item_index is None:
+			return
+		
+		row = self.image_tags_grid.GetGridCursorRow()
+		if row <= 0:
+			return
+		
+		self.controller.move_tag(self.image_tags_grid.item_index, row, row - 1)
+		wx.CallAfter(self.image_tags_grid.SetGridCursor, row - 1, 0)
+		wx.CallAfter(self.image_tags_grid.SelectBlock, row - 1, 0, row - 1, 0)
+	
+	def on_move_tag_down(self, event: wx.CommandEvent):
+		if not self.controller or self.image_tags_grid.item_index is None:
+			return
+		
+		row = self.image_tags_grid.GetGridCursorRow()
+		if row < 0 or row >= self.image_tags_grid.GetNumberRows() - 1:
+			return
+		
+		self.controller.move_tag(self.image_tags_grid.item_index, row, row + 1)
+		wx.CallAfter(self.image_tags_grid.SetGridCursor, row + 1, 0)
+		wx.CallAfter(self.image_tags_grid.SelectBlock, row + 1, 0, row + 1, 0)
 	
 	# === UI更新メソッド ===
 	
