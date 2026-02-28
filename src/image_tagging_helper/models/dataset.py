@@ -1,0 +1,286 @@
+from typing import List, TYPE_CHECKING, Dict
+import glob
+import os
+from collections import Counter, deque
+
+from src.image_tagging_helper.models.caption import Caption
+from src.image_tagging_helper.models.diff import (
+	DatasetDiff,
+	AppendDiff, InsertDiff, MoveDiff,
+	DeleteDiff, MutateTagDiff, BatchDiff,
+)
+from src.image_tagging_helper.models.history_manager import HistoryManager
+from src.image_tagging_helper.models.history_actions import HistoryAction
+from src.image_tagging_helper.models.controller import DatasetController
+
+class DatasetItem:
+	"""
+	データセット内の個々の画像ファイルを表すクラス。
+
+	Attributes:
+		  image_path (str): 画像ファイルのパス。
+		  caption (Caption): 画像に関連付けられたキャプション。
+	"""
+	
+	def __init__(
+			self,
+			image_path: str,
+			caption_path: str,
+			caption: Caption | None = None,
+	):
+		"""
+		DatasetItemのコンストラクタ。
+
+		Args:
+			image_path: 画像ファイルのパス。
+			caption: 画像に関連付けられたキャプション。指定されない場合は空のCaptionが作成される。
+		"""
+		self.image_path = image_path
+		self.caption_path = caption_path
+		self.caption = caption or Caption()
+	
+	@staticmethod
+	def create(image_path, caption_ext, caption_format_config):
+		caption_path = os.path.splitext(image_path)[0] + caption_ext
+		caption = Caption()
+		if os.path.exists(caption_path):
+			with open(caption_path, 'r', encoding='utf-8') as f:
+				caption_text = f.read()
+				caption = Caption.parse(caption_text, config=caption_format_config)
+		
+		return DatasetItem(image_path=image_path, caption_path=caption_path, caption=caption)
+
+class Dataset:
+	"""
+	複数のCaptionを管理するデータセットクラス。
+	変更を監視するためのリスナー機能や、Diffの適用機能を提供します。
+	"""
+	SENDER_ID = 'dataset'
+	
+	def __init__(self):
+		self.items = None
+		self.listeners = []
+		self.history = HistoryManager()
+	
+	def __getitem__(self, item: int | slice) -> DatasetItem | List[DatasetItem]:
+		return self.items[item]
+	
+	def __len__(self):
+		return len(self.items)
+	
+	@property
+	def initialized(self):
+		return self.items is not None
+	
+	# === 初期化処理 ===
+	def load(
+			self,
+			folder_path,
+			image_exts,
+			caption_ext,
+			caption_format_config,
+	):
+		self.history = HistoryManager()
+		
+		image_files = []
+		for ext in image_exts:
+			image_files.extend(glob.glob(os.path.join(folder_path, '*' + ext)))
+		
+		image_files = sorted(list(set(image_files)))
+		
+		self.items = [
+			DatasetItem.create(path, caption_ext, caption_format_config)
+			for path in image_files
+		]
+	
+	# === イベントリスナーの処理 ===
+	
+	def add_listener(self, callback):
+		"""
+		変更通知を受け取るリスナーを追加します。
+		
+		Args:
+			callback (callable): 変更通知を受け取るコールバック関数。
+		"""
+		self.listeners.append(callback)
+	
+	def remove_listener(self, callback):
+		"""
+		リスナーを削除します。
+		
+		Args:
+			callback (callable): 削除するコールバック関数。
+		"""
+		self.listeners.remove(callback)
+	
+	def _notify(self, sender, diff):
+		"""
+		登録されたリスナーに変更を通知します。
+		
+		Args:
+			sender (str): 変更を行った送信元のID。
+			diff (DatasetDiff): 適用された変更内容。
+		"""
+		for cb in self.listeners:
+			# UIスレッドセーフな呼び出しが必要な場合は、呼び出し側(cb)でwx.CallAfter等を使用することを想定
+			cb(sender, diff)
+	
+	def apply_diff(self, sender, diff):
+		"""
+		Diffオブジェクトに基づいてデータセットを更新します。
+		更新後、リスナーに通知を行います。
+		
+		Args:
+			sender (str): 変更を行った送信元のID。
+			diff (DatasetDiff): 適用する変更内容。
+		"""
+		if sender == self.SENDER_ID:
+			return
+		
+		self._apply_diff_internal(diff)
+		self._notify(sender, diff)
+	
+	def _apply_diff_internal(self, diff):
+		"""
+		Diffオブジェクトに基づいてデータセットを更新します（内部用）。
+		通知は行いません。
+		"""
+		if isinstance(diff, AppendDiff):
+			self.append_tags(diff.target, diff.tags)
+		elif isinstance(diff, InsertDiff):
+			self.insert_tags(diff.target, diff.position, diff.tags)
+		elif isinstance(diff, MoveDiff):
+			self.move_tag(diff.target, diff.old_position, diff.new_position)
+		elif isinstance(diff, DeleteDiff):
+			self.delete_tags(diff.target, diff.positions)
+		elif isinstance(diff, MutateTagDiff):
+			self.mutate_tag(diff.target, diff.position, diff.new_tag)
+		elif isinstance(diff, BatchDiff):
+			for child in diff.children:
+				self._apply_diff_internal(child)
+	
+	# === 履歴操作 ===
+	
+	def execute(self, action: HistoryAction, sender: str = None):
+		"""
+		アクションを実行し、履歴に追加します。
+		
+		Args:
+			action (HistoryAction): 実行するアクション。
+			sender (str): 操作の送信元ID。
+		"""
+		self.history.push(action, sender)
+	
+	def undo(self, sender: str = None):
+		"""
+		直前の操作を取り消します。
+		
+		Args:
+			sender (str): 操作の送信元ID。
+		"""
+		self.history.undo(sender)
+	
+	def redo(self, sender: str = None):
+		"""
+		取り消した操作をやり直します。
+		
+		Args:
+			sender (str): 操作の送信元ID。
+		"""
+		self.history.redo(sender)
+	
+	def can_undo(self) -> bool:
+		return self.history.can_undo()
+	
+	def can_redo(self) -> bool:
+		return self.history.can_redo()
+	
+	# === 編集操作 ===
+	
+	def append_tags(self, target, tags):
+		"""
+		指定されたキャプションの末尾にタグを追加します。
+		
+		Args:
+			target (int): 対象のキャプションインデックス。
+			tags (tuple[Tag, ...]): 追加するタグのリスト。
+		"""
+		caption = self.items[target].caption
+		caption.append_tags(tags)
+	
+	def insert_tags(self, target, position, tags):
+		"""
+		指定されたキャプションの指定位置にタグを挿入します。
+		
+		Args:
+			target (int): 対象のキャプションインデックス。
+			position (int): 挿入位置。
+			tags (tuple[Tag, ...]): 挿入するタグのリスト。
+		"""
+		caption = self.items[target].caption
+		caption.insert_tags(position, tags)
+	
+	def delete_tags(self, target, positions):
+		"""
+		指定された位置のタグを削除します。
+		
+		Args:
+			target (int): 対象のキャプションインデックス。
+			positions (tuple[int, ...]): 削除するタグの位置のリスト。降順にソート済みである必要があります。
+		"""
+		caption = self.items[target].caption
+		caption.delete_tags(positions)
+	
+	def move_tag(self, target, old_position, new_position):
+		"""
+		タグの位置を移動します。
+		
+		Args:
+			target (int): 対象のキャプションインデックス。
+			old_position (int): 移動元の位置。
+			new_position (int): 移動先の位置。
+		"""
+		caption = self.items[target].caption
+		caption.move_tag(old_position, new_position)
+	
+	def mutate_tag(self, target, position, new_tag):
+		"""
+		指定された位置のタグを新しいタグに置換します。
+		
+		Args:
+			target (int): 対象のキャプションインデックス。
+			position (int): 置換するタグの位置。
+			new_tag (Tag): 新しいタグ。
+		"""
+		caption = self.items[target].caption
+		caption.mutate_tag(position, new_tag)
+	
+	# === タグカウント ===
+	
+	def get_all_tags_with_counts(self) -> Dict[str, int]:
+		"""
+		データセット内のすべてのタグとその出現回数を取得します。
+
+		Returns:
+			Dict[str, int]: タグ名をキー、出現回数を値とする辞書。
+		"""
+		all_tags: Counter[str] = Counter()
+		for item in self.items:
+			for tag, cnt in item.caption.counter.items():
+				if cnt > 0:
+					all_tags[tag.text] += 1
+		return dict(all_tags)
+	
+	# === コントローラ ===
+	
+	def get_controller(self, sender: str | None = None) -> DatasetController:
+		"""
+		DatasetControllerを生成します。
+		
+		Args:
+			sender (str): 操作の送信元ID。
+			
+		Returns:
+			生成されたDatasetControllerオブジェクト。
+		"""
+		return DatasetController(self, sender)

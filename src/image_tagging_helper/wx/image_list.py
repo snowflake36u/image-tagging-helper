@@ -3,7 +3,7 @@ from typing import Dict
 
 import wx
 
-from src.image_tagging_helper.core.dataset import Dataset, DatasetItem
+from src.image_tagging_helper.models.dataset import Dataset, DatasetItem
 
 class ImageVListBox(wx.VListBox):
 	"""

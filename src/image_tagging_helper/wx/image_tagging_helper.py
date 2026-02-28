@@ -5,10 +5,10 @@ import wx.grid
 import ctypes
 from collections import Counter
 
-from src.image_tagging_helper.core.caption import Caption, CaptionFormatConfig
 from src.image_tagging_helper.core.config import Config
-from src.image_tagging_helper.core.dataset import Dataset, DatasetItem
-from src.image_tagging_helper.core.manager import DatasetManager
+from src.image_tagging_helper.models.caption import CaptionFormatConfig
+from src.image_tagging_helper.models.dataset import Dataset
+from src.image_tagging_helper.models.controller import DatasetController
 from src.image_tagging_helper.wx.image_list import ImageVListBox
 from src.image_tagging_helper.wx.image_tags_grid import ImageTagsGrid
 from src.image_tagging_helper.i18n import setup_translation, __
@@ -107,7 +107,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# === データメンバーの初期化 ===
 		self.image_exts = ['.jpg', '.jpeg', '.png', '.webp']
 		self.caption_ext = '.caption'
-		self.dataset_manager = DatasetManager(CaptionFormatConfig())
+		self.dataset = Dataset()
+		self.controller: DatasetController | None = None
+		self.caption_format_config = CaptionFormatConfig()
 		self.last_thumbnail_selection: int = wx.NOT_FOUND
 		
 		# === UIの初期化 ===
@@ -167,6 +169,10 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		undo_item = self._append_menu_item(menu, wx.ID_UNDO, __("action:undo"), __("tooltip:undo"), 'Ctrl+Z')
 		redo_item = self._append_menu_item(menu, wx.ID_REDO, __("action:redo"), __("tooltip:redo"), 'Ctrl+Y')
+		self.Bind(wx.EVT_MENU, self.on_undo, undo_item)
+		self.Bind(wx.EVT_MENU, self.on_redo, redo_item)
+		self.Bind(wx.EVT_UPDATE_UI, self.on_update_ui_undo, undo_item)
+		self.Bind(wx.EVT_UPDATE_UI, self.on_update_ui_redo, redo_item)
 		
 		menu.AppendSeparator()
 		
@@ -315,7 +321,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.image_tags_toolbar.AddSeparator()
 		self.image_tags_toolbar.Realize()
 		
-		self.image_tags_grid = ImageTagsGrid(self.image_tags_panel, self.dataset_manager)
+		self.image_tags_grid = ImageTagsGrid(self.image_tags_panel)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.image_tags_toolbar, 0, wx.EXPAND)
@@ -496,6 +502,26 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""データセットタグの表示/非表示を切り替えます。"""
 		self._update_layout_visibility()
 	
+	def on_undo(self, event: wx.CommandEvent):
+		"""直前の操作を元に戻します。"""
+		if self.controller:
+			self.controller.undo()
+	
+	def on_redo(self, event: wx.CommandEvent):
+		"""元に戻した操作をやり直します。"""
+		if self.controller:
+			self.controller.redo()
+	
+	def on_update_ui_undo(self, event: wx.UpdateUIEvent):
+		"""アンドゥメニュー項目のUIを更新します。"""
+		can_undo = self.controller.can_undo() if self.controller else False
+		event.Enable(can_undo)
+	
+	def on_update_ui_redo(self, event: wx.UpdateUIEvent):
+		"""リドゥメニュー項目のUIを更新します。"""
+		can_redo = self.controller.can_redo() if self.controller else False
+		event.Enable(can_redo)
+	
 	# === UI更新メソッド ===
 	
 	def _update_layout_visibility(self):
@@ -581,11 +607,11 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	def _update_image_path_view(self, selection: int):
 		"""選択された画像のパスを表示します。"""
-		if not self.dataset_manager.initialized or selection == wx.NOT_FOUND:
+		if not self.dataset.initialized or selection == wx.NOT_FOUND:
 			self.path_text.SetValue('')
 			return
 		
-		item = self.dataset_manager.dataset[selection]
+		item = self.dataset[selection]
 		self.path_text.SetValue(item.image_path)
 	
 	def _update_dataset_tags_view(self):
@@ -594,8 +620,8 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.dataset_tags_list.InsertColumn(0, __("label:tag"), width=150)
 		self.dataset_tags_list.InsertColumn(1, __("label:count"), width=50)
 		
-		dataset = self.dataset_manager.dataset
-		if not self.dataset_manager.initialized or len(dataset) == 0:
+		dataset = self.dataset
+		if not dataset.initialized or len(dataset) == 0:
 			return
 		
 		all_tags = []
@@ -621,10 +647,17 @@ class ImageTaggingHelperFrame(wx.Frame):
 		Args:
 			folder_path: 画像とキャプションファイルが含まれるフォルダのパス。
 		"""
-		self.dataset_manager.load(folder_path, self.image_exts, caption_ext=self.caption_ext)
-		dataset = self.dataset_manager.dataset
+		self.dataset.load(
+			folder_path,
+			self.image_exts,
+			caption_ext=self.caption_ext,
+			caption_format_config=self.caption_format_config,
+		)
+		self.controller = self.dataset.get_controller('frame')
+		dataset = self.dataset
 		
 		self.thumbnail_list.set_dataset(dataset)
+		self.image_tags_grid.set_dataset(dataset)
 		
 		if dataset and len(dataset) > 0:
 			self.thumbnail_list.SetSelection(0)
