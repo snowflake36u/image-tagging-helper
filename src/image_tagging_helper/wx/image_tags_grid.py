@@ -34,6 +34,7 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.on_cell_left_click)
 		self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
 		self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.on_range_select)
+		self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.on_label_left_click)
 	
 	def _init_grid(self):
 		"""グリッドの初期設定を行います。
@@ -103,8 +104,13 @@ class ImageTagsGrid(wx.grid.Grid):
 	
 	def on_key_down(self, evt):
 		"""キー操作による範囲選択を防止します。"""
+		key = evt.GetKeyCode()
+		
+		# Ctrl+Space または Shift+Space による範囲選択を無効化
+		if key == wx.WXK_SPACE and (evt.ControlDown() or evt.ShiftDown()):
+			return
+		
 		if evt.ShiftDown():
-			key = evt.GetKeyCode()
 			# Shift + 矢印キーによる選択を無効化
 			if key in [wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT]:
 				# 選択なしでカーソルを移動する
@@ -125,6 +131,13 @@ class ImageTagsGrid(wx.grid.Grid):
 		if evt.Selecting():
 			# 範囲選択イベントをキャンセルする
 			evt.Veto()
+	
+	def on_label_left_click(self, evt):
+		"""列ラベルクリックによる列選択を無効化します。"""
+		# 行ラベルは非表示なので、列ラベルのクリックのみを考慮する
+		if evt.GetCol() != -1:
+			return  # イベントを処理せず、選択を発生させない
+		evt.Skip()
 	
 	def on_grid_motion(self, evt):
 		"""ドラッグ操作による範囲選択を無効化します。"""
