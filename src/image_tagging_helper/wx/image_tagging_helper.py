@@ -3,6 +3,8 @@ import glob
 import wx
 import wx.grid
 import ctypes
+import csv
+import io
 from collections import Counter
 
 from src.image_tagging_helper.core.config import Config
@@ -557,16 +559,62 @@ class ImageTaggingHelperFrame(wx.Frame):
 		event.Enable(can_redo)
 	
 	def on_copy(self, event: wx.CommandEvent):
-		row = self.image_tags_grid.GetGridCursorRow()
-		if row < 0:
+		# 選択範囲の取得
+		selected_cells = set()
+		
+		# ブロック選択
+		top_left = self.image_tags_grid.GetSelectionBlockTopLeft()
+		bottom_right = self.image_tags_grid.GetSelectionBlockBottomRight()
+		for (r1, c1), (r2, c2) in zip(top_left, bottom_right):
+			for r in range(r1, r2 + 1):
+				for c in range(c1, c2 + 1):
+					selected_cells.add((r, c))
+		
+		# 行選択
+		for r in self.image_tags_grid.GetSelectedRows():
+			for c in range(self.image_tags_grid.GetNumberCols()):
+				selected_cells.add((r, c))
+		
+		# 個別セル選択
+		for r, c in self.image_tags_grid.GetSelectedCells():
+			selected_cells.add((r, c))
+		
+		# 選択がない場合はカーソル位置
+		if not selected_cells:
+			row = self.image_tags_grid.GetGridCursorRow()
+			col = self.image_tags_grid.GetGridCursorCol()
+			if row >= 0:
+				selected_cells.add((row, col))
+		
+		if not selected_cells:
 			return
 		
-		tag_text = self.image_tags_grid.GetCellValue(row, 0)
-		if not tag_text:
-			return
+		# 範囲の特定
+		min_r = min(r for r, c in selected_cells)
+		max_r = max(r for r, c in selected_cells)
+		min_c = min(c for r, c in selected_cells)
+		max_c = max(c for r, c in selected_cells)
+		
+		rows_data = []
+		for r in range(min_r, max_r + 1):
+			# 行内に選択セルがあるか確認
+			if any((r, c) in selected_cells for c in range(min_c, max_c + 1)):
+				row_items = []
+				for c in range(min_c, max_c + 1):
+					if (r, c) in selected_cells:
+						row_items.append(self.image_tags_grid.GetCellValue(r, c))
+					else:
+						row_items.append("")
+				rows_data.append(row_items)
+		
+		# TSV生成
+		output = io.StringIO()
+		writer = csv.writer(output, delimiter='\t', lineterminator='\n')
+		writer.writerows(rows_data)
+		text = output.getvalue()
 		
 		if wx.TheClipboard.Open():
-			wx.TheClipboard.SetData(wx.TextDataObject(tag_text))
+			wx.TheClipboard.SetData(wx.TextDataObject(text))
 			wx.TheClipboard.Close()
 	
 	def on_paste(self, event: wx.CommandEvent):
@@ -575,23 +623,48 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		text = ""
 		if wx.TheClipboard.Open():
-			if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DFTEXT)):
+			if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_TEXT)):
 				data = wx.TextDataObject()
 				wx.TheClipboard.GetData(data)
 				text = data.GetText()
 			wx.TheClipboard.Close()
 		
-		if text:
-			caption = Caption.parse(text, self.caption_format_config)
-			if caption.tags:
-				self.controller.append_tags(self.image_tags_grid.item_index, tuple(caption.tags))
+		if not text:
+			return
+		
+		tags = []
+		# TSVパース
+		f = io.StringIO(text)
+		reader = csv.reader(f, delimiter='\t')
+		
+		for row in reader:
+			if not row:
+				continue
+			
+			tag_text = row[0].strip()
+			if not tag_text:
+				continue
+			
+			weight = 1.0
+			if len(row) > 1:
+				try:
+					weight = float(row[1])
+				except ValueError:
+					pass
+			
+			tags.append(Tag(tag_text, weight))
+		
+		if tags:
+			row = self.image_tags_grid.GetGridCursorRow()
+			insert_pos = row + 1 if row >= 0 else self.image_tags_grid.GetNumberRows()
+			self.controller.insert_tags(self.image_tags_grid.item_index, insert_pos, tuple(tags))
 	
 	def on_insert_blank_tag(self, event: wx.CommandEvent):
 		if not self.controller or self.image_tags_grid.item_index is None:
 			return
 		
 		row = self.image_tags_grid.GetGridCursorRow()
-		self.controller.insert_tags(self.image_tags_grid.item_index, row + 1, [Tag()])
+		self.controller.insert_tags(self.image_tags_grid.item_index, row + 1, (Tag(),))
 	
 	def on_delete_tag(self, event: wx.CommandEvent):
 		if not self.controller or self.image_tags_grid.item_index is None:
