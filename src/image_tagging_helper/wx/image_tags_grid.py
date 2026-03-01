@@ -91,38 +91,45 @@ class ImageTagsGrid(wx.grid.Grid):
 		evt.Skip()
 	
 	def on_cell_left_click(self, evt):
-		"""クリック時の複数選択・範囲選択を防止します。"""
-		row, col = evt.GetRow(), evt.GetCol()
+		"""クリック時の複数選択・範囲選択を防止します。
 		
-		# 既存の選択をクリアし、クリックされたセルのみを選択する
-		self.ClearSelection()
-		self.SelectBlock(row, col, row, col)
-		self.SetGridCursor(row, col)
-	
-	# デフォルトの選択処理（Ctrl/Shiftでの追加選択など）を無効化するため、
-	# イベントをこれ以上伝播させない
+		クリックされたセルを単一に選択し、カーソルをそこに移動します。
+		デフォルトの選択処理（Ctrl/Shiftでの追加選択など）を無効化するため、
+		イベントの伝播をここで止めます（evt.Skip()を呼びません）。
+		"""
+		self.select_cell(evt.GetRow(), evt.GetCol())
 	
 	def on_key_down(self, evt):
-		"""キー操作による範囲選択を防止します。"""
+		"""キー操作によるカーソル移動と選択を制御します。
+		
+		矢印キーが押された場合、カーソルを移動し、移動後のセルを単一選択します。
+		これにより、カーソルと選択範囲が常に一致するようになります。
+		"""
 		key = evt.GetKeyCode()
 		
 		# Ctrl+Space または Shift+Space による範囲選択を無効化
 		if key == wx.WXK_SPACE and (evt.ControlDown() or evt.ShiftDown()):
 			return
 		
-		if evt.ShiftDown():
-			# Shift + 矢印キーによる選択を無効化
-			if key in [wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT]:
-				# 選択なしでカーソルを移動する
-				if key == wx.WXK_UP:
-					self.MoveCursorUp(False)
-				elif key == wx.WXK_DOWN:
-					self.MoveCursorDown(False)
-				elif key == wx.WXK_LEFT:
-					self.MoveCursorLeft(False)
-				elif key == wx.WXK_RIGHT:
-					self.MoveCursorRight(False)
-				return  # イベント処理をここで終了
+		# 矢印キーの処理
+		if key in [wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT]:
+			row, col = self.GetGridCursorRow(), self.GetGridCursorCol()
+			
+			new_row, new_col = row, col
+			
+			if key == wx.WXK_UP:
+				new_row = max(0, row - 1)
+			elif key == wx.WXK_DOWN:
+				new_row = min(self.GetNumberRows() - 1, row + 1)
+			elif key == wx.WXK_LEFT:
+				new_col = max(0, col - 1)
+			elif key == wx.WXK_RIGHT:
+				new_col = min(self.GetNumberCols() - 1, col + 1)
+			
+			if row != new_row or col != new_col:
+				self.select_cell(new_row, new_col)
+			
+			return  # デフォルトのキー処理をスキップ
 		
 		evt.Skip()
 	
@@ -196,7 +203,7 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.select_cell(0, 0)
 	
 	def select_cell(self, row: int, col: int):
-		"""指定されたセルを選択状態にします。"""
+		"""指定されたセルを選択状態にし、カーソルを移動します。"""
 		self.ClearSelection()
 		self.SetGridCursor(row, col)
 		self.SelectBlock(row, col, row, col)
