@@ -1,11 +1,9 @@
-import os
-import glob
 import wx
 import wx.grid
 import ctypes
 import csv
 import io
-from collections import Counter
+import bisect
 
 from src.image_tagging_helper.core.config import Config
 from src.image_tagging_helper.models.caption import Caption, CaptionFormatConfig, Tag
@@ -826,21 +824,41 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		dataset = self.dataset
 		if not dataset.initialized or len(dataset) == 0:
+			self.dataset_tags = []
 			return
 		
-		all_tags = []
-		for item in dataset:
-			for tag in item.caption.tags:
-				all_tags.append(tag.text)
-		
-		tag_counts = Counter(all_tags)
-		
 		# タグをアルファベット順にソートして表示
-		sorted_tags = sorted(tag_counts.items())
+		sorted_tags = sorted(dataset.tag_usages.items())
 		
 		for i, (tag_text, count) in enumerate(sorted_tags):
 			self.dataset_tags_list.InsertItem(i, tag_text)
 			self.dataset_tags_list.SetItem(i, 1, str(count))
+		
+		# タグリストを保存（更新用）
+		self.dataset_tags = [tag_text for tag_text, _ in sorted_tags]
+	
+	def on_tag_usage_changed(self, tag_text: str, count: int):
+		"""
+		タグの使用回数が変更されたときの処理。
+		リスト内の該当するタグのカウントを更新します。
+		"""
+		if not hasattr(self, 'dataset_tags'):
+			self._update_dataset_tags_view()
+			return
+		
+		idx = bisect.bisect_left(self.dataset_tags, tag_text)
+		exists = idx < len(self.dataset_tags) and self.dataset_tags[idx] == tag_text
+		
+		if exists:
+			if count > 0:
+				self.dataset_tags_list.SetItem(idx, 1, str(count))
+			else:
+				self.dataset_tags_list.DeleteItem(idx)
+				del self.dataset_tags[idx]
+		elif count > 0:
+			self.dataset_tags_list.InsertItem(idx, tag_text)
+			self.dataset_tags_list.SetItem(idx, 1, str(count))
+			self.dataset_tags.insert(idx, tag_text)
 	
 	# === データ処理メソッド ===
 	
@@ -851,6 +869,10 @@ class ImageTaggingHelperFrame(wx.Frame):
 		Args:
 			folder_path: 画像とキャプションファイルが含まれるフォルダのパス。
 		"""
+		# 既存のリスナーを解除
+		if self.dataset.initialized:
+			self.dataset.remove_tag_usage_changed_listener(self.on_tag_usage_changed)
+		
 		self.dataset.load(
 			folder_path,
 			self.image_exts,
@@ -859,6 +881,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		)
 		self.controller = self.dataset.get_controller('frame')
 		dataset = self.dataset
+		
+		# リスナーを登録
+		dataset.add_tag_usage_changed_listener(self.on_tag_usage_changed)
 		
 		self.thumbnail_list.set_dataset(dataset)
 		self.image_tags_grid.set_dataset(dataset)

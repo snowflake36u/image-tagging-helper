@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING, Dict
+from typing import List, TYPE_CHECKING, Dict, Callable
 import glob
 import os
 from collections import Counter, deque
@@ -42,11 +42,13 @@ class DatasetItem:
 	@staticmethod
 	def create(image_path, caption_ext, caption_format_config, on_tag_usage_changed):
 		caption_path = os.path.splitext(image_path)[0] + caption_ext
-		caption = Caption(on_tag_usage_changed=on_tag_usage_changed)
+		caption = Caption()
 		if os.path.exists(caption_path):
 			with open(caption_path, 'r', encoding='utf-8') as f:
 				caption_text = f.read()
 				caption = Caption.parse(caption_text, config=caption_format_config)
+		
+		caption.set_tag_usage_changed_listener(on_tag_usage_changed)
 		
 		return DatasetItem(image_path=image_path, caption_path=caption_path, caption=caption)
 
@@ -59,8 +61,13 @@ class Dataset:
 	
 	def __init__(self):
 		self.items = None
-		self._diff_applied_listeners = []
+		self.tag_usages = Counter()
 		self.history = HistoryManager()
+		
+		# タグの使用回数の更新後イベント。(tag, count) -> None
+		self._tag_usage_changed_listeners: List[Callable[[str, int], None]] = []
+		# 変更操作の適用後イベント。(sender, diff) -> None
+		self._diff_applied_listeners: List[Callable[[str, DatasetDiff], None]] = []
 	
 	def __getitem__(self, item: int | slice) -> DatasetItem | List[DatasetItem]:
 		return self.items[item]
@@ -89,11 +96,17 @@ class Dataset:
 		image_files = sorted(list(set(image_files)))
 		
 		self.items = [
-			DatasetItem.create(path, caption_ext, caption_format_config)
+			DatasetItem.create(
+				image_path=path,
+				caption_ext=caption_ext,
+				caption_format_config=caption_format_config,
+				on_tag_usage_changed=self.on_tag_usage_changed_in_caption
+			)
 			for path in image_files
 		]
+		self._init_tag_usages()
 	
-	# === イベントリスナーの処理 ===
+	# === イベントリスナーの管理 ===
 	
 	def add_diff_applied_listener(self, callback):
 		"""
@@ -112,6 +125,26 @@ class Dataset:
 			callback (callable): 削除するコールバック関数。
 		"""
 		self._diff_applied_listeners.remove(callback)
+	
+	def add_tag_usage_changed_listener(self, callback):
+		"""
+		変更通知を受け取るリスナーを追加します。
+		
+		Args:
+			callback (callable): 変更通知を受け取るコールバック関数。
+		"""
+		self._tag_usage_changed_listeners.append(callback)
+	
+	def remove_tag_usage_changed_listener(self, callback):
+		"""
+		リスナーを削除します。
+		
+		Args:
+			callback (callable): 削除するコールバック関数。
+		"""
+		self._tag_usage_changed_listeners.remove(callback)
+	
+	# === 編集操作の管理 ===
 	
 	def _notify_diff_applied(self, sender, diff):
 		"""
@@ -257,22 +290,27 @@ class Dataset:
 	
 	# === タグカウント ===
 	
-	def get_all_tags_with_counts(self) -> Dict[str, int]:
+	def _init_tag_usages(self) -> Dict[str, int]:
 		"""
 		データセット内のすべてのタグとその出現回数を取得します。
 
 		Returns:
 			Dict[str, int]: タグ名をキー、出現回数を値とする辞書。
 		"""
-		all_tags: Counter[str] = Counter()
+		tag_usages: Counter[str] = Counter()
 		for item in self.items:
-			for tag, cnt in item.caption.counter.items():
-				if cnt > 0:
-					all_tags[tag.text] += 1
-		return dict(all_tags)
+			for tag in item.caption.tags:
+				tag_usages[tag.text] += 1
+		self.tag_usages = tag_usages
 	
-	def on_tag_usage_changed(self, text, is_used):
-		pass
+	def on_tag_usage_changed_in_caption(self, text, is_used):
+		if is_used:
+			self.tag_usages[text] += 1
+		else:
+			self.tag_usages[text] -= 1
+		
+		for cb in self._tag_usage_changed_listeners:
+			cb(text, self.tag_usages[text])
 	
 	# === コントローラ ===
 	

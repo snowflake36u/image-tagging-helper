@@ -84,7 +84,7 @@ class Caption:
 	1つの画像のキャプション（タグの集合）を表すクラス。
 	"""
 	
-	def __init__(self, tags=None, on_tag_usage_changed=None):
+	def __init__(self, tags=None):
 		self.tags = tags or []
 		# タグの出現回数をカウント（重複チェックなどに使用）
 		self.counter = Counter([tag.text for tag in self.tags])
@@ -95,6 +95,9 @@ class Caption:
 	
 	def __len__(self):
 		return len(self.tags)
+	
+	def set_tag_usage_changed_listener(self, callback):
+		self.on_tag_usage_changed = callback
 	
 	def format(self, config: CaptionFormatConfig):
 		"""
@@ -109,7 +112,10 @@ class Caption:
 		return config.format_delimiter.join([tag.format(config) for tag in self.tags])
 	
 	@staticmethod
-	def parse(text: str, config: CaptionFormatConfig) -> 'Caption':
+	def parse(
+			text: str,
+			config: CaptionFormatConfig,
+	) -> 'Caption':
 		"""
 		テキストをパースしてCaptionオブジェクトを生成します。
 		括弧による重み付けや、(tag:1.5) のような明示的な重み指定に対応しています。
