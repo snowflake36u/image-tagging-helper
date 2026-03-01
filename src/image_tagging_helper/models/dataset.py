@@ -59,7 +59,7 @@ class Dataset:
 	
 	def __init__(self):
 		self.items = None
-		self.listeners = []
+		self._diff_applied_listeners = []
 		self.history = HistoryManager()
 	
 	def __getitem__(self, item: int | slice) -> DatasetItem | List[DatasetItem]:
@@ -95,25 +95,25 @@ class Dataset:
 	
 	# === イベントリスナーの処理 ===
 	
-	def add_listener(self, callback):
+	def add_diff_applied_listener(self, callback):
 		"""
 		変更通知を受け取るリスナーを追加します。
 		
 		Args:
 			callback (callable): 変更通知を受け取るコールバック関数。
 		"""
-		self.listeners.append(callback)
+		self._diff_applied_listeners.append(callback)
 	
-	def remove_listener(self, callback):
+	def remove_diff_applied_listener(self, callback):
 		"""
 		リスナーを削除します。
 		
 		Args:
 			callback (callable): 削除するコールバック関数。
 		"""
-		self.listeners.remove(callback)
+		self._diff_applied_listeners.remove(callback)
 	
-	def _notify(self, sender, diff):
+	def _notify_diff_applied(self, sender, diff):
 		"""
 		登録されたリスナーに変更を通知します。
 		
@@ -121,7 +121,7 @@ class Dataset:
 			sender (str): 変更を行った送信元のID。
 			diff (DatasetDiff): 適用された変更内容。
 		"""
-		for cb in self.listeners:
+		for cb in self._diff_applied_listeners:
 			# UIスレッドセーフな呼び出しが必要な場合は、呼び出し側(cb)でwx.CallAfter等を使用することを想定
 			cb(sender, diff)
 	
@@ -138,7 +138,7 @@ class Dataset:
 			return
 		
 		self._apply_diff_internal(diff)
-		self._notify(sender, diff)
+		self._notify_diff_applied(sender, diff)
 	
 	def _apply_diff_internal(self, diff):
 		"""

@@ -58,12 +58,12 @@ class ImageTagsGrid(wx.grid.Grid):
 			dataset: 設定するDatasetオブジェクト。Noneの場合はクリアされます。
 		"""
 		if self.dataset:
-			self.dataset.remove_listener(self.on_model_changed)
+			self.dataset.remove_diff_applied_listener(self.on_model_changed)
 		
 		self.dataset = dataset
 		if dataset:
 			self.controller = dataset.get_controller(self.SENDER_ID)
-			self.dataset.add_listener(self.on_model_changed)
+			self.dataset.add_diff_applied_listener(self.on_model_changed)
 		
 		self.refresh_grid()
 	
