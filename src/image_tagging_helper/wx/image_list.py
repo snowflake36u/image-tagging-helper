@@ -18,6 +18,7 @@ class ImageVListBox(wx.VListBox):
 		self._thumbnail_display_width = 64  # デフォルト値
 		self.padding_h = 5
 		self.padding_v = 5
+		self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""
@@ -172,3 +173,19 @@ class ImageVListBox(wx.VListBox):
 		total_height = image_height + self.padding_v * 2
 		
 		return int(total_height)
+	
+	def on_mouse_wheel(self, event: wx.MouseEvent):
+		"""
+		マウスホイールイベントを処理し、スクロール量を調整する。
+		"""
+		rotation = event.GetWheelRotation()
+		
+		# 1回転あたりのスクロール行数を1に設定
+		lines_to_scroll = 1
+		
+		if rotation > 0:
+			# 上にスクロール
+			self.ScrollLines(-lines_to_scroll)
+		elif rotation < 0:
+			# 下にスクロール
+			self.ScrollLines(lines_to_scroll)
