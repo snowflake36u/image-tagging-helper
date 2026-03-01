@@ -574,7 +574,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 			return
 		
 		self.controller.delete_tags(self.image_tags_grid.item_index, (row,))
-		wx.CallAfter(self.image_tags_grid.SetGridCursor, row + 1, 0)
 	
 	def on_move_tag_up(self, event: wx.CommandEvent):
 		if not self.controller or self.image_tags_grid.item_index is None:
@@ -585,8 +584,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 			return
 		
 		self.controller.move_tag(self.image_tags_grid.item_index, row, row - 1)
-		wx.CallAfter(self.image_tags_grid.SetGridCursor, row - 1, 0)
-		wx.CallAfter(self.image_tags_grid.SelectBlock, row - 1, 0, row - 1, 0)
 	
 	def on_move_tag_down(self, event: wx.CommandEvent):
 		if not self.controller or self.image_tags_grid.item_index is None:
@@ -597,8 +594,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 			return
 		
 		self.controller.move_tag(self.image_tags_grid.item_index, row, row + 1)
-		wx.CallAfter(self.image_tags_grid.SetGridCursor, row + 1, 0)
-		wx.CallAfter(self.image_tags_grid.SelectBlock, row + 1, 0, row + 1, 0)
 	
 	# === UI更新メソッド ===
 	

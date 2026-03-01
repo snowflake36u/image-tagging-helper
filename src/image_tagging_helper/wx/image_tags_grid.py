@@ -180,6 +180,12 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.item_index = index
 		self.refresh_grid()
 	
+	def select_cell(self, row: int, col: int):
+		"""指定されたセルを選択状態にします。"""
+		self.ClearSelection()
+		self.SetGridCursor(row, col)
+		self.SelectBlock(row, col, row, col)
+
 	def refresh_grid(self):
 		"""グリッドの内容を現在のデータセットとインデックスに基づいて完全に更新します。
 		
@@ -226,6 +232,9 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.SetCellValue(row, 0, tag.text)
 			weight_str = f'{tag.weight:.2f}' if tag.weight is not None else ''
 			self.SetCellValue(row, 1, weight_str)
+		
+		if tags:
+			self.select_cell(row, 0)
 	
 	def insert_tags(self, target: int, position: int, tags: tuple[Tag, ...]):
 		"""指定位置にタグを挿入します。
@@ -245,6 +254,9 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.SetCellValue(row, 0, tag.text)
 			weight_str = f'{tag.weight:.2f}' if tag.weight is not None else ''
 			self.SetCellValue(row, 1, weight_str)
+		
+		if tags:
+			self.select_cell(row, 0)
 	
 	def move_tag(self, target: int, old_position: int, new_position: int):
 		"""タグの位置を移動します。
@@ -268,6 +280,8 @@ class ImageTagsGrid(wx.grid.Grid):
 		
 		self.SetCellValue(new_position, 0, tag_text)
 		self.SetCellValue(new_position, 1, tag_weight)
+		
+		self.select_cell(new_position, 0)
 	
 	def delete_tags(self, target: int, positions: tuple[int, ...]):
 		"""指定された位置のタグを削除します。
@@ -281,6 +295,11 @@ class ImageTagsGrid(wx.grid.Grid):
 		
 		for pos in positions:
 			self.DeleteRows(pos, 1)
+		
+		if positions:
+			target_row = max(0, positions[-1] - 1)
+			if target_row < self.GetNumberRows():
+				self.select_cell(target_row, 0)
 	
 	def mutate_tag(self, target: int, position: int, new_tag: Tag):
 		"""指定位置のタグの内容を更新します。
@@ -293,6 +312,11 @@ class ImageTagsGrid(wx.grid.Grid):
 		if self.item_index != target:
 			return
 		
-		self.SetCellValue(position, 0, new_tag.text)
-		weight_str = f'{new_tag.weight:.2f}' if new_tag.weight is not None else ''
-		self.SetCellValue(position, 1, weight_str)
+		column = 0
+		if self.GetCellValue(position, 0) != new_tag.text:
+			self.SetCellValue(position, 0, new_tag.text)
+		else:
+			column = 1
+			self.SetCellValue(position, 1, f'{new_tag.weight:.2f}')
+		
+		self.select_cell(position, column)
