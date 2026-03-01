@@ -8,6 +8,8 @@ from src.image_tagging_helper.models.diff import (
 	DatasetDiff, AppendDiff, InsertDiff, MoveDiff, DeleteDiff, MutateTagDiff, BatchDiff
 )
 
+from src.image_tagging_helper.i18n import __
+
 class ImageTagsGrid(wx.grid.Grid):
 	"""画像のタグを表示・編集するためのグリッドコントロール。
 	
@@ -40,10 +42,8 @@ class ImageTagsGrid(wx.grid.Grid):
 		行サイズのドラッグ無効化、選択モードの設定を行います。
 		"""
 		self.CreateGrid(0, 2)
-		self.SetColLabelValue(0, "Tag")
-		self.SetColLabelValue(1, "Weight")
-		# self.SetColLabelValue(0, __("label:tag"))
-		# self.SetColLabelValue(1, __("label:weight"))
+		self.SetColLabelValue(0, __("label:tag"))
+		self.SetColLabelValue(1, __("label:weight"))
 		self.SetColSize(0, 150)
 		self.SetColSize(1, 50)
 		self.SetRowLabelSize(0)

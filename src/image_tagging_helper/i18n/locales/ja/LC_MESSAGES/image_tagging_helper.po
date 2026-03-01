@@ -7,6 +7,12 @@ msgstr "言語設定"
 msgid "label:language"
 msgstr "言語"
 
+msgid "label:font_settings"
+msgstr "フォント設定"
+
+msgid "label:editor_font"
+msgstr "エディタ"
+
 msgid "ui_group:file"
 msgstr "ファイル(&F)"
 
@@ -48,12 +54,6 @@ msgstr "やり直し(&R)"
 
 msgid "tooltip:redo"
 msgstr "やり直し"
-
-msgid "action:cut"
-msgstr "切り取り(&T)"
-
-msgid "tooltip:cut"
-msgstr "切り取り"
 
 msgid "action:copy"
 msgstr "コピー(&C)"
@@ -181,17 +181,14 @@ msgstr "画像一覧"
 msgid "label:image_tags"
 msgstr "画像のタグ"
 
-msgid "label:tag"
-msgstr "タグ"
-
-msgid "label:weight"
-msgstr "重み"
-
 msgid "label:tag_palette"
 msgstr "タグパレット"
 
 msgid "label:dataset_tags"
 msgstr "全タグ一覧"
+
+msgid "label:tag"
+msgstr "タグ"
 
 msgid "label:count"
 msgstr "該当数"
@@ -207,3 +204,16 @@ msgstr "再起動が必要"
 
 msgid "title:app_main_window"
 msgstr "Image Tagging Helper"
+
+msgid "label:weight"
+msgstr "重み"
+
+#~ msgid "action:cut"
+#~ msgstr "切り取り(&T)"
+
+#~ msgid "tooltip:cut"
+#~ msgstr "切り取り"
+
+#~ msgid "label:font"
+#~ msgstr "フォント"
+

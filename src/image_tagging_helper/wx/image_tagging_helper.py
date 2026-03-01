@@ -60,6 +60,26 @@ class PreferencesDialog(wx.Dialog):
 		sbs.Add(hbox, flag=wx.EXPAND | wx.ALL, border=5)
 		panel_sizer.Add(sbs, flag=wx.EXPAND | wx.ALL, border=10)
 		
+		# フォント設定
+		sb_font = wx.StaticBox(panel, label=__("label:font_settings"))
+		sbs_font = wx.StaticBoxSizer(sb_font, wx.VERTICAL)
+		
+		hbox_font = wx.BoxSizer(wx.HORIZONTAL)
+		st_font = wx.StaticText(panel, label=__("label:editor_font"))
+		
+		self.font_picker = wx.FontPickerCtrl(panel, style=wx.FNTP_FONTDESC_AS_LABEL)
+		font_desc = self.config.get('ui.font')
+		if font_desc:
+			font = wx.Font(font_desc)
+			if font.IsOk():
+				self.font_picker.SetSelectedFont(font)
+		
+		hbox_font.Add(st_font, flag=wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, border=8)
+		hbox_font.Add(self.font_picker, proportion=1)
+		
+		sbs_font.Add(hbox_font, flag=wx.EXPAND | wx.ALL, border=5)
+		panel_sizer.Add(sbs_font, flag=wx.EXPAND | wx.ALL, border=10)
+		
 		panel.SetSizer(panel_sizer)
 		
 		dlg_sizer.Add(panel, 1, wx.EXPAND)
@@ -78,6 +98,11 @@ class PreferencesDialog(wx.Dialog):
 		if idx != wx.NOT_FOUND:
 			lang_code = self.languages[idx][0]
 			self.config.set('language', lang_code)
+		
+		# フォント設定の保存
+		font = self.font_picker.GetSelectedFont()
+		if font.IsOk():
+			self.config.set('ui.font', font.GetNativeFontInfoDesc())
 		
 		self.config.save()
 		
@@ -132,6 +157,8 @@ class ImageTaggingHelperFrame(wx.Frame):
 		sizer.Add(path_panel, 0, wx.EXPAND | wx.ALL, 5)
 		sizer.Add(self.splitter_1, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 		main_panel.SetSizer(sizer)
+		
+		self.apply_font_settings()
 	
 	def _init_menubar(self):
 		"""メニューバーを初期化します。"""
@@ -493,6 +520,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		with PreferencesDialog(self, self.config) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				lang_changed = dlg.save()
+				self.apply_font_settings()
 				if lang_changed:
 					wx.MessageBox(
 						__("message:restart_to_apply_language"),
@@ -672,6 +700,33 @@ class ImageTaggingHelperFrame(wx.Frame):
 				self.splitter_3.SetSashPosition(s3_pos)
 		finally:
 			self.Thaw()
+	
+	def apply_font_settings(self):
+		"""設定されたフォントをUIに適用します。"""
+		font_desc = self.config.get('ui.font')
+		if not font_desc:
+			return
+		
+		font = wx.Font(font_desc)
+		if not font.IsOk():
+			return
+		
+		# ImageTagsGridへの適用
+		self.image_tags_grid.SetDefaultCellFont(font)
+		self.image_tags_grid.SetLabelFont(font)
+		
+		# 行の高さを調整
+		dc = wx.ClientDC(self.image_tags_grid)
+		dc.SetFont(font)
+		text_width, text_height = dc.GetTextExtent("Wg")
+		row_height = text_height + 4  # パディングを追加
+		
+		self.image_tags_grid.SetDefaultRowSize(row_height, True)
+		self.image_tags_grid.ForceRefresh()
+		
+		# DatasetTagsListへの適用
+		self.dataset_tags_list.SetFont(font)
+		self.dataset_tags_list.Refresh()
 	
 	def _update_views_for_item_selection(self, selection: int):
 		"""指定された選択に基づいて関連するビューを更新します。"""

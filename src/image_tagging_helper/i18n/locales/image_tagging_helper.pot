@@ -7,6 +7,12 @@ msgstr ""
 msgid "label:language"
 msgstr ""
 
+msgid "label:font_settings"
+msgstr ""
+
+msgid "label:editor_font"
+msgstr ""
+
 msgid "ui_group:file"
 msgstr ""
 
@@ -47,12 +53,6 @@ msgid "action:redo"
 msgstr ""
 
 msgid "tooltip:redo"
-msgstr ""
-
-msgid "action:cut"
-msgstr ""
-
-msgid "tooltip:cut"
 msgstr ""
 
 msgid "action:copy"
@@ -181,16 +181,13 @@ msgstr ""
 msgid "label:image_tags"
 msgstr ""
 
-msgid "label:tag"
-msgstr ""
-
-msgid "label:weight"
-msgstr ""
-
 msgid "label:tag_palette"
 msgstr ""
 
 msgid "label:dataset_tags"
+msgstr ""
+
+msgid "label:tag"
 msgstr ""
 
 msgid "label:count"
@@ -206,5 +203,8 @@ msgid "title:restart_required"
 msgstr ""
 
 msgid "title:app_main_window"
+msgstr ""
+
+msgid "label:weight"
 msgstr ""
 

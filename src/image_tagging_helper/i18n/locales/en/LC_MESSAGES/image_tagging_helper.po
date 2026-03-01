@@ -7,6 +7,12 @@ msgstr "Language Settings"
 msgid "label:language"
 msgstr "Language"
 
+msgid "label:font_settings"
+msgstr "Font Settings"
+
+msgid "label:editor_font"
+msgstr "Editor"
+
 msgid "ui_group:file"
 msgstr "&File"
 
@@ -48,12 +54,6 @@ msgstr "&Redo"
 
 msgid "tooltip:redo"
 msgstr "Redo"
-
-msgid "action:cut"
-msgstr "Cu&t"
-
-msgid "tooltip:cut"
-msgstr "Cut"
 
 msgid "action:copy"
 msgstr "&Copy"
@@ -181,17 +181,14 @@ msgstr "Image List"
 msgid "label:image_tags"
 msgstr "Image Tags"
 
-msgid "label:tag"
-msgstr "Tag"
-
-msgid "label:weight"
-msgstr "Weight"
-
 msgid "label:tag_palette"
 msgstr "Tag Palette"
 
 msgid "label:dataset_tags"
 msgstr "Dataset Tags"
+
+msgid "label:tag"
+msgstr "Tag"
 
 msgid "label:count"
 msgstr "Count"
@@ -207,3 +204,16 @@ msgstr "Restart Required"
 
 msgid "title:app_main_window"
 msgstr "Image Tagging Helper"
+
+msgid "label:weight"
+msgstr "Weight"
+
+#~ msgid "action:cut"
+#~ msgstr "Cu&t"
+
+#~ msgid "tooltip:cut"
+#~ msgstr "Cut"
+
+#~ msgid "label:font"
+#~ msgstr "Font"
+
