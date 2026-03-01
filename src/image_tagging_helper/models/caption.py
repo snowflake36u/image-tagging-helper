@@ -1,5 +1,6 @@
 from collections import Counter
 from dataclasses import dataclass
+from typing import Callable
 
 class CaptionFormatConfig:
 	"""
@@ -83,10 +84,11 @@ class Caption:
 	1つの画像のキャプション（タグの集合）を表すクラス。
 	"""
 	
-	def __init__(self, tags=None):
+	def __init__(self, tags=None, on_tag_usage_changed=None):
 		self.tags = tags or []
 		# タグの出現回数をカウント（重複チェックなどに使用）
 		self.counter = Counter([tag.text for tag in self.tags])
+		self.on_tag_usage_changed: Callable[[str, bool], None] | None = None
 	
 	def __items__(self, index: int | slice):
 		return self.tags[index]
@@ -201,16 +203,24 @@ class Caption:
 	
 	def append_tags(self, tags):
 		self.tags.extend(tags)
-		self.counter.update([tag.text for tag in tags])
+		for tag in tags:
+			if self.counter[tag.text] == 0 and self.on_tag_usage_changed:
+				self.on_tag_usage_changed(tag.text, True)
+			self.counter[tag.text] += 1
 	
 	def insert_tags(self, position, tags):
 		self.tags[position:position] = tags
-		self.counter.update([tag.text for tag in tags])
+		for tag in tags:
+			if self.counter[tag.text] == 0 and self.on_tag_usage_changed:
+				self.on_tag_usage_changed(tag.text, True)
+			self.counter[tag.text] += 1
 	
 	def delete_tags(self, positions):
 		for i in positions:
 			tag = self.tags.pop(i)
 			self.counter[tag.text] -= 1
+			if self.counter[tag.text] == 0 and self.on_tag_usage_changed:
+				self.on_tag_usage_changed(tag.text, False)
 	
 	def move_tag(self, old_position, new_position):
 		tag = self.tags.pop(old_position)
@@ -221,4 +231,9 @@ class Caption:
 		self.tags[position] = new_tag
 		if old_tag.text != new_tag.text:
 			self.counter[old_tag.text] -= 1
+			if self.counter[old_tag.text] == 0 and self.on_tag_usage_changed:
+				self.on_tag_usage_changed(old_tag.text, False)
+			
+			if self.counter[new_tag.text] == 0 and self.on_tag_usage_changed:
+				self.on_tag_usage_changed(new_tag.text, True)
 			self.counter[new_tag.text] += 1

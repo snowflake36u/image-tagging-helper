@@ -40,9 +40,9 @@ class DatasetItem:
 		self.caption = caption or Caption()
 	
 	@staticmethod
-	def create(image_path, caption_ext, caption_format_config):
+	def create(image_path, caption_ext, caption_format_config, on_tag_usage_changed):
 		caption_path = os.path.splitext(image_path)[0] + caption_ext
-		caption = Caption()
+		caption = Caption(on_tag_usage_changed=on_tag_usage_changed)
 		if os.path.exists(caption_path):
 			with open(caption_path, 'r', encoding='utf-8') as f:
 				caption_text = f.read()
@@ -270,6 +270,9 @@ class Dataset:
 				if cnt > 0:
 					all_tags[tag.text] += 1
 		return dict(all_tags)
+	
+	def on_tag_usage_changed(self, text, is_used):
+		pass
 	
 	# === コントローラ ===
 	
