@@ -179,6 +179,8 @@ class ImageTagsGrid(wx.grid.Grid):
 		"""
 		self.item_index = index
 		self.refresh_grid()
+		if self.GetNumberRows() > 0:
+			self.select_cell(0, 0)
 	
 	def select_cell(self, row: int, col: int):
 		"""指定されたセルを選択状態にします。"""
