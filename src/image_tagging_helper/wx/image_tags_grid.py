@@ -31,10 +31,6 @@ class ImageTagsGrid(wx.grid.Grid):
 		self._init_grid()
 		
 		self.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.on_cell_changed)
-		self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.on_cell_left_click)
-		self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
-		self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.on_range_select)
-		self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.on_label_left_click)
 	
 	def _init_grid(self):
 		"""グリッドの初期設定を行います。
@@ -51,9 +47,6 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.EnableDragRowSize(False)
 		# 選択モードをセル選択にする
 		self.SetSelectionMode(wx.grid.Grid.SelectCells)
-		
-		# ドラッグによる範囲選択を防止するためにマウスイベントを監視
-		self.GetGridWindow().Bind(wx.EVT_MOTION, self.on_grid_motion)
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""表示対象のデータセットを設定します。
@@ -90,69 +83,6 @@ class ImageTagsGrid(wx.grid.Grid):
 		
 		evt.Skip()
 	
-	def on_cell_left_click(self, evt):
-		"""クリック時の複数選択・範囲選択を防止します。
-		
-		クリックされたセルを単一に選択し、カーソルをそこに移動します。
-		デフォルトの選択処理（Ctrl/Shiftでの追加選択など）を無効化するため、
-		イベントの伝播をここで止めます（evt.Skip()を呼びません）。
-		"""
-		self.select_cell(evt.GetRow(), evt.GetCol())
-	
-	def on_key_down(self, evt):
-		"""キー操作によるカーソル移動と選択を制御します。
-		
-		矢印キーが押された場合、カーソルを移動し、移動後のセルを単一選択します。
-		これにより、カーソルと選択範囲が常に一致するようになります。
-		"""
-		key = evt.GetKeyCode()
-		
-		# Ctrl+Space または Shift+Space による範囲選択を無効化
-		if key == wx.WXK_SPACE and (evt.ControlDown() or evt.ShiftDown()):
-			return
-		
-		# 矢印キーの処理
-		if key in [wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT]:
-			row, col = self.GetGridCursorRow(), self.GetGridCursorCol()
-			
-			new_row, new_col = row, col
-			
-			if key == wx.WXK_UP:
-				new_row = max(0, row - 1)
-			elif key == wx.WXK_DOWN:
-				new_row = min(self.GetNumberRows() - 1, row + 1)
-			elif key == wx.WXK_LEFT:
-				new_col = max(0, col - 1)
-			elif key == wx.WXK_RIGHT:
-				new_col = min(self.GetNumberCols() - 1, col + 1)
-			
-			if row != new_row or col != new_col:
-				self.select_cell(new_row, new_col)
-			
-			return  # デフォルトのキー処理をスキップ
-		
-		evt.Skip()
-	
-	def on_range_select(self, evt):
-		"""範囲選択（ドラッグ、Shift+クリック）を無効化します。"""
-		if evt.Selecting():
-			# 範囲選択イベントをキャンセルする
-			evt.Veto()
-	
-	def on_label_left_click(self, evt):
-		"""列ラベルクリックによる列選択を無効化します。"""
-		# 行ラベルは非表示なので、列ラベルのクリックのみを考慮する
-		if evt.GetCol() != -1:
-			return  # イベントを処理せず、選択を発生させない
-		evt.Skip()
-	
-	def on_grid_motion(self, evt):
-		"""ドラッグ操作による範囲選択を無効化します。"""
-		if evt.Dragging():
-			# ドラッグ中はイベントを処理せず終了することで、範囲選択を防ぐ
-			return
-		evt.Skip()
-
 	def on_model_changed(self, sender, diff: DatasetDiff):
 		"""Datasetからの変更通知を受け取った際の処理です。
 
@@ -200,14 +130,26 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.item_index = index
 		self.refresh_grid()
 		if self.GetNumberRows() > 0:
-			self.select_cell(0, 0)
+			self.focus_cell(0, 0)
 	
-	def select_cell(self, row: int, col: int):
+	def focus_cell(self, row: int, col: int):
 		"""指定されたセルを選択状態にし、カーソルを移動します。"""
 		self.ClearSelection()
 		self.SetGridCursor(row, col)
-		self.SelectBlock(row, col, row, col)
-
+	
+	def get_selected_rows(self) -> list[int]:
+		"""選択されている行のインデックスリストを返します。"""
+		rows = list(self.GetSelectedRows())
+		
+		# ブロック選択の処理
+		top_left = self.GetSelectionBlockTopLeft()
+		bottom_right = self.GetSelectionBlockBottomRight()
+		
+		for (r1, c1), (r2, c2) in zip(top_left, bottom_right):
+			rows.extend(range(r1, r2 + 1))
+		
+		return sorted(list(set(rows)))
+	
 	def refresh_grid(self):
 		"""グリッドの内容を現在のデータセットとインデックスに基づいて完全に更新します。
 		
@@ -256,7 +198,7 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.SetCellValue(row, 1, weight_str)
 		
 		if tags:
-			self.select_cell(row, 0)
+			self.focus_cell(len(tags) + start_row - 1, 0)
 	
 	def insert_tags(self, target: int, position: int, tags: tuple[Tag, ...]):
 		"""指定位置にタグを挿入します。
@@ -278,7 +220,7 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.SetCellValue(row, 1, weight_str)
 		
 		if tags:
-			self.select_cell(row, 0)
+			self.focus_cell(len(tags) + position - 1, 0)
 	
 	def move_tag(self, target: int, old_position: int, new_position: int):
 		"""タグの位置を移動します。
@@ -303,7 +245,7 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.SetCellValue(new_position, 0, tag_text)
 		self.SetCellValue(new_position, 1, tag_weight)
 		
-		self.select_cell(new_position, 0)
+		self.focus_cell(new_position, 0)
 	
 	def delete_tags(self, target: int, positions: tuple[int, ...]):
 		"""指定された位置のタグを削除します。
@@ -318,10 +260,10 @@ class ImageTagsGrid(wx.grid.Grid):
 		for pos in positions:
 			self.DeleteRows(pos, 1)
 		
-		if positions:
-			target_row = max(0, positions[-1] - 1)
-			if target_row < self.GetNumberRows():
-				self.select_cell(target_row, 0)
+		if positions and self.GetNumberRows() > 0:
+			# 移動先の行インデックス
+			target_row = max(0, min(self.GetNumberRows() - 1, positions[-1] - 1))
+			self.focus_cell(target_row, 0)
 	
 	def mutate_tag(self, target: int, position: int, new_tag: Tag):
 		"""指定位置のタグの内容を更新します。
@@ -341,4 +283,4 @@ class ImageTagsGrid(wx.grid.Grid):
 			column = 1
 			self.SetCellValue(position, 1, f'{new_tag.weight:.2f}')
 		
-		self.select_cell(position, column)
+		self.focus_cell(position, column)

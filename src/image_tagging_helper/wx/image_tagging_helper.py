@@ -597,11 +597,14 @@ class ImageTaggingHelperFrame(wx.Frame):
 		if not self.controller or self.image_tags_grid.item_index is None:
 			return
 		
-		row = self.image_tags_grid.GetGridCursorRow()
-		if row < 0:
-			return
+		rows = self.image_tags_grid.get_selected_rows()
+		if not rows:
+			row = self.image_tags_grid.GetGridCursorRow()
+			if row < 0:
+				return
+			rows = [row]
 		
-		self.controller.delete_tags(self.image_tags_grid.item_index, (row,))
+		self.controller.delete_tags(self.image_tags_grid.item_index, tuple(rows))
 	
 	def on_move_tag_up(self, event: wx.CommandEvent):
 		if not self.controller or self.image_tags_grid.item_index is None:
