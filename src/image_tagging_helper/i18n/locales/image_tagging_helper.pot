@@ -175,6 +175,9 @@ msgstr ""
 msgid "label:file_path"
 msgstr ""
 
+msgid "hint:search_filter"
+msgstr ""
+
 msgid "label:image_list"
 msgstr ""
 

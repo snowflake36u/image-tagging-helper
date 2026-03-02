@@ -117,7 +117,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def __init__(self, parent: wx.Window | None, title: str, config: Config):
 		"""
 		フレームを初期化します。
-		
+
 		Args:
 			parent: 親ウィンドウ。
 			title: ウィンドウのタイトル。
@@ -212,7 +212,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		insert_blank_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:insert_blank_tag"), __("tooltip:insert_blank_tag"), 'Ctrl+E')
 		delete_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:delete_tag"), __("tooltip:delete_tag"), 'Ctrl+D')
-		replace_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:replace_tag"), __("tooltip:replace_tag"), 'Ctrl+H')
+		replace_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:replace_tag"), __("tooltip:replace_tag"), 'Ctrl+R')
 		self.Bind(wx.EVT_MENU, self.on_insert_blank_tag, insert_blank_tag_item)
 		self.Bind(wx.EVT_MENU, self.on_delete_tag, delete_tag_item)
 		# self.Bind(wx.EVT_MENU, self.on_replace_tag, replace_tag_item)
@@ -277,21 +277,61 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def _create_path_panel(self, parent: wx.Window) -> wx.Window:
 		"""
 		ファイルパス表示パネルを作成します。
-		
+
 		Args:
 			parent: 親となるウィンドウ。
-		
+
 		Returns:
 			作成されたパネル。
 		"""
-		path_panel = wx.Panel(parent)
-		path_sizer = wx.BoxSizer(wx.HORIZONTAL)
-		path_label = wx.StaticText(path_panel, label=__("label:file_path"))
-		self.path_text = wx.TextCtrl(path_panel, style=wx.TE_READONLY)
-		path_sizer.Add(path_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-		path_sizer.Add(self.path_text, 1, wx.EXPAND)
-		path_panel.SetSizer(path_sizer)
-		return path_panel
+		topbar_panel = wx.Panel(parent)
+		topbar_sizer = wx.BoxSizer(wx.HORIZONTAL)
+		
+		path_label = wx.StaticText(topbar_panel, label=__("label:file_path"))
+		
+		# スプリッターの作成
+		self.topbar_splitter = wx.SplitterWindow(topbar_panel, style=wx.SP_LIVE_UPDATE | wx.SP_NOBORDER)
+		self.topbar_splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
+		
+		# 左側：ファイルパス
+		path_text_panel = wx.Panel(self.topbar_splitter)
+		path_text_sizer = wx.BoxSizer(wx.HORIZONTAL)
+		self.path_text = wx.TextCtrl(path_text_panel, style=wx.TE_READONLY)
+		path_text_sizer.Add(self.path_text, 1, wx.ALIGN_CENTER_VERTICAL)
+		path_text_panel.SetSizer(path_text_sizer)
+		
+		# 右側：検索フィルタ
+		search_panel = wx.Panel(self.topbar_splitter)
+		search_sizer = wx.BoxSizer(wx.HORIZONTAL)
+		
+		self.search_ctrl = wx.SearchCtrl(search_panel, style=wx.TE_PROCESS_ENTER)
+		self.search_ctrl.ShowCancelButton(True)
+		self.search_ctrl.SetHint(__("hint:search_filter"))
+		
+		# テキストボックスの高さをpath_textに合わせる
+		ref_height = self.path_text.GetBestSize().height
+		self.search_ctrl.SetMinSize((-1, ref_height))
+		
+		search_sizer.Add(self.search_ctrl, 1, wx.ALIGN_CENTER_VERTICAL, 0)
+		search_panel.SetSizer(search_sizer)
+		
+		# スプリッターの設定
+		self.topbar_splitter.SetMinimumPaneSize(50)
+		self.topbar_splitter.SplitVertically(path_text_panel, search_panel)
+		self.topbar_splitter.SetSashGravity(1.0)
+		self.topbar_splitter.SetSashPosition(-250)
+		
+		topbar_sizer.Add(path_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+		topbar_sizer.Add(self.topbar_splitter, 1, wx.EXPAND)
+		
+		topbar_panel.SetSizer(topbar_sizer)
+		
+		# イベントハンドラをバインド
+		self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.on_search, self.search_ctrl)
+		self.Bind(wx.EVT_TEXT_ENTER, self.on_search, self.search_ctrl)
+		self.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self.on_search_cancel, self.search_ctrl)
+		
+		return topbar_panel
 	
 	def _create_main_sash_layout(self, parent: wx.Window):
 		"""
@@ -398,6 +438,18 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	# === イベントハンドラ ===
 	
+	def on_search(self, event: wx.CommandEvent):
+		"""検索コントロールで検索が実行されたときの処理。"""
+		query = self.search_ctrl.GetValue()
+		# TODO: フィルタリング処理を実装
+		print(f"Search for: {query}")
+	
+	def on_search_cancel(self, event: wx.CommandEvent):
+		"""検索コントロールでキャンセルボタンが押されたときの処理。"""
+		self.search_ctrl.SetValue("")
+		# TODO: フィルタリング解除処理を実装
+		print("Search cancelled.")
+
 	def on_close(self, event: wx.CloseEvent):
 		"""ウィンドウが閉じるときにUI設定を保存します。"""
 		self.save_ui_settings()
@@ -435,11 +487,11 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def _adjust_splitter_sash(self, splitter: wx.SplitterWindow, new_pos: int) -> int:
 		"""
 		スプリッターのサッシ位置を調整して、各パネルの最小サイズを維持します。
-		
+
 		Args:
 			splitter: 対象のスプリッターウィンドウ。
 			new_pos: 提案された新しいサッシ位置。
-		
+
 		Returns:
 			調整後のサッシ位置。
 		"""
@@ -865,7 +917,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def load_dataset(self, folder_path: str):
 		"""
 		指定されたフォルダからデータセットを構築します。
-		
+
 		Args:
 			folder_path: 画像とキャプションファイルが含まれるフォルダのパス。
 		"""

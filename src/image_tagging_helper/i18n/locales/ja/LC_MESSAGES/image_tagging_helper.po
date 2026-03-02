@@ -175,6 +175,9 @@ msgstr "環境設定"
 msgid "label:file_path"
 msgstr "ファイルパス"
 
+msgid "hint:search_filter"
+msgstr "タグで画像をフィルタ..."
+
 msgid "label:image_list"
 msgstr "画像一覧"
 

@@ -175,6 +175,9 @@ msgstr "Preferences"
 msgid "label:file_path"
 msgstr "File Path"
 
+msgid "hint:search_filter"
+msgstr "Filter images by tag..."
+
 msgid "label:image_list"
 msgstr "Image List"
 
