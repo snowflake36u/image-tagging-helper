@@ -4,6 +4,9 @@ import ctypes
 import csv
 import io
 import bisect
+import os
+import sys
+import subprocess
 
 from src.image_tagging_helper.core.config import Config
 from src.image_tagging_helper.models.caption import Caption, CaptionFormatConfig, Tag
@@ -245,8 +248,10 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:dataset"))
 		
-		open_in_folder_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:open_in_folder"), __("tooltip:open_in_folder"))
 		view_image_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:view_image"), __("tooltip:view_image"))
+		open_in_folder_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:open_in_folder"), __("tooltip:open_in_folder"))
+		self.Bind(wx.EVT_MENU, self.on_view_image, view_image_menu)
+		self.Bind(wx.EVT_MENU, self.on_open_in_folder, open_in_folder_menu)
 		
 		menu.AppendSeparator()
 		
@@ -889,6 +894,40 @@ class ImageTaggingHelperFrame(wx.Frame):
 			return
 		
 		self.controller.move_tag(self.image_tags_grid.item_index, row, row + 1)
+	
+	def on_view_image(self, event: wx.CommandEvent):
+		"""選択されている画像を既定のビューアで開きます。"""
+		if self.last_thumbnail_selection == wx.NOT_FOUND:
+			return
+		
+		item = self.dataset[self.last_thumbnail_selection]
+		image_path = item.image_path
+		
+		if not wx.LaunchDefaultApplication(image_path):
+			wx.LogError(f"Failed to open file: {image_path}")
+	
+	def on_open_in_folder(self, event: wx.CommandEvent):
+		"""選択されている画像が存在する場所をエクスプローラ等で開きます。"""
+		if self.last_thumbnail_selection == wx.NOT_FOUND:
+			return
+		
+		item = self.dataset[self.last_thumbnail_selection]
+		image_path = os.path.abspath(item.image_path)
+		
+		if sys.platform == 'win32':
+			# explorerは正常に動作しても非ゼロの終了コードを返すことがあるため、check=Trueは指定しない
+			subprocess.run(['explorer', '/select,', image_path])
+		elif sys.platform == 'darwin':
+			try:
+				subprocess.run(['open', '-R', image_path], check=True)
+			except (FileNotFoundError, subprocess.CalledProcessError):
+				wx.LogError("Failed to open Finder.")
+		else:
+			try:
+				dir_path = os.path.dirname(image_path)
+				subprocess.run(['xdg-open', dir_path], check=True)
+			except (FileNotFoundError, subprocess.CalledProcessError):
+				wx.LogError("Failed to open file manager. Please ensure 'xdg-open' is installed.")
 	
 	# === UI更新メソッド ===
 	
