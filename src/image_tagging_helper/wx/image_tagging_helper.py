@@ -259,6 +259,8 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		next_image_menu = self._append_menu_item(menu, wx.ID_FORWARD, __("action:next_image"), __("tooltip:next_image"), 'Shift+C')
 		prev_image_menu = self._append_menu_item(menu, wx.ID_BACKWARD, __("action:prev_image"), __("tooltip:prev_image"), 'Shift+X')
+		self.Bind(wx.EVT_MENU, self.on_next_image, next_image_menu)
+		self.Bind(wx.EVT_MENU, self.on_prev_image, prev_image_menu)
 		
 		menu.AppendSeparator()
 		
@@ -959,6 +961,43 @@ class ImageTaggingHelperFrame(wx.Frame):
 				subprocess.run(['xdg-open', dir_path], check=True)
 			except (FileNotFoundError, subprocess.CalledProcessError):
 				wx.LogError("Failed to open file manager. Please ensure 'xdg-open' is installed.")
+	
+	def on_next_image(self, event: wx.CommandEvent):
+		"""次の画像を選択します。"""
+		count = self.thumbnail_list.GetItemCount()
+		if count == 0:
+			return
+		
+		current = self.thumbnail_list.GetSelection()
+		next_idx = 0
+		if current != wx.NOT_FOUND:
+			next_idx = current + 1
+		
+		if next_idx < count:
+			self.thumbnail_list.SetSelection(next_idx)
+			self.on_thumbnail_select(None)
+			
+			if not self.thumbnail_list.IsVisible(next_idx):
+				self.thumbnail_list.ScrollToLine(next_idx)
+	
+	def on_prev_image(self, event: wx.CommandEvent):
+		"""前の画像を選択します。"""
+		count = self.thumbnail_list.GetItemCount()
+		if count == 0:
+			return
+		
+		current = self.thumbnail_list.GetSelection()
+		if current == wx.NOT_FOUND:
+			return
+		
+		prev_idx = current - 1
+		
+		if prev_idx >= 0:
+			self.thumbnail_list.SetSelection(prev_idx)
+			self.on_thumbnail_select(None)
+			
+			if not self.thumbnail_list.IsVisible(prev_idx):
+				self.thumbnail_list.ScrollToLine(prev_idx)
 	
 	# === UI更新メソッド ===
 	
