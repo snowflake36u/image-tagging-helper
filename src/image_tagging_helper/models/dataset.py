@@ -325,3 +325,11 @@ class Dataset:
 			生成されたDatasetControllerオブジェクト。
 		"""
 		return DatasetController(self, sender)
+	
+	# === フィルタ機能 ===
+	
+	def match_items(self, include_tags: set[str], exclude_tags: set[str]) -> list[int]:
+		return [
+			i for i, item in enumerate(self.items)
+			if item.caption.match(include_tags, exclude_tags)
+		]

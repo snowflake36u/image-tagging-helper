@@ -239,9 +239,8 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		menu.AppendSeparator()
 		
-		filter_images_menu = self._append_menu_item(menu, wx.ID_FIND, __("action:filter_images"), __("tooltip:filter_images"), 'F3')
-		self.Bind(wx.EVT_MENU, self.on_filter_images, filter_images_menu)
-		clear_filter_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:clear_filter"), __("tooltip:clear_filter"), 'Shift+F3')
+		filter_images_menu = self._append_menu_item(menu, wx.ID_FIND, __("action:filter_images"), __("tooltip:filter_images"), 'Ctrl+Shift+F')
+		self.Bind(wx.EVT_MENU, self.on_filter_images_menu, filter_images_menu)
 	
 	def _init_view_menu(self, menubar):
 		menu = wx.Menu()
@@ -302,23 +301,23 @@ class ImageTaggingHelperFrame(wx.Frame):
 		path_text_panel.SetSizer(path_text_sizer)
 		
 		# 右側：検索フィルタ
-		search_panel = wx.Panel(self.topbar_splitter)
-		search_sizer = wx.BoxSizer(wx.HORIZONTAL)
+		filter_panel = wx.Panel(self.topbar_splitter)
+		filter_sizer = wx.BoxSizer(wx.HORIZONTAL)
 		
-		self.search_ctrl = wx.SearchCtrl(search_panel, style=wx.TE_PROCESS_ENTER)
-		self.search_ctrl.ShowCancelButton(True)
-		self.search_ctrl.SetDescriptiveText(__("hint:search_filter"))
+		self.filter_ctrl = wx.SearchCtrl(filter_panel, style=wx.TE_PROCESS_ENTER)
+		self.filter_ctrl.ShowCancelButton(True)
+		self.filter_ctrl.SetDescriptiveText(__("hint:search_filter"))
 		
 		# テキストボックスの高さをpath_textに合わせる
 		ref_height = self.path_text.GetBestSize().height
-		self.search_ctrl.SetMinSize((-1, ref_height))
+		self.filter_ctrl.SetMinSize((-1, ref_height))
 		
-		search_sizer.Add(self.search_ctrl, 1, wx.ALIGN_CENTER_VERTICAL, 0)
-		search_panel.SetSizer(search_sizer)
+		filter_sizer.Add(self.filter_ctrl, 1, wx.ALIGN_CENTER_VERTICAL, 0)
+		filter_panel.SetSizer(filter_sizer)
 		
 		# スプリッターの設定
 		self.topbar_splitter.SetMinimumPaneSize(50)
-		self.topbar_splitter.SplitVertically(path_text_panel, search_panel)
+		self.topbar_splitter.SplitVertically(path_text_panel, filter_panel)
 		self.topbar_splitter.SetSashGravity(1.0)
 		self.topbar_splitter.SetSashPosition(-250)
 		
@@ -328,9 +327,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		topbar_panel.SetSizer(topbar_sizer)
 		
 		# イベントハンドラをバインド
-		self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.on_search, self.search_ctrl)
-		self.Bind(wx.EVT_TEXT_ENTER, self.on_search, self.search_ctrl)
-		self.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self.on_search_cancel, self.search_ctrl)
+		self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.on_filter_items, self.filter_ctrl)
+		self.Bind(wx.EVT_TEXT_ENTER, self.on_filter_items, self.filter_ctrl)
+		self.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self.on_filter_cancel, self.filter_ctrl)
 		
 		return topbar_panel
 	
@@ -439,17 +438,65 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	# === イベントハンドラ ===
 	
-	def on_search(self, event: wx.CommandEvent):
+	def on_filter_items(self, event: wx.CommandEvent):
 		"""検索コントロールで検索が実行されたときの処理。"""
-		query = self.search_ctrl.GetValue()
-		# TODO: フィルタリング処理を実装
-		print(f"Search for: {query}")
+		query = self.filter_ctrl.GetValue()
+		if not query:
+			self.on_filter_cancel(event)
+			return
+		
+		# クエリのパース
+		include_tags = set()
+		exclude_tags = set()
+		
+		for part in query.split():
+			part = part.strip()
+			if not part:
+				continue
+			if part.startswith('-'):
+				tag = part[1:].strip()
+				if tag:
+					exclude_tags.add(tag)
+			else:
+				include_tags.add(part)
+		
+		# フィルタリング実行
+		matched_indices = self.dataset.match_items(include_tags, exclude_tags)
+		self.thumbnail_list.set_filter(matched_indices)
+		
+		# 選択状態の更新
+		if matched_indices:
+			# 現在選択中の画像がマッチしたか確認
+			current_selection = self.last_thumbnail_selection
+			if current_selection in matched_indices:
+				# マッチした場合はその画像を選択状態にする
+				view_index = self.thumbnail_list.get_view_index(current_selection)
+				self.thumbnail_list.SetSelection(view_index)
+			else:
+				# マッチしなかった場合は、最も近い画像を選択する
+				# ここでは単純にリストの先頭を選択する
+				# TODO: より高度な「最も近い画像」の選択ロジックを実装する
+				self.thumbnail_list.SetSelection(0)
+				self.last_thumbnail_selection = matched_indices[0]
+				self._update_views_for_item_selection(matched_indices[0])
+		else:
+			# マッチする画像がない場合
+			self.last_thumbnail_selection = wx.NOT_FOUND
+			self._update_views_for_item_selection(wx.NOT_FOUND)
 	
-	def on_search_cancel(self, event: wx.CommandEvent):
+	def on_filter_cancel(self, event: wx.CommandEvent):
 		"""検索コントロールでキャンセルボタンが押されたときの処理。"""
-		self.search_ctrl.SetValue("")
-		# TODO: フィルタリング解除処理を実装
-		print("Search cancelled.")
+		self.filter_ctrl.SetValue("")
+		self.thumbnail_list.set_filter(None)
+		
+		# 選択状態の復元
+		if self.last_thumbnail_selection != wx.NOT_FOUND:
+			self.thumbnail_list.SetSelection(self.last_thumbnail_selection)
+			self._update_views_for_item_selection(self.last_thumbnail_selection)
+	
+	def on_filter_images_menu(self, event: wx.CommandEvent):
+		"""検索バーにフォーカスを移動します。"""
+		self.filter_ctrl.SetFocus()
 
 	def on_close(self, event: wx.CloseEvent):
 		"""ウィンドウが閉じるときにUI設定を保存します。"""
@@ -553,20 +600,26 @@ class ImageTaggingHelperFrame(wx.Frame):
 		サムネイルリストの選択が変更されたときの処理。
 		常に単一の選択を維持します。
 		"""
-		item_index = self.thumbnail_list.GetSelection()
+		view_index = self.thumbnail_list.GetSelection()
 		
-		if item_index == wx.NOT_FOUND:
+		if view_index == wx.NOT_FOUND:
 			# 選択が解除された場合、最後の選択状態に戻す
+			# ただし、フィルタリングによって選択項目が消えた場合は戻さない
 			if self.last_thumbnail_selection != wx.NOT_FOUND:
-				self.thumbnail_list.SetSelection(self.last_thumbnail_selection)
+				# 現在のフィルタで表示されているか確認
+				restored_view_index = self.thumbnail_list.get_view_index(self.last_thumbnail_selection)
+				if restored_view_index != wx.NOT_FOUND:
+					self.thumbnail_list.SetSelection(restored_view_index)
 			return
+		
+		dataset_index = self.thumbnail_list.get_dataset_index(view_index)
 		
 		# 同じアイテムが再度選択された場合は何もしない
-		if item_index == self.last_thumbnail_selection:
+		if dataset_index == self.last_thumbnail_selection:
 			return
 		
-		self.last_thumbnail_selection = item_index
-		self._update_views_for_item_selection(item_index)
+		self.last_thumbnail_selection = dataset_index
+		self._update_views_for_item_selection(dataset_index)
 	
 	def on_preferences(self, event: wx.CommandEvent):
 		"""設定ダイアログを表示します。"""

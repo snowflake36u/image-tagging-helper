@@ -243,3 +243,10 @@ class Caption:
 			if self.counter[new_tag.text] == 0 and self.on_tag_usage_changed:
 				self.on_tag_usage_changed(new_tag.text, True)
 			self.counter[new_tag.text] += 1
+	
+	# === フィルタ機能 ===
+	
+	def match(self, include_tags: set[str], exclude_tags: set[str]):
+		match_include = all(self.counter[text] for text in include_tags)
+		match_exclude = any(self.counter[text] for text in exclude_tags)
+		return match_include and not match_exclude

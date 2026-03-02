@@ -1,5 +1,6 @@
 import os
-from typing import Dict
+from typing import Dict, List, Optional
+import bisect
 
 import wx
 
@@ -13,6 +14,7 @@ class ImageVListBox(wx.VListBox):
 	def __init__(self, parent, style=0):
 		super().__init__(parent, style=style)
 		self.dataset: Dataset | None = None
+		self.filtered_indices: List[int] | None = None
 		self.thumbnail_cache: Dict[tuple[str, tuple[int, int]], wx.Bitmap] = { }
 		self.image_cache: Dict[str, wx.Image] = { }
 		self._thumbnail_display_width = 64  # デフォルト値
@@ -25,6 +27,7 @@ class ImageVListBox(wx.VListBox):
 		表示するデータセットを設定し、リストを更新する。
 		"""
 		self.dataset = dataset
+		self.filtered_indices = None
 		item_count = len(self.dataset) if self.dataset else 0
 		self.SetItemCount(item_count)
 		
@@ -37,6 +40,45 @@ class ImageVListBox(wx.VListBox):
 			self.SetSelection(wx.NOT_FOUND)
 		
 		self.Refresh()
+	
+	def set_filter(self, indices: List[int] | None):
+		"""
+		表示するアイテムのインデックスリストを設定する。
+		Noneの場合は全アイテムを表示する。
+		"""
+		self.filtered_indices = indices
+		item_count = len(indices) if indices is not None else (len(self.dataset) if self.dataset else 0)
+		self.SetItemCount(item_count)
+		
+		if self.GetSelection() >= item_count:
+			self.SetSelection(wx.NOT_FOUND)
+		self.Refresh()
+	
+	def get_dataset_index(self, n: int) -> int:
+		"""
+		表示上のインデックス n に対応するデータセットの実インデックスを返す。
+		"""
+		if self.filtered_indices is not None:
+			if 0 <= n < len(self.filtered_indices):
+				return self.filtered_indices[n]
+			return -1  # Invalid
+		return n
+	
+	def get_view_index(self, dataset_index: int) -> int:
+		"""
+		データセットの実インデックスに対応する表示上のインデックスを返す。
+		表示されていない場合は wx.NOT_FOUND を返す。
+		"""
+		if self.filtered_indices is None:
+			if 0 <= dataset_index < (len(self.dataset) if self.dataset else 0):
+				return dataset_index
+			return wx.NOT_FOUND
+		
+		# dataset.match_items は enumerate 順に返すので昇順である。
+		idx = bisect.bisect_left(self.filtered_indices, dataset_index)
+		if idx < len(self.filtered_indices) and self.filtered_indices[idx] == dataset_index:
+			return idx
+		return wx.NOT_FOUND
 	
 	def _get_thumbnail(self, item: DatasetItem, size: tuple[int, int]) -> wx.Bitmap:
 		"""
@@ -119,7 +161,10 @@ class ImageVListBox(wx.VListBox):
 		dc.SetPen(wx.TRANSPARENT_PEN)
 		dc.DrawRectangle(rect)
 		
-		item = self.dataset[n]
+		dataset_index = self.get_dataset_index(n)
+		if dataset_index < 0:
+			return
+		item = self.dataset[dataset_index]
 		
 		# サムネイルを取得して描画
 		# OnMeasureItemで計算された幅を使用
@@ -143,7 +188,7 @@ class ImageVListBox(wx.VListBox):
 			error_text = 'Error loading image'
 			tw, th = dc.GetTextExtent(error_text)
 			dc.DrawText(error_text, rect.x + (rect.width - tw) // 2, rect.y + (rect.height - th) // 2)
-			print(f'Error rendering thumbnail for {item.path}: {e}')  # ログにも出力
+			print(f'Error rendering thumbnail for {item.image_path}: {e}')  # ログにも出力
 			return  # エラー時はファイル名を描画しない
 	
 	def OnMeasureItem(self, n: int) -> int:
