@@ -401,6 +401,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		self.thumbnail_list = ImageVListBox(self.thumbnail_panel, style=wx.VSCROLL | wx.ALWAYS_SHOW_SB)
 		self.thumbnail_list.Bind(wx.EVT_LISTBOX, self.on_thumbnail_select)
+		self.thumbnail_list.Bind(wx.EVT_CONTEXT_MENU, self.on_thumbnail_context_menu)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.thumbnail_toolbar, 0, wx.EXPAND)
@@ -712,6 +713,34 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		self.last_thumbnail_selection = dataset_index
 		self._update_views_for_item_selection(dataset_index)
+	
+	def on_thumbnail_context_menu(self, event: wx.ContextMenuEvent):
+		"""サムネイルリストのコンテキストメニューを表示します。"""
+		pos = event.GetPosition()
+		
+		# キーボード操作（メニューキー）の場合、posは(-1, -1)になることが多い
+		if pos == wx.DefaultPosition:
+			item_index = self.thumbnail_list.GetSelection()
+		else:
+			# マウス操作の場合、クリック位置のアイテムを選択する
+			client_pos = self.thumbnail_list.ScreenToClient(pos)
+			item_index = self.thumbnail_list.VirtualHitTest(client_pos.y)
+			
+			if item_index != wx.NOT_FOUND:
+				self.thumbnail_list.SetSelection(item_index)
+				self.on_thumbnail_select(None)
+		
+		if item_index != wx.NOT_FOUND:
+			menu = wx.Menu()
+			
+			view_image_item = menu.Append(wx.ID_ANY, __("action:view_image"))
+			open_in_folder_item = menu.Append(wx.ID_ANY, __("action:open_in_folder"))
+			
+			self.Bind(wx.EVT_MENU, self.on_view_image, view_image_item)
+			self.Bind(wx.EVT_MENU, self.on_open_in_folder, open_in_folder_item)
+			
+			self.thumbnail_list.PopupMenu(menu)
+			menu.Destroy()
 	
 	def on_preferences(self, event: wx.CommandEvent):
 		"""設定ダイアログを表示します。"""

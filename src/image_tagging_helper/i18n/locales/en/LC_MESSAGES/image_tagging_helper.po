@@ -107,7 +107,7 @@ msgid "ui_group:dataset"
 msgstr "&Dataset"
 
 msgid "action:open_in_folder"
-msgstr "Open in &Folder"
+msgstr "Open &in Folder"
 
 msgid "tooltip:open_in_folder"
 msgstr "Open in Folder"

@@ -107,7 +107,7 @@ msgid "ui_group:dataset"
 msgstr "データセット(&D)"
 
 msgid "action:open_in_folder"
-msgstr "ファイルの場所を開く(&F)"
+msgstr "ファイルの場所を開く(&I)"
 
 msgid "tooltip:open_in_folder"
 msgstr "ファイルが存在するフォルダを開く"
