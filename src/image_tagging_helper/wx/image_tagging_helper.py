@@ -12,6 +12,7 @@ from src.image_tagging_helper.core.config import Config
 from src.image_tagging_helper.models.caption import CaptionFormatConfig, Tag
 from src.image_tagging_helper.models.dataset import Dataset
 from src.image_tagging_helper.models.controller import DatasetController
+from src.image_tagging_helper.wx.editor_widgets.dataset_tag_list import DatasetTagsList
 from src.image_tagging_helper.wx.editor_widgets.image_list import ImageVListBox
 from src.image_tagging_helper.wx.editor_widgets.image_tags_grid import ImageTagsGrid
 from src.image_tagging_helper.wx.preferences import PreferencesDialog
@@ -343,9 +344,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.dataset_tags_toolbar.AddSeparator()
 		self.dataset_tags_toolbar.Realize()
 		
-		self.dataset_tags_list = wx.ListCtrl(self.dataset_tags_panel, style=wx.LC_REPORT)
-		self.dataset_tags_list.InsertColumn(0, __("label:tag"), width=150)
-		self.dataset_tags_list.InsertColumn(1, __("label:count"), width=50)
+		self.dataset_tags_list = DatasetTagsList(self.dataset_tags_panel)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.dataset_tags_toolbar, 0, wx.EXPAND)
@@ -1014,8 +1013,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.image_tags_grid.ForceRefresh()
 		
 		# DatasetTagsListへの適用
-		self.dataset_tags_list.SetFont(font)
-		self.dataset_tags_list.Refresh()
+		self.dataset_tags_list.apply_font(font)
 	
 	def _update_views_for_item_selection(self, selection: int):
 		"""指定された選択に基づいて関連するビューを更新します。"""
@@ -1031,56 +1029,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 		item = self.dataset[selection]
 		self.path_text.SetValue(item.image_path)
 	
-	def _update_dataset_tags_view(self):
-		"""データセット全体のタグとその出現回数をリストに表示します。"""
-		self.dataset_tags_list.ClearAll()  # 既存の項目をクリア
-		self.dataset_tags_list.InsertColumn(0, __("label:tag"), width=150)
-		self.dataset_tags_list.InsertColumn(1, __("label:count"), width=50)
-		
-		dataset = self.dataset
-		if not dataset.initialized or len(dataset) == 0:
-			self.dataset_tags = []
-			return
-		
-		# タグをアルファベット順にソートして表示
-		sorted_tags = sorted(dataset.tag_usages.items())
-		
-		# 空白タグを除外
-		valid_tags = [(t, c) for t, c in sorted_tags if t.strip()]
-		
-		for i, (tag_text, count) in enumerate(valid_tags):
-			self.dataset_tags_list.InsertItem(i, tag_text)
-			self.dataset_tags_list.SetItem(i, 1, str(count))
-		
-		# タグリストを保存（更新用）
-		self.dataset_tags = [tag_text for tag_text, _ in valid_tags]
-	
-	def on_tag_usage_changed(self, tag_text: str, count: int):
-		"""
-		タグの使用回数が変更されたときの処理。
-		リスト内の該当するタグのカウントを更新します。
-		"""
-		if not tag_text.strip():
-			return
-		
-		if not hasattr(self, 'dataset_tags'):
-			self._update_dataset_tags_view()
-			return
-		
-		idx = bisect.bisect_left(self.dataset_tags, tag_text)
-		exists = idx < len(self.dataset_tags) and self.dataset_tags[idx] == tag_text
-		
-		if exists:
-			if count > 0:
-				self.dataset_tags_list.SetItem(idx, 1, str(count))
-			else:
-				self.dataset_tags_list.DeleteItem(idx)
-				del self.dataset_tags[idx]
-		elif count > 0:
-			self.dataset_tags_list.InsertItem(idx, tag_text)
-			self.dataset_tags_list.SetItem(idx, 1, str(count))
-			self.dataset_tags.insert(idx, tag_text)
-	
 	# === データ処理メソッド ===
 	
 	def load_dataset(self, folder_path: str):
@@ -1090,10 +1038,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 		Args:
 			folder_path: 画像とキャプションファイルが含まれるフォルダのパス。
 		"""
-		# 既存のリスナーを解除
-		if self.dataset.initialized:
-			self.dataset.remove_tag_usage_changed_listener(self.on_tag_usage_changed)
-		
 		self.dataset.load(
 			folder_path,
 			self.image_exts,
@@ -1103,20 +1047,19 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.controller = self.dataset.get_controller('frame')
 		dataset = self.dataset
 		
-		# リスナーを登録
-		dataset.add_tag_usage_changed_listener(self.on_tag_usage_changed)
-		
 		self.thumbnail_list.set_dataset(dataset)
 		self.image_tags_grid.set_dataset(dataset)
+		self.dataset_tags_list.set_dataset(dataset)
 		
 		if dataset and len(dataset) > 0:
 			self.thumbnail_list.SetSelection(0)
 			# SetSelectionはイベントを発生させないため、手動で更新処理を呼び出す
 			self.last_thumbnail_selection = 0
 			self._update_views_for_item_selection(0)
-		
-		# データセットタグのビューを更新
-		self._update_dataset_tags_view()
+		else:
+			# データセットが空の場合のビュー更新
+			self.last_thumbnail_selection = wx.NOT_FOUND
+			self._update_views_for_item_selection(wx.NOT_FOUND)
 	
 	@staticmethod
 	def launch(config: Config):
