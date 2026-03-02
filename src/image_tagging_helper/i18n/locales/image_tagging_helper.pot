@@ -106,16 +106,16 @@ msgstr ""
 msgid "ui_group:dataset"
 msgstr ""
 
-msgid "action:open_in_folder"
-msgstr ""
-
-msgid "tooltip:open_in_folder"
-msgstr ""
-
 msgid "action:view_image"
 msgstr ""
 
 msgid "tooltip:view_image"
+msgstr ""
+
+msgid "action:open_in_folder"
+msgstr ""
+
+msgid "tooltip:open_in_folder"
 msgstr ""
 
 msgid "action:next_image"
@@ -134,12 +134,6 @@ msgid "action:filter_images"
 msgstr ""
 
 msgid "tooltip:filter_images"
-msgstr ""
-
-msgid "action:clear_filter"
-msgstr ""
-
-msgid "tooltip:clear_filter"
 msgstr ""
 
 msgid "ui_group:view"
@@ -203,6 +197,12 @@ msgid "message:restart_to_apply_language"
 msgstr ""
 
 msgid "title:restart_required"
+msgstr ""
+
+msgid "message:unsaved_changes"
+msgstr ""
+
+msgid "title:save_changes"
 msgstr ""
 
 msgid "title:app_main_window"

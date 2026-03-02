@@ -106,17 +106,17 @@ msgstr "並べ替え"
 msgid "ui_group:dataset"
 msgstr "データセット(&D)"
 
-msgid "action:open_in_folder"
-msgstr "ファイルの場所を開く(&I)"
-
-msgid "tooltip:open_in_folder"
-msgstr "ファイルが存在するフォルダを開く"
-
 msgid "action:view_image"
 msgstr "画像を表示(&V)"
 
 msgid "tooltip:view_image"
 msgstr "画像を表示"
+
+msgid "action:open_in_folder"
+msgstr "ファイルの場所を開く(&I)"
+
+msgid "tooltip:open_in_folder"
+msgstr "ファイルが存在するフォルダを開く"
 
 msgid "action:next_image"
 msgstr "次の画像(&N)"
@@ -135,12 +135,6 @@ msgstr "フィルタ(&F)"
 
 msgid "tooltip:filter_images"
 msgstr "画像をフィルタ"
-
-msgid "action:clear_filter"
-msgstr "フィルタを解除(&C)"
-
-msgid "tooltip:clear_filter"
-msgstr "フィルタを解除"
 
 msgid "ui_group:view"
 msgstr "表示(&V)"
@@ -205,6 +199,12 @@ msgstr "言語の変更にはアプリの再起動が必要です。"
 msgid "title:restart_required"
 msgstr "再起動が必要"
 
+msgid "message:unsaved_changes"
+msgstr "キャプションデータが変更されています。保存しますか？"
+
+msgid "title:save_changes"
+msgstr "変更の保存"
+
 msgid "title:app_main_window"
 msgstr "Image Tagging Helper"
 
@@ -220,3 +220,8 @@ msgstr "重み"
 #~ msgid "label:font"
 #~ msgstr "フォント"
 
+#~ msgid "action:clear_filter"
+#~ msgstr "フィルタを解除(&C)"
+
+#~ msgid "tooltip:clear_filter"
+#~ msgstr "フィルタを解除"

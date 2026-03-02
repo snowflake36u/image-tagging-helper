@@ -106,17 +106,17 @@ msgstr "Sort"
 msgid "ui_group:dataset"
 msgstr "&Dataset"
 
-msgid "action:open_in_folder"
-msgstr "Open &in Folder"
-
-msgid "tooltip:open_in_folder"
-msgstr "Open in Folder"
-
 msgid "action:view_image"
 msgstr "&View Image"
 
 msgid "tooltip:view_image"
 msgstr "View Image"
+
+msgid "action:open_in_folder"
+msgstr "Open &in Folder"
+
+msgid "tooltip:open_in_folder"
+msgstr "Open in Folder"
 
 msgid "action:next_image"
 msgstr "&Next Image"
@@ -135,12 +135,6 @@ msgstr "&Filter"
 
 msgid "tooltip:filter_images"
 msgstr "Filter Images"
-
-msgid "action:clear_filter"
-msgstr "&Clear Filter"
-
-msgid "tooltip:clear_filter"
-msgstr "Clear Filter"
 
 msgid "ui_group:view"
 msgstr "&View"
@@ -205,6 +199,12 @@ msgstr "Restart the application to apply the language change."
 msgid "title:restart_required"
 msgstr "Restart Required"
 
+msgid "message:unsaved_changes"
+msgstr "There are unsaved changes. Do you want to save?"
+
+msgid "title:save_changes"
+msgstr "Save Changes"
+
 msgid "title:app_main_window"
 msgstr "Image Tagging Helper"
 
@@ -220,3 +220,8 @@ msgstr "Weight"
 #~ msgid "label:font"
 #~ msgstr "Font"
 
+#~ msgid "action:clear_filter"
+#~ msgstr "&Clear Filter"
+
+#~ msgid "tooltip:clear_filter"
+#~ msgstr "Clear Filter"

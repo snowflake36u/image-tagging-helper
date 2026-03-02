@@ -79,6 +79,11 @@ class Dataset:
 	def initialized(self):
 		return self.items is not None
 	
+	@property
+	def is_dirty(self) -> bool:
+		"""保存されていない変更があるかどうかを返します。"""
+		return self.history.is_dirty
+	
 	# === 初期化処理 ===
 	def load(
 			self,

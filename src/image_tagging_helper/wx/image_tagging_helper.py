@@ -599,7 +599,18 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.filter_ctrl.SetFocus()
 	
 	def on_close(self, event: wx.CloseEvent):
-		"""ウィンドウが閉じるときにUI設定を保存します。"""
+		"""
+		ウィンドウが閉じるときにUI設定を保存し、未保存の変更がある場合は確認ダイアログを表示します。
+		"""
+		if self.dataset.initialized and self.dataset.is_dirty:
+			ret = self.confirm_save()
+			
+			if ret == wx.YES:
+				self.dataset.save(self.caption_ext, self.caption_format_config)
+			elif ret == wx.CANCEL:
+				event.Veto()
+				return
+		
 		self.save_ui_settings()
 		event.Skip()
 	
@@ -690,15 +701,36 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	def on_open_folder(self, event: wx.CommandEvent):
 		"""フォルダ選択ダイアログを表示し、データセットを読み込みます。"""
+		if self.dataset.initialized and self.dataset.is_dirty:
+			ret = self.confirm_save()
+			
+			if ret == wx.YES:
+				self.dataset.save(self.caption_ext, self.caption_format_config)
+			elif ret == wx.CANCEL:
+				return
+		
 		with wx.DirDialog(self, __("title:choose_a_directory"), style=wx.DD_DEFAULT_STYLE) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				path = dlg.GetPath()
 				self.load_dataset(path)
 	
 	def on_reload(self, event: wx.CommandEvent):
-		"""データセットを再読み込みします。"""
-		if self.dataset.folder_path:
-			self.load_dataset(self.dataset.folder_path)
+		"""
+		データセットを再読み込みします。
+		未保存の変更がある場合は確認ダイアログを表示します。
+		"""
+		if not self.dataset.folder_path:
+			return
+		
+		if self.dataset.initialized and self.dataset.is_dirty:
+			ret = self.confirm_save()
+			
+			if ret == wx.YES:
+				self.dataset.save(self.caption_ext, self.caption_format_config)
+			elif ret == wx.CANCEL:
+				return
+		
+		self.load_dataset(self.dataset.folder_path)
 	
 	def on_save(self, event: wx.CommandEvent):
 		"""データセットを保存します。"""
@@ -1015,6 +1047,16 @@ class ImageTaggingHelperFrame(wx.Frame):
 			
 			if not self.thumbnail_list.IsVisible(prev_idx):
 				self.thumbnail_list.ScrollToLine(prev_idx)
+	
+	# === ダイアログボックス ===
+	
+	def confirm_save(self):
+		return wx.MessageBox(
+			__("message:unsaved_changes"),
+			__("title:save_changes"),
+			wx.YES_NO | wx.CANCEL | wx.ICON_WARNING,
+			self
+		)
 	
 	# === UI更新メソッド ===
 	
