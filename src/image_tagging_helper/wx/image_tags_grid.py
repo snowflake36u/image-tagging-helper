@@ -136,6 +136,7 @@ class ImageTagsGrid(wx.grid.Grid):
 		"""指定されたセルを選択状態にし、カーソルを移動します。"""
 		self.ClearSelection()
 		self.SetGridCursor(row, col)
+		self.SelectBlock(row, col, row, col)
 	
 	def get_selected_rows(self) -> list[int]:
 		"""選択されている行のインデックスリストを返します。"""
