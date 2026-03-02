@@ -1,18 +1,3 @@
-msgid "title:preferences"
-msgstr "環境設定"
-
-msgid "label:language_settings"
-msgstr "言語設定"
-
-msgid "label:language"
-msgstr "言語"
-
-msgid "label:font_settings"
-msgstr "フォント設定"
-
-msgid "label:editor_font"
-msgstr "エディタ"
-
 msgid "ui_group:file"
 msgstr "ファイル(&F)"
 
@@ -175,12 +160,6 @@ msgstr "画像のタグ"
 msgid "label:dataset_tags"
 msgstr "全タグ一覧"
 
-msgid "label:tag"
-msgstr "タグ"
-
-msgid "label:count"
-msgstr "該当数"
-
 msgid "title:choose_a_directory"
 msgstr "フォルダを選択"
 
@@ -198,6 +177,27 @@ msgstr "変更の保存"
 
 msgid "title:app_main_window"
 msgstr "Image Tagging Helper"
+
+msgid "title:preferences"
+msgstr "環境設定"
+
+msgid "label:language_settings"
+msgstr "言語設定"
+
+msgid "label:language"
+msgstr "言語"
+
+msgid "label:font_settings"
+msgstr "フォント設定"
+
+msgid "label:editor_font"
+msgstr "エディタ"
+
+msgid "label:tag"
+msgstr "タグ"
+
+msgid "label:image_count"
+msgstr "画像数"
 
 msgid "label:weight"
 msgstr "重み"

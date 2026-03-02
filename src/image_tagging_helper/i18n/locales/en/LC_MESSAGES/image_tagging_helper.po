@@ -1,18 +1,3 @@
-msgid "title:preferences"
-msgstr "Preferences"
-
-msgid "label:language_settings"
-msgstr "Language Settings"
-
-msgid "label:language"
-msgstr "Language"
-
-msgid "label:font_settings"
-msgstr "Font Settings"
-
-msgid "label:editor_font"
-msgstr "Editor"
-
 msgid "ui_group:file"
 msgstr "&File"
 
@@ -175,12 +160,6 @@ msgstr "Image Tags"
 msgid "label:dataset_tags"
 msgstr "Dataset Tags"
 
-msgid "label:tag"
-msgstr "Tag"
-
-msgid "label:count"
-msgstr "Count"
-
 msgid "title:choose_a_directory"
 msgstr "Choose a Directory"
 
@@ -198,6 +177,27 @@ msgstr "Save Changes"
 
 msgid "title:app_main_window"
 msgstr "Image Tagging Helper"
+
+msgid "title:preferences"
+msgstr "Preferences"
+
+msgid "label:language_settings"
+msgstr "Language Settings"
+
+msgid "label:language"
+msgstr "Language"
+
+msgid "label:font_settings"
+msgstr "Font Settings"
+
+msgid "label:editor_font"
+msgstr "Editor"
+
+msgid "label:tag"
+msgstr "Tag"
+
+msgid "label:image_count"
+msgstr "#images"
 
 msgid "label:weight"
 msgstr "Weight"

@@ -24,7 +24,7 @@ class DatasetTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		self.dataset_tags: list[str] = []
 		
 		self.InsertColumn(0, __("label:tag"), width=150)
-		self.InsertColumn(1, __("label:count"), width=50, format=wx.LIST_FORMAT_RIGHT)
+		self.InsertColumn(1, __("label:image_count"), width=50, format=wx.LIST_FORMAT_RIGHT)
 		self.setResizeColumn(0)
 	
 	def set_dataset(self, dataset: Dataset | None):
