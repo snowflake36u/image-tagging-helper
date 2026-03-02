@@ -936,18 +936,24 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# タグをアルファベット順にソートして表示
 		sorted_tags = sorted(dataset.tag_usages.items())
 		
-		for i, (tag_text, count) in enumerate(sorted_tags):
+		# 空白タグを除外
+		valid_tags = [(t, c) for t, c in sorted_tags if t.strip()]
+		
+		for i, (tag_text, count) in enumerate(valid_tags):
 			self.dataset_tags_list.InsertItem(i, tag_text)
 			self.dataset_tags_list.SetItem(i, 1, str(count))
 		
 		# タグリストを保存（更新用）
-		self.dataset_tags = [tag_text for tag_text, _ in sorted_tags]
+		self.dataset_tags = [tag_text for tag_text, _ in valid_tags]
 	
 	def on_tag_usage_changed(self, tag_text: str, count: int):
 		"""
 		タグの使用回数が変更されたときの処理。
 		リスト内の該当するタグのカウントを更新します。
 		"""
+		if not tag_text.strip():
+			return
+
 		if not hasattr(self, 'dataset_tags'):
 			self._update_dataset_tags_view()
 			return
