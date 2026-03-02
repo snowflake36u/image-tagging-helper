@@ -380,7 +380,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		wx.CallAfter(self.load_ui_settings)
 		
 		# ウィンドウリサイズ時の挙動を設定
-		self.splitter_1.SetSashGravity(0.25)
+		self.splitter_1.SetSashGravity(0)
 		self.splitter_2.SetSashGravity(1.0 / 3.0)
 		self.splitter_3.SetSashGravity(0.5)
 	
