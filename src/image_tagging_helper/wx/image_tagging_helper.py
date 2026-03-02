@@ -232,6 +232,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		insert_blank_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:insert_blank_tag"), __("tooltip:insert_blank_tag"), 'Ctrl+E')
 		delete_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:delete_tag"), __("tooltip:delete_tag"), 'Ctrl+D')
 		replace_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:replace_tag"), __("tooltip:replace_tag"), 'Ctrl+R')
+		replace_tag_menu.Enable(False)
 		self.Bind(wx.EVT_MENU, self.on_insert_blank_tag, insert_blank_tag_menu)
 		self.Bind(wx.EVT_MENU, self.on_delete_tag, delete_tag_menu)
 		# self.Bind(wx.EVT_MENU, self.on_replace_tag, replace_tag_menu)
@@ -241,6 +242,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		move_tag_up_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_up"), __("tooltip:move_tag_up"), 'Shift+W')
 		move_tag_down_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_down"), __("tooltip:move_tag_down"), 'Shift+S')
 		sort_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:sort_tag"), __("tooltip:sort_tag"), 'Ctrl+L')
+		sort_tag_menu.Enable(False)
 		self.Bind(wx.EVT_MENU, self.on_move_tag_up, move_tag_up_menu)
 		self.Bind(wx.EVT_MENU, self.on_move_tag_down, move_tag_down_menu)
 	
