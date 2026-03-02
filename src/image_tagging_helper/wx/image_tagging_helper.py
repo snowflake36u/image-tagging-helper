@@ -199,6 +199,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.on_open_folder, open_folder_menu)
 		
 		reload_menu = self._append_menu_item(menu, wx.ID_REFRESH, __("action:reload"), __("tooltip:reload"))
+		self.Bind(wx.EVT_MENU, self.on_reload, reload_menu)
 		
 		menu.AppendSeparator()
 		
@@ -282,6 +283,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menu.AppendSeparator()
 		
 		fullscreen_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:fullscreen"), __("tooltip:fullscreen"), 'F11')
+		self.Bind(wx.EVT_MENU, self.on_fullscreen, fullscreen_menu)
 	
 	def _init_configure_menu(self, menubar):
 		menu = wx.Menu()
@@ -692,6 +694,11 @@ class ImageTaggingHelperFrame(wx.Frame):
 				path = dlg.GetPath()
 				self.load_dataset(path)
 	
+	def on_reload(self, event: wx.CommandEvent):
+		"""データセットを再読み込みします。"""
+		if self.dataset.folder_path:
+			self.load_dataset(self.dataset.folder_path)
+	
 	def on_thumbnail_select(self, event: wx.CommandEvent):
 		"""
 		サムネイルリストの選択が変更されたときの処理。
@@ -766,6 +773,10 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def on_toggle_dataset_tags(self, event: wx.CommandEvent):
 		"""データセットタグの表示/非表示を切り替えます。"""
 		self._update_layout_visibility()
+	
+	def on_fullscreen(self, event: wx.CommandEvent):
+		"""フルスクリーン表示を切り替えます。"""
+		self.ShowFullScreen(not self.IsFullScreen())
 	
 	def on_undo(self, event: wx.CommandEvent):
 		"""直前の操作を元に戻します。"""
