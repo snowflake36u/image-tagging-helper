@@ -31,6 +31,7 @@ class ImageTagsGrid(wx.grid.Grid):
 		self._init_grid()
 		
 		self.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.on_cell_changed)
+		self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
 	
 	def _init_grid(self):
 		"""グリッドの初期設定を行います。
@@ -82,6 +83,23 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.controller.edit_tag(self.item_index, r, new_tag)
 		
 		evt.Skip()
+	
+	def on_key_down(self, event: wx.KeyEvent):
+		"""キー入力イベントを処理します。
+
+		タブキーが押された場合、コントロール間のフォーカス移動を行います。
+		これにより、グリッド内でのセル移動のデフォルト動作をオーバーライドします。
+
+		Args:
+			event: wx.KeyEventオブジェクト。
+		"""
+		if event.GetKeyCode() == wx.WXK_TAB:
+			if event.ShiftDown():
+				self.Navigate(wx.NAVDIR_PREVIOUS)
+			else:
+				self.Navigate(wx.NAVDIR_NEXT)
+		else:
+			event.Skip()
 	
 	def on_model_changed(self, sender, diff: DatasetDiff):
 		"""Datasetからの変更通知を受け取った際の処理です。

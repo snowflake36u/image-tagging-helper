@@ -159,6 +159,22 @@ class ImageTaggingHelperFrame(wx.Frame):
 		main_panel.SetSizer(sizer)
 		
 		self.apply_font_settings()
+		
+		# フォーカス遷移の順序をリストで定義
+		self.focus_order = [
+			self.path_text,
+			self.filter_ctrl,
+			self.thumbnail_list,
+			self.image_tags_grid,
+			self.tag_palette_content,
+			self.dataset_tags_list,
+		]
+		
+		# Tabキーによるフォーカス遷移を制御するためのイベントフック
+		self.Bind(wx.EVT_CHAR_HOOK, self.on_char_hook)
+		
+		# 初期フォーカスをサムネイルリストに設定
+		wx.CallAfter(self.thumbnail_list.SetFocus)
 	
 	def _init_menubar(self):
 		"""メニューバーを初期化します。"""
@@ -410,7 +426,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.tag_palette_toolbar.AddSeparator()
 		self.tag_palette_toolbar.Realize()
 		
-		self.tag_palette_content = wx.Panel(self.tag_palette_panel)
+		self.tag_palette_content = wx.Panel(self.tag_palette_panel, style=wx.TAB_TRAVERSAL)
 		self.tag_palette_content.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_APPWORKSPACE))
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
@@ -437,6 +453,59 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.dataset_tags_panel.SetSizer(sizer)
 	
 	# === イベントハンドラ ===
+	
+	def on_char_hook(self, event: wx.KeyEvent):
+		"""
+		キーイベントをフックして、Tabキーによるフォーカス遷移を制御します。
+		フォーカス遷移の順序を self.focus_order リストに基づいて動的に決定します。
+		"""
+		if event.GetKeyCode() != wx.WXK_TAB:
+			event.Skip()
+			return
+		
+		focus_win = wx.Window.FindFocus()
+		if not focus_win:
+			event.Skip()
+			return
+		
+		# 現在フォーカスのあるコントロールを特定します。
+		# ImageTagsGridは内部にウィンドウを持つため、特別に扱います。
+		current_control = None
+		grid_win = self.image_tags_grid.GetGridWindow()
+		is_grid_focus = (focus_win == self.image_tags_grid or focus_win == grid_win or
+							  (focus_win.GetParent() and focus_win.GetParent() == grid_win))
+		
+		if is_grid_focus:
+			current_control = self.image_tags_grid
+		else:
+			# self.focus_order に含まれるコントロールかどうかをチェックします。
+			for ctrl in self.focus_order:
+				if focus_win == ctrl:
+					current_control = ctrl
+					break
+		
+		if current_control is None:
+			event.Skip()
+			return
+		
+		try:
+			current_index = self.focus_order.index(current_control)
+		except ValueError:
+			event.Skip()
+			return
+		
+		shift_down = event.ShiftDown()
+		num_controls = len(self.focus_order)
+		
+		# 次にフォーカスするコントロールのインデックスを計算します。
+		offset = -1 if shift_down else 1
+		next_index = (current_index + offset + num_controls) % num_controls
+		
+		# 次のコントロールにフォーカスを移動します。
+		next_control = self.focus_order[next_index]
+		next_control.SetFocus()
+	
+	# event.Skip() を呼ばないことで、デフォルトのTab処理を抑制します。
 	
 	def on_filter_items(self, event: wx.CommandEvent):
 		"""検索コントロールで検索が実行されたときの処理。"""
