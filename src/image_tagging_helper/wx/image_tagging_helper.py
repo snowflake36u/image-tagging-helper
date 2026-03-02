@@ -176,94 +176,95 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:file"))
 		
-		open_folder_item = self._append_menu_item(menu, wx.ID_OPEN, __("action:open_folder"), __("tooltip:open_folder"), 'Ctrl+O')
-		self.Bind(wx.EVT_MENU, self.on_open_folder, open_folder_item)
+		open_folder_menu = self._append_menu_item(menu, wx.ID_OPEN, __("action:open_folder"), __("tooltip:open_folder"), 'Ctrl+O')
+		self.Bind(wx.EVT_MENU, self.on_open_folder, open_folder_menu)
 		
-		reload_item = self._append_menu_item(menu, wx.ID_REFRESH, __("action:reload"), __("tooltip:reload"))
-		
-		menu.AppendSeparator()
-		
-		save_item = self._append_menu_item(menu, wx.ID_SAVE, __("action:save"), __("tooltip:save"), 'Ctrl+S')
+		reload_menu = self._append_menu_item(menu, wx.ID_REFRESH, __("action:reload"), __("tooltip:reload"))
 		
 		menu.AppendSeparator()
 		
-		exit_item = self._append_menu_item(menu, wx.ID_EXIT, __("action:exit"), __("tooltip:exit"))
-		self.Bind(wx.EVT_MENU, self.on_exit, exit_item)
+		save_menu = self._append_menu_item(menu, wx.ID_SAVE, __("action:save"), __("tooltip:save"), 'Ctrl+S')
+		
+		menu.AppendSeparator()
+		
+		exit_menu = self._append_menu_item(menu, wx.ID_EXIT, __("action:exit"), __("tooltip:exit"))
+		self.Bind(wx.EVT_MENU, self.on_exit, exit_menu)
 	
 	def _init_edit_menu(self, menubar):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:edit"))
 		
-		undo_item = self._append_menu_item(menu, wx.ID_UNDO, __("action:undo"), __("tooltip:undo"), 'Ctrl+Z')
-		redo_item = self._append_menu_item(menu, wx.ID_REDO, __("action:redo"), __("tooltip:redo"), 'Ctrl+Y')
-		self.Bind(wx.EVT_MENU, self.on_undo, undo_item)
-		self.Bind(wx.EVT_MENU, self.on_redo, redo_item)
-		self.Bind(wx.EVT_UPDATE_UI, self.on_update_ui_undo, undo_item)
-		self.Bind(wx.EVT_UPDATE_UI, self.on_update_ui_redo, redo_item)
+		undo_menu = self._append_menu_item(menu, wx.ID_UNDO, __("action:undo"), __("tooltip:undo"), 'Ctrl+Z')
+		redo_menu = self._append_menu_item(menu, wx.ID_REDO, __("action:redo"), __("tooltip:redo"), 'Ctrl+Y')
+		self.Bind(wx.EVT_MENU, self.on_undo, undo_menu)
+		self.Bind(wx.EVT_MENU, self.on_redo, redo_menu)
+		self.Bind(wx.EVT_UPDATE_UI, self.on_update_ui_undo, undo_menu)
+		self.Bind(wx.EVT_UPDATE_UI, self.on_update_ui_redo, redo_menu)
 		
 		menu.AppendSeparator()
 		
-		copy_item = self._append_menu_item(menu, wx.ID_COPY, __("action:copy"), __("tooltip:copy"), 'Ctrl+C')
-		paste_item = self._append_menu_item(menu, wx.ID_PASTE, __("action:paste"), __("tooltip:paste"), 'Ctrl+V')
-		self.Bind(wx.EVT_MENU, self.on_copy, copy_item)
-		self.Bind(wx.EVT_MENU, self.on_paste, paste_item)
+		copy_menu = self._append_menu_item(menu, wx.ID_COPY, __("action:copy"), __("tooltip:copy"), 'Ctrl+C')
+		paste_menu = self._append_menu_item(menu, wx.ID_PASTE, __("action:paste"), __("tooltip:paste"), 'Ctrl+V')
+		self.Bind(wx.EVT_MENU, self.on_copy, copy_menu)
+		self.Bind(wx.EVT_MENU, self.on_paste, paste_menu)
 		
 		menu.AppendSeparator()
 		
-		insert_blank_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:insert_blank_tag"), __("tooltip:insert_blank_tag"), 'Ctrl+E')
-		delete_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:delete_tag"), __("tooltip:delete_tag"), 'Ctrl+D')
-		replace_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:replace_tag"), __("tooltip:replace_tag"), 'Ctrl+R')
-		self.Bind(wx.EVT_MENU, self.on_insert_blank_tag, insert_blank_tag_item)
-		self.Bind(wx.EVT_MENU, self.on_delete_tag, delete_tag_item)
-		# self.Bind(wx.EVT_MENU, self.on_replace_tag, replace_tag_item)
+		insert_blank_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:insert_blank_tag"), __("tooltip:insert_blank_tag"), 'Ctrl+E')
+		delete_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:delete_tag"), __("tooltip:delete_tag"), 'Ctrl+D')
+		replace_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:replace_tag"), __("tooltip:replace_tag"), 'Ctrl+R')
+		self.Bind(wx.EVT_MENU, self.on_insert_blank_tag, insert_blank_tag_menu)
+		self.Bind(wx.EVT_MENU, self.on_delete_tag, delete_tag_menu)
+		# self.Bind(wx.EVT_MENU, self.on_replace_tag, replace_tag_menu)
 		
 		menu.AppendSeparator()
 		
-		move_tag_up_item = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_up"), __("tooltip:move_tag_up"), 'Shift+W')
-		move_tag_down_item = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_down"), __("tooltip:move_tag_down"), 'Shift+S')
-		sort_tag_item = self._append_menu_item(menu, wx.ID_ANY, __("action:sort_tag"), __("tooltip:sort_tag"), 'Ctrl+L')
-		self.Bind(wx.EVT_MENU, self.on_move_tag_up, move_tag_up_item)
-		self.Bind(wx.EVT_MENU, self.on_move_tag_down, move_tag_down_item)
+		move_tag_up_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_up"), __("tooltip:move_tag_up"), 'Shift+W')
+		move_tag_down_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_down"), __("tooltip:move_tag_down"), 'Shift+S')
+		sort_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:sort_tag"), __("tooltip:sort_tag"), 'Ctrl+L')
+		self.Bind(wx.EVT_MENU, self.on_move_tag_up, move_tag_up_menu)
+		self.Bind(wx.EVT_MENU, self.on_move_tag_down, move_tag_down_menu)
 	
 	def _init_dataset_menu(self, menubar):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:dataset"))
 		
-		open_in_folder_item = self._append_menu_item(menu, wx.ID_ANY, __("action:open_in_folder"), __("tooltip:open_in_folder"))
-		view_image_item = self._append_menu_item(menu, wx.ID_ANY, __("action:view_image"), __("tooltip:view_image"))
+		open_in_folder_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:open_in_folder"), __("tooltip:open_in_folder"))
+		view_image_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:view_image"), __("tooltip:view_image"))
 		
 		menu.AppendSeparator()
 		
-		next_image_item = self._append_menu_item(menu, wx.ID_FORWARD, __("action:next_image"), __("tooltip:next_image"), 'Shift+C')
-		prev_image_item = self._append_menu_item(menu, wx.ID_BACKWARD, __("action:prev_image"), __("tooltip:prev_image"), 'Shift+X')
+		next_image_menu = self._append_menu_item(menu, wx.ID_FORWARD, __("action:next_image"), __("tooltip:next_image"), 'Shift+C')
+		prev_image_menu = self._append_menu_item(menu, wx.ID_BACKWARD, __("action:prev_image"), __("tooltip:prev_image"), 'Shift+X')
 		
 		menu.AppendSeparator()
 		
-		filter_images_item = self._append_menu_item(menu, wx.ID_FIND, __("action:filter_images"), __("tooltip:filter_images"), 'F3')
-		clear_filter_item = self._append_menu_item(menu, wx.ID_ANY, __("action:clear_filter"), __("tooltip:clear_filter"), 'Shift+F3')
+		filter_images_menu = self._append_menu_item(menu, wx.ID_FIND, __("action:filter_images"), __("tooltip:filter_images"), 'F3')
+		self.Bind(wx.EVT_MENU, self.on_filter_images, filter_images_menu)
+		clear_filter_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:clear_filter"), __("tooltip:clear_filter"), 'Shift+F3')
 	
 	def _init_view_menu(self, menubar):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:view"))
 		
-		self.toggle_tag_palette_item = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_tag_palette"), __("tooltip:toggle_tag_palette"), kind=wx.ITEM_CHECK)
-		self.toggle_tag_palette_item.Check(True)
-		self.Bind(wx.EVT_MENU, self.on_toggle_tag_palette, self.toggle_tag_palette_item)
+		self.toggle_tag_palette_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_tag_palette"), __("tooltip:toggle_tag_palette"), kind=wx.ITEM_CHECK)
+		self.toggle_tag_palette_menu.Check(True)
+		self.Bind(wx.EVT_MENU, self.on_toggle_tag_palette, self.toggle_tag_palette_menu)
 		
-		self.toggle_dataset_tags_item = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_dataset_tags"), __("tooltip:toggle_dataset_tags"), kind=wx.ITEM_CHECK)
-		self.toggle_dataset_tags_item.Check(True)
-		self.Bind(wx.EVT_MENU, self.on_toggle_dataset_tags, self.toggle_dataset_tags_item)
+		self.toggle_dataset_tags_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_dataset_tags"), __("tooltip:toggle_dataset_tags"), kind=wx.ITEM_CHECK)
+		self.toggle_dataset_tags_menu.Check(True)
+		self.Bind(wx.EVT_MENU, self.on_toggle_dataset_tags, self.toggle_dataset_tags_menu)
 		
 		menu.AppendSeparator()
 		
-		fullscreen_item = self._append_menu_item(menu, wx.ID_ANY, __("action:fullscreen"), __("tooltip:fullscreen"), 'F11')
+		fullscreen_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:fullscreen"), __("tooltip:fullscreen"), 'F11')
 	
 	def _init_configure_menu(self, menubar):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:configure"))
 		
-		preferences_item = self._append_menu_item(menu, wx.ID_PREFERENCES, __("action:preferences"), __("tooltip:preferences"))
-		self.Bind(wx.EVT_MENU, self.on_preferences, preferences_item)
+		preferences_menu = self._append_menu_item(menu, wx.ID_PREFERENCES, __("action:preferences"), __("tooltip:preferences"))
+		self.Bind(wx.EVT_MENU, self.on_preferences, preferences_menu)
 	
 	@staticmethod
 	def _append_menu_item(menu: wx.Menu, item_id: int, label: str, help_str: str, accel: str = None, kind: wx.ItemKind = wx.ITEM_NORMAL) -> wx.MenuItem:
@@ -753,8 +754,8 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	def _update_layout_visibility(self):
 		"""メニューのチェック状態に基づいてパネルの表示/非表示を更新します。"""
-		show_tag_palette = self.toggle_tag_palette_item.IsChecked()
-		show_dataset_tags = self.toggle_dataset_tags_item.IsChecked()
+		show_tag_palette = self.toggle_tag_palette_menu.IsChecked()
+		show_dataset_tags = self.toggle_dataset_tags_menu.IsChecked()
 		
 		# splitter_3 の状態更新
 		if show_tag_palette and show_dataset_tags:
