@@ -473,12 +473,17 @@ class ImageTaggingHelperFrame(wx.Frame):
 				view_index = self.thumbnail_list.get_view_index(current_selection)
 				self.thumbnail_list.SetSelection(view_index)
 			else:
-				# マッチしなかった場合は、最も近い画像を選択する
-				# ここでは単純にリストの先頭を選択する
-				# TODO: より高度な「最も近い画像」の選択ロジックを実装する
-				self.thumbnail_list.SetSelection(0)
-				self.last_thumbnail_selection = matched_indices[0]
-				self._update_views_for_item_selection(matched_indices[0])
+				# マッチしなかった場合は、直前の画像を選択する
+				idx = bisect.bisect_left(matched_indices, current_selection)
+				if idx > 0:
+					new_selection = matched_indices[idx - 1]
+				else:
+					new_selection = matched_indices[0]
+				
+				view_index = self.thumbnail_list.get_view_index(new_selection)
+				self.thumbnail_list.SetSelection(view_index)
+				self.last_thumbnail_selection = new_selection
+				self._update_views_for_item_selection(new_selection)
 		else:
 			# マッチする画像がない場合
 			self.last_thumbnail_selection = wx.NOT_FOUND
