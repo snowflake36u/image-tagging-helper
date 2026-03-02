@@ -255,7 +255,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		menu.AppendSeparator()
 		
-		filter_images_menu = self._append_menu_item(menu, wx.ID_FIND, __("action:filter_images"), __("tooltip:filter_images"), 'Ctrl+Shift+F')
+		filter_images_menu = self._append_menu_item(menu, wx.ID_FIND, __("action:filter_images"), __("tooltip:filter_images"), 'Ctrl+F')
 		self.Bind(wx.EVT_MENU, self.on_filter_images_menu, filter_images_menu)
 	
 	def _init_view_menu(self, menubar):
@@ -343,9 +343,10 @@ class ImageTaggingHelperFrame(wx.Frame):
 		topbar_panel.SetSizer(topbar_sizer)
 		
 		# イベントハンドラをバインド
-		self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.on_filter_items, self.filter_ctrl)
+		self.Bind(wx.EVT_SEARCH, self.on_filter_items, self.filter_ctrl)
 		self.Bind(wx.EVT_TEXT_ENTER, self.on_filter_items, self.filter_ctrl)
-		self.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self.on_filter_cancel, self.filter_ctrl)
+		self.Bind(wx.EVT_SEARCH_CANCEL, self.on_filter_cancel, self.filter_ctrl)
+		self.filter_ctrl.Bind(wx.EVT_KEY_DOWN, self.on_filter_ctrl_key_down)
 		
 		return topbar_panel
 	
@@ -506,6 +507,18 @@ class ImageTaggingHelperFrame(wx.Frame):
 		next_control.SetFocus()
 	
 	# event.Skip() を呼ばないことで、デフォルトのTab処理を抑制します。
+	
+	def on_filter_ctrl_key_down(self, event: wx.KeyEvent):
+		"""
+		検索コントロールでのキー入力を処理します。
+		空文字列でEnterキーが押された場合、EVT_SEARCHが発生しないため手動で処理します。
+		"""
+		if event.GetKeyCode() == wx.WXK_RETURN:
+			if not self.filter_ctrl.GetValue():
+				self.on_filter_items(None)
+				return
+		
+		event.Skip()
 	
 	def on_filter_items(self, event: wx.CommandEvent):
 		"""検索コントロールで検索が実行されたときの処理。"""
