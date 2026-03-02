@@ -139,12 +139,6 @@ msgstr "画像をフィルタ"
 msgid "ui_group:view"
 msgstr "表示(&V)"
 
-msgid "action:toggle_tag_palette"
-msgstr "タグパレット(&T)"
-
-msgid "tooltip:toggle_tag_palette"
-msgstr "タグパレットの表示切り替え"
-
 msgid "action:toggle_dataset_tags"
 msgstr "全タグ一覧(&A)"
 
@@ -178,9 +172,6 @@ msgstr "画像一覧"
 msgid "label:image_tags"
 msgstr "画像のタグ"
 
-msgid "label:tag_palette"
-msgstr "タグパレット"
-
 msgid "label:dataset_tags"
 msgstr "全タグ一覧"
 
@@ -211,17 +202,6 @@ msgstr "Image Tagging Helper"
 msgid "label:weight"
 msgstr "重み"
 
-#~ msgid "action:cut"
-#~ msgstr "切り取り(&T)"
-
-#~ msgid "tooltip:cut"
-#~ msgstr "切り取り"
-
 #~ msgid "label:font"
 #~ msgstr "フォント"
 
-#~ msgid "action:clear_filter"
-#~ msgstr "フィルタを解除(&C)"
-
-#~ msgid "tooltip:clear_filter"
-#~ msgstr "フィルタを解除"

@@ -139,12 +139,6 @@ msgstr "Filter Images"
 msgid "ui_group:view"
 msgstr "&View"
 
-msgid "action:toggle_tag_palette"
-msgstr "Toggle &Tag Palette"
-
-msgid "tooltip:toggle_tag_palette"
-msgstr "Toggle Tag Palette"
-
 msgid "action:toggle_dataset_tags"
 msgstr "Toggle D&ataset Tags"
 
@@ -178,9 +172,6 @@ msgstr "Image List"
 msgid "label:image_tags"
 msgstr "Image Tags"
 
-msgid "label:tag_palette"
-msgstr "Tag Palette"
-
 msgid "label:dataset_tags"
 msgstr "Dataset Tags"
 
@@ -211,17 +202,6 @@ msgstr "Image Tagging Helper"
 msgid "label:weight"
 msgstr "Weight"
 
-#~ msgid "action:cut"
-#~ msgstr "Cu&t"
-
-#~ msgid "tooltip:cut"
-#~ msgstr "Cut"
-
 #~ msgid "label:font"
 #~ msgstr "Font"
 
-#~ msgid "action:clear_filter"
-#~ msgstr "&Clear Filter"
-
-#~ msgid "tooltip:clear_filter"
-#~ msgstr "Clear Filter"

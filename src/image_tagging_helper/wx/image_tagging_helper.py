@@ -169,7 +169,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 			self.filter_ctrl,
 			self.thumbnail_list,
 			self.image_tags_grid,
-			self.tag_palette_content,
 			self.dataset_tags_list,
 		]
 		
@@ -273,10 +272,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:view"))
 		
-		self.toggle_tag_palette_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_tag_palette"), __("tooltip:toggle_tag_palette"), kind=wx.ITEM_CHECK)
-		self.toggle_tag_palette_menu.Check(True)
-		self.Bind(wx.EVT_MENU, self.on_toggle_tag_palette, self.toggle_tag_palette_menu)
-		
 		self.toggle_dataset_tags_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_dataset_tags"), __("tooltip:toggle_dataset_tags"), kind=wx.ITEM_CHECK)
 		self.toggle_dataset_tags_menu.Check(True)
 		self.Bind(wx.EVT_MENU, self.on_toggle_dataset_tags, self.toggle_dataset_tags_menu)
@@ -369,9 +364,8 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# スプリッターウィンドウの作成
 		self.splitter_1 = wx.SplitterWindow(parent)
 		self.splitter_2 = wx.SplitterWindow(self.splitter_1)
-		self.splitter_3 = wx.SplitterWindow(self.splitter_2)
 		
-		splitters = [self.splitter_1, self.splitter_2, self.splitter_3]
+		splitters = [self.splitter_1, self.splitter_2]
 		for splitter in splitters:
 			splitter.Bind(wx.EVT_SPLITTER_DCLICK, self.on_splitter_dclick)
 			splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGING, self.on_splitter_sash_pos_changing)
@@ -380,22 +374,19 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# 各ペインの作成
 		self._create_thumbnail_panel(self.splitter_1)
 		self._create_image_tags_panel(self.splitter_2)
-		self._create_tag_palette_panel(self.splitter_3)
-		self._create_dataset_tags_panel(self.splitter_3)
+		self._create_dataset_tags_panel(self.splitter_2)
 		
 		# スプリッターの分割設定
-		# 全体幅1200に対して各パネル300ずつ割り当てる
-		self.splitter_1.SplitVertically(self.thumbnail_panel, self.splitter_2, 300)
-		self.splitter_2.SplitVertically(self.image_tags_panel, self.splitter_3, 300)
-		self.splitter_3.SplitVertically(self.tag_palette_panel, self.dataset_tags_panel, 300)
+		# 全体幅1200に対して各パネル400ずつ割り当てる
+		self.splitter_1.SplitVertically(self.thumbnail_panel, self.splitter_2, 400)
+		self.splitter_2.SplitVertically(self.image_tags_panel, self.dataset_tags_panel, 400)
 		
 		# UI設定を復元
 		wx.CallAfter(self.load_ui_settings)
 		
 		# ウィンドウリサイズ時の挙動を設定
 		self.splitter_1.SetSashGravity(0)
-		self.splitter_2.SetSashGravity(1.0 / 3.0)
-		self.splitter_3.SetSashGravity(0.5)
+		self.splitter_2.SetSashGravity(0.5)
 	
 	def _create_thumbnail_panel(self, parent: wx.Window):
 		"""画像のサムネイルリストパネルを作成します。"""
@@ -430,23 +421,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 		sizer.Add(self.image_tags_toolbar, 0, wx.EXPAND)
 		sizer.Add(self.image_tags_grid, 1, wx.EXPAND)
 		self.image_tags_panel.SetSizer(sizer)
-	
-	def _create_tag_palette_panel(self, parent: wx.Window):
-		"""タグパレットパネルを作成します。"""
-		self.tag_palette_panel = wx.Panel(parent)
-		self.tag_palette_panel.SetMinSize((SASH_MIN_WIDTH, -1))
-		self.tag_palette_toolbar = wx.ToolBar(self.tag_palette_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
-		self.tag_palette_toolbar.AddControl(wx.StaticText(self.tag_palette_toolbar, label=__("label:tag_palette")))
-		self.tag_palette_toolbar.AddSeparator()
-		self.tag_palette_toolbar.Realize()
-		
-		self.tag_palette_content = wx.Panel(self.tag_palette_panel, style=wx.TAB_TRAVERSAL)
-		self.tag_palette_content.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_APPWORKSPACE))
-		
-		sizer = wx.BoxSizer(wx.VERTICAL)
-		sizer.Add(self.tag_palette_toolbar, 0, wx.EXPAND)
-		sizer.Add(self.tag_palette_content, 1, wx.EXPAND)
-		self.tag_palette_panel.SetSizer(sizer)
 	
 	def _create_dataset_tags_panel(self, parent: wx.Window):
 		"""データセット全体のタグ一覧パネルを作成します。"""
@@ -804,10 +778,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 						wx.OK | wx.ICON_INFORMATION
 					)
 	
-	def on_toggle_tag_palette(self, event: wx.CommandEvent):
-		"""タグパレットの表示/非表示を切り替えます。"""
-		self._update_layout_visibility()
-	
 	def on_toggle_dataset_tags(self, event: wx.CommandEvent):
 		"""データセットタグの表示/非表示を切り替えます。"""
 		self._update_layout_visibility()
@@ -1062,40 +1032,16 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	def _update_layout_visibility(self):
 		"""メニューのチェック状態に基づいてパネルの表示/非表示を更新します。"""
-		show_tag_palette = self.toggle_tag_palette_menu.IsChecked()
 		show_dataset_tags = self.toggle_dataset_tags_menu.IsChecked()
 		
-		# splitter_3 の状態更新
-		if show_tag_palette and show_dataset_tags:
-			if not self.splitter_3.IsSplit():
-				self.splitter_3.SplitVertically(self.tag_palette_panel, self.dataset_tags_panel)
-				# 位置を復元またはデフォルト値に設定
-				self.splitter_3.SetSashPosition(self.splitter_3.GetSize().GetWidth() // 2)
-		elif show_tag_palette:
-			if self.splitter_3.IsSplit():
-				self.splitter_3.Unsplit(self.dataset_tags_panel)
-			elif self.splitter_3.GetWindow1() != self.tag_palette_panel:
-				# 現在 dataset_tags_panel が表示されている場合、入れ替える
-				# Unsplit 状態では GetWindow1 が表示されているウィンドウ
-				# ただし、Unsplit(to_remove) を呼ぶと、残った方が GetWindow1 になるはず
-				# ここでは一度初期化しなおすのが確実
-				self.splitter_3.Initialize(self.tag_palette_panel)
-		elif show_dataset_tags:
-			if self.splitter_3.IsSplit():
-				self.splitter_3.Unsplit(self.tag_palette_panel)
-			elif self.splitter_3.GetWindow1() != self.dataset_tags_panel:
-				self.splitter_3.Initialize(self.dataset_tags_panel)
-		
-		# splitter_2 の状態更新 (splitter_3 の表示/非表示)
-		show_splitter_3 = show_tag_palette or show_dataset_tags
-		
-		if show_splitter_3:
+		# splitter_2 の状態更新 (dataset_tags_panel の表示/非表示)
+		if show_dataset_tags:
 			if not self.splitter_2.IsSplit():
-				self.splitter_2.SplitVertically(self.image_tags_panel, self.splitter_3)
-				self.splitter_2.SetSashPosition(self.splitter_2.GetSize().GetWidth() * 2 // 3)
+				self.splitter_2.SplitVertically(self.image_tags_panel, self.dataset_tags_panel)
+				self.splitter_2.SetSashPosition(self.splitter_2.GetSize().GetWidth() // 2)
 		else:
 			if self.splitter_2.IsSplit():
-				self.splitter_2.Unsplit(self.splitter_3)
+				self.splitter_2.Unsplit(self.dataset_tags_panel)
 		
 		self.Layout()
 	
@@ -1103,7 +1049,6 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""UIの状態（スプリッターの位置など）を保存します。"""
 		self.config.set('ui.splitter_1_pos', self.splitter_1.GetSashPosition())
 		self.config.set('ui.splitter_2_pos', self.splitter_2.GetSashPosition())
-		self.config.set('ui.splitter_3_pos', self.splitter_3.GetSashPosition())
 		
 		# ウィンドウサイズを保存
 		size = self.GetSize()
@@ -1122,17 +1067,14 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.Freeze()
 		try:
 			# デフォルト値は初期レイアウトに基づく
-			# 初期サイズ(1200)に基づく比率 1:1:1:1 -> 300:300:300:300
-			s1_pos = self.config.get('ui.splitter_1_pos', 300)
-			s2_pos = self.config.get('ui.splitter_2_pos', 300)
-			s3_pos = self.config.get('ui.splitter_3_pos', 300)
+			# 初期サイズ(1200)に基づく比率 1:1:1 -> 400:400:400
+			s1_pos = self.config.get('ui.splitter_1_pos', 400)
+			s2_pos = self.config.get('ui.splitter_2_pos', 400)
 			
 			if s1_pos > 0:
 				self.splitter_1.SetSashPosition(s1_pos)
 			if s2_pos > 0:
 				self.splitter_2.SetSashPosition(s2_pos)
-			if s3_pos > 0:
-				self.splitter_3.SetSashPosition(s3_pos)
 		finally:
 			self.Thaw()
 	

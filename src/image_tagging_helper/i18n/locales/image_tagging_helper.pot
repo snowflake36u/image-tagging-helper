@@ -139,12 +139,6 @@ msgstr ""
 msgid "ui_group:view"
 msgstr ""
 
-msgid "action:toggle_tag_palette"
-msgstr ""
-
-msgid "tooltip:toggle_tag_palette"
-msgstr ""
-
 msgid "action:toggle_dataset_tags"
 msgstr ""
 
@@ -176,9 +170,6 @@ msgid "label:image_list"
 msgstr ""
 
 msgid "label:image_tags"
-msgstr ""
-
-msgid "label:tag_palette"
 msgstr ""
 
 msgid "label:dataset_tags"
