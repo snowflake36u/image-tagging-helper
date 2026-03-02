@@ -306,7 +306,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		self.search_ctrl = wx.SearchCtrl(search_panel, style=wx.TE_PROCESS_ENTER)
 		self.search_ctrl.ShowCancelButton(True)
-		self.search_ctrl.SetHint(__("hint:search_filter"))
+		self.search_ctrl.SetDescriptiveText(__("hint:search_filter"))
 		
 		# テキストボックスの高さをpath_textに合わせる
 		ref_height = self.path_text.GetBestSize().height
