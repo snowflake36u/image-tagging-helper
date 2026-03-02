@@ -32,6 +32,7 @@ class ImageTagsGrid(wx.grid.Grid):
 		
 		self.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.on_cell_changed)
 		self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
+		self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.on_cell_left_click)
 	
 	def _init_grid(self):
 		"""グリッドの初期設定を行います。
@@ -89,17 +90,71 @@ class ImageTagsGrid(wx.grid.Grid):
 
 		タブキーが押された場合、コントロール間のフォーカス移動を行います。
 		これにより、グリッド内でのセル移動のデフォルト動作をオーバーライドします。
+		十字キー（Shiftなし）が押された場合、カーソル移動に合わせてセルを選択します。
 
 		Args:
 			event: wx.KeyEventオブジェクト。
 		"""
-		if event.GetKeyCode() == wx.WXK_TAB:
+		key_code = event.GetKeyCode()
+		
+		if key_code == wx.WXK_TAB:
 			if event.ShiftDown():
 				self.Navigate(wx.NAVDIR_PREVIOUS)
 			else:
 				self.Navigate(wx.NAVDIR_NEXT)
-		else:
+			return
+		
+		if key_code in (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT):
+			if event.ShiftDown():
+				event.Skip()
+				return
+			
+			if event.ControlDown():
+				event.Skip()
+				wx.CallAfter(self._sync_selection_with_cursor)
+				return
+			
+			# デフォルトのナビゲーションを無効にし、独自処理を行う
+			current_row = self.GetGridCursorRow()
+			current_col = self.GetGridCursorCol()
+			
+			new_row, new_col = current_row, current_col
+			
+			if key_code == wx.WXK_UP:
+				new_row = max(0, current_row - 1)
+			elif key_code == wx.WXK_DOWN:
+				new_row = min(self.GetNumberRows() - 1, current_row + 1)
+			elif key_code == wx.WXK_LEFT:
+				new_col = max(0, current_col - 1)
+			elif key_code == wx.WXK_RIGHT:
+				new_col = min(self.GetNumberCols() - 1, current_col + 1)
+			
+			if new_row != current_row or new_col != current_col:
+				self.focus_cell(new_row, new_col)
+				self.MakeCellVisible(new_row, new_col)
+			return
+		
+		event.Skip()
+	
+	def on_cell_left_click(self, event):
+		"""左クリック時の処理。
+
+		修飾キーがない場合、クリックされたセルを選択状態にします。
+		"""
+		if event.ShiftDown() or event.ControlDown():
 			event.Skip()
+			return
+		
+		row = event.GetRow()
+		col = event.GetCol()
+		self.focus_cell(row, col)
+	
+	def _sync_selection_with_cursor(self):
+		"""現在のカーソル位置に合わせて選択範囲を更新します。"""
+		row = self.GetGridCursorRow()
+		col = self.GetGridCursorCol()
+		if 0 <= row < self.GetNumberRows() and 0 <= col < self.GetNumberCols():
+			self.focus_cell(row, col)
 	
 	def on_model_changed(self, sender, diff: DatasetDiff):
 		"""Datasetからの変更通知を受け取った際の処理です。
