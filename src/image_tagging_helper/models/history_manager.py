@@ -9,6 +9,20 @@ class HistoryManager:
 	def __init__(self):
 		self.undo_stack: List[HistoryAction] = []
 		self.redo_stack: List[HistoryAction] = []
+		self._saved_index = 0
+	
+	@property
+	def is_dirty(self) -> bool:
+		"""
+		保存されていない変更があるかどうかを返します。
+		"""
+		return self._saved_index != len(self.undo_stack)
+	
+	def mark_saved(self):
+		"""
+		現在の状態を保存済みとしてマークします。
+		"""
+		self._saved_index = len(self.undo_stack)
 	
 	def push(self, action: HistoryAction, sender: str = None):
 		"""
@@ -20,6 +34,12 @@ class HistoryManager:
 			sender (str): 操作の送信元ID。
 		"""
 		action.apply(sender)
+		
+		# 保存された状態からUndoして新しい操作を行った場合、
+		# 以前の保存状態には戻れなくなるため、saved_indexを無効化する
+		if self._saved_index > len(self.undo_stack):
+			self._saved_index = -1
+		
 		self.undo_stack.append(action)
 		self.redo_stack.clear()
 	

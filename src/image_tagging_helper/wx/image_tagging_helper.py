@@ -204,6 +204,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menu.AppendSeparator()
 		
 		save_menu = self._append_menu_item(menu, wx.ID_SAVE, __("action:save"), __("tooltip:save"), 'Ctrl+S')
+		self.Bind(wx.EVT_MENU, self.on_save, save_menu)
 		
 		menu.AppendSeparator()
 		
@@ -596,7 +597,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def on_filter_images_menu(self, event: wx.CommandEvent):
 		"""検索バーにフォーカスを移動します。"""
 		self.filter_ctrl.SetFocus()
-
+	
 	def on_close(self, event: wx.CloseEvent):
 		"""ウィンドウが閉じるときにUI設定を保存します。"""
 		self.save_ui_settings()
@@ -698,6 +699,11 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""データセットを再読み込みします。"""
 		if self.dataset.folder_path:
 			self.load_dataset(self.dataset.folder_path)
+	
+	def on_save(self, event: wx.CommandEvent):
+		"""データセットを保存します。"""
+		if self.dataset.initialized:
+			self.dataset.save(self.caption_ext, self.caption_format_config)
 	
 	def on_thumbnail_select(self, event: wx.CommandEvent):
 		"""
@@ -1160,7 +1166,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""
 		if not tag_text.strip():
 			return
-
+		
 		if not hasattr(self, 'dataset_tags'):
 			self._update_dataset_tags_view()
 			return

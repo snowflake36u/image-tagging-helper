@@ -25,7 +25,6 @@ class DatasetItem:
 	def __init__(
 			self,
 			image_path: str,
-			caption_path: str,
 			caption: Caption | None = None,
 	):
 		"""
@@ -36,13 +35,12 @@ class DatasetItem:
 			caption: 画像に関連付けられたキャプション。指定されない場合は空のCaptionが作成される。
 		"""
 		self.image_path = image_path
-		self.caption_path = caption_path
 		self.caption = caption or Caption()
 	
 	@staticmethod
 	def create(image_path, caption_ext, caption_format_config, on_tag_usage_changed):
-		caption_path = os.path.splitext(image_path)[0] + caption_ext
 		caption = Caption()
+		caption_path = os.path.splitext(image_path)[0] + caption_ext
 		if os.path.exists(caption_path):
 			with open(caption_path, 'r', encoding='utf-8') as f:
 				caption_text = f.read()
@@ -50,7 +48,7 @@ class DatasetItem:
 		
 		caption.set_tag_usage_changed_listener(on_tag_usage_changed)
 		
-		return DatasetItem(image_path=image_path, caption_path=caption_path, caption=caption)
+		return DatasetItem(image_path=image_path, caption=caption)
 
 class Dataset:
 	"""
@@ -63,6 +61,7 @@ class Dataset:
 		self.items = None
 		self.tag_usages = Counter()
 		self.history = HistoryManager()
+		self.folder_path = None
 		
 		# タグの使用回数の更新後イベント。(tag, count) -> None
 		self._tag_usage_changed_listeners: List[Callable[[str, int], None]] = []
@@ -87,6 +86,7 @@ class Dataset:
 			caption_ext,
 			caption_format_config,
 	):
+		self.folder_path = folder_path
 		self.history = HistoryManager()
 		
 		image_files = []
@@ -105,6 +105,24 @@ class Dataset:
 			for path in image_files
 		]
 		self._init_tag_usages()
+	
+	def save(self, caption_ext: str, caption_format_config):
+		"""
+		データセット内のすべてのキャプションをファイルに保存します。
+
+		Args:
+			caption_format_config: キャプションのフォーマット設定。
+		"""
+		if not self.items:
+			return
+		
+		self.history.mark_saved()
+		
+		for item in self.items:
+			caption_path = os.path.splitext(item.image_path)[0] + caption_ext
+			text = item.caption.format(caption_format_config)
+			with open(caption_path, 'w', encoding='utf-8') as f:
+				f.write(text)
 	
 	# === イベントリスナーの管理 ===
 	
