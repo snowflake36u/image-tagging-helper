@@ -1,10 +1,15 @@
 import os
-from typing import Dict, List, Optional
+import threading
+import queue
+from typing import Dict, List, Optional, Set
 import bisect
 
 import wx
 
 from src.image_tagging_helper.models.dataset import Dataset, DatasetItem
+
+# サムネイルの固定サイズを定義。メモリと品質のバランスを考慮して調整可能。
+THUMBNAIL_CACHE_FIXED_SIZE = (384, 384)
 
 class ImageVListBox(wx.VListBox):
 	"""
@@ -15,12 +20,139 @@ class ImageVListBox(wx.VListBox):
 		super().__init__(parent, style=style)
 		self.dataset: Dataset | None = None
 		self.filtered_indices: List[int] | None = None
-		self.thumbnail_cache: Dict[tuple[str, tuple[int, int]], wx.Bitmap] = { }
-		self.image_cache: Dict[str, wx.Image] = { }
+		# サムネイルキャッシュ。{ 画像パス: サムネイルビットマップ }
+		self.thumbnail_cache: Dict[str, wx.Bitmap] = { }
 		self._thumbnail_display_width = 64  # デフォルト値
 		self.padding_h = 5
 		self.padding_v = 5
 		self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
+		
+		# 非同期サムネイル生成のための準備
+		self.thumbnail_queue = queue.Queue()
+		self.pending_thumbnails: Set[str] = set()  # 生成中のサムネイルパスを追跡
+		self.worker_thread: threading.Thread | None = None
+		self.worker_running = False
+		self._start_thumbnail_worker()
+		
+		# アプリケーション終了時にワーカーを停止するためのイベントハンドラ
+		self.Bind(wx.EVT_WINDOW_DESTROY, self._on_destroy)
+	
+	def _start_thumbnail_worker(self):
+		"""
+		サムネイル生成ワーカースレッドを開始する。
+		"""
+		if not self.worker_running:
+			self.worker_running = True
+			self.worker_thread = threading.Thread(target=self._thumbnail_worker_task)
+			self.worker_thread.daemon = True  # メインスレッド終了時に一緒に終了
+			self.worker_thread.start()
+	
+	def _stop_thumbnail_worker(self):
+		"""
+		サムネイル生成ワーカースレッドを停止する。
+		"""
+		if self.worker_running:
+			self.worker_running = False
+			self.thumbnail_queue.put(None)  # 終了シグナル
+			if self.worker_thread and self.worker_thread.is_alive():
+				self.worker_thread.join(timeout=1.0)  # 終了を待つ
+	
+	def _on_destroy(self, event: wx.Event):
+		"""
+		ウィンドウ破棄時にワーカースレッドを停止する。
+		"""
+		self._stop_thumbnail_worker()
+		event.Skip()
+	
+	def _thumbnail_worker_task(self):
+		"""
+		ワーカースレッドでサムネイル生成処理を実行する。
+		"""
+		while self.worker_running:
+			item_data = self.thumbnail_queue.get()
+			if item_data is None:  # 終了シグナル
+				break
+			
+			image_path, item_index = item_data
+			
+			# 既に生成依頼が出ているか確認
+			if image_path not in self.pending_thumbnails:
+				self.thumbnail_queue.task_done()
+				continue
+			
+			try:
+				# 画像ファイルを直接読み込む
+				with wx.LogNull():
+					img = wx.Image(image_path, wx.BITMAP_TYPE_ANY)
+				
+				if not img.IsOk():
+					# 読み込み失敗時はエラー用のビットマップを生成
+					bmp = wx.Bitmap(THUMBNAIL_CACHE_FIXED_SIZE[0], THUMBNAIL_CACHE_FIXED_SIZE[1])
+					dc = wx.MemoryDC(bmp)
+					dc.SetBackground(wx.Brush(wx.LIGHT_GREY))
+					dc.Clear()
+					dc.SelectObject(wx.NullBitmap)
+					generated_bmp = bmp
+				else:
+					# サムネイル用にリサイズ（アスペクト比維持）
+					w, h = img.GetWidth(), img.GetHeight()
+					target_w, target_h = THUMBNAIL_CACHE_FIXED_SIZE
+					
+					if w <= 0 or h <= 0:
+						bmp = wx.Bitmap(target_w, target_h)
+						dc = wx.MemoryDC(bmp)
+						dc.SetBackground(wx.Brush(wx.WHITE))
+						dc.Clear()
+						dc.SelectObject(wx.NullBitmap)
+						generated_bmp = bmp
+					else:
+						scale = min(target_w / w, target_h / h)
+						new_w = int(w * scale)
+						new_h = int(h * scale)
+						
+						# 品質を通常に設定してリサイズ
+						scaled_img = img.Scale(new_w, new_h, wx.IMAGE_QUALITY_HIGH)
+						
+						bmp = wx.Bitmap(target_w, target_h)
+						dc = wx.MemoryDC(bmp)
+						dc.SetBackground(wx.Brush(wx.WHITE))
+						dc.Clear()
+						
+						x = (target_w - new_w) // 2
+						y = (target_h - new_h) // 2
+						dc.DrawBitmap(wx.Bitmap(scaled_img), x, y, True)
+						dc.SelectObject(wx.NullBitmap)
+						generated_bmp = bmp
+				
+				# UIスレッドに結果を通知
+				wx.CallAfter(self._on_thumbnail_generated, image_path, generated_bmp, item_index)
+			
+			except Exception as e:
+				print(f"Error generating thumbnail for {image_path}: {e}")
+				# エラー時もpending_thumbnailsから削除
+				wx.CallAfter(self._on_thumbnail_generated, image_path, None, item_index)
+			finally:
+				self.thumbnail_queue.task_done()
+	
+	def _on_thumbnail_generated(self, image_path: str, bitmap: wx.Bitmap | None, item_index: int):
+		"""
+		ワーカースレッドでサムネイルが生成された後にUIスレッドで呼び出される。
+		キャッシュを更新し、該当アイテムを再描画する。
+		"""
+		if image_path in self.pending_thumbnails:
+			self.pending_thumbnails.remove(image_path)
+		
+		if bitmap:
+			self.thumbnail_cache[image_path] = bitmap
+			# 該当アイテムが現在表示されている範囲内であれば再描画を要求
+			# VListBoxのRefreshItemはview_indexを要求するので、dataset_indexから変換
+			view_index = self.get_view_index(item_index)
+			if view_index != wx.NOT_FOUND and self.IsVisible(view_index):
+				self.RefreshLine(view_index)
+		else:
+			# エラー発生時は、エラー用のビットマップをキャッシュするなどの対応も可能
+			# 今回はキャッシュしないでおく（次回描画時に再試行される）
+			pass
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""
@@ -33,7 +165,7 @@ class ImageVListBox(wx.VListBox):
 		
 		# データセットが変更されたら、キャッシュをクリア
 		self.thumbnail_cache.clear()
-		self.image_cache.clear()
+		self.pending_thumbnails.clear()
 		
 		# データセットが変更されたら、選択をクリア
 		if self.GetSelection() >= item_count:
@@ -88,69 +220,39 @@ class ImageVListBox(wx.VListBox):
 		if view_index != wx.NOT_FOUND:
 			self.SetSelection(view_index)
 	
-	def _get_thumbnail(self, item: DatasetItem, size: tuple[int, int]) -> wx.Bitmap:
+	def _get_thumbnail(self, item: DatasetItem, item_index: int) -> wx.Bitmap:
 		"""
-		画像を読み込み、指定されたサイズでサムネイルを生成する。
+		画像を読み込み、固定サイズでサムネイルを生成する。
 		アスペクト比を維持し、余白は白で埋める。
-
-		生成されたサムネイルはself.thumbnailsにキャッシュされる。
+		キャッシュに存在しない場合は、非同期で生成を依頼し、プレースホルダーを返す。
 		"""
-		cache_key = (item.image_path, size)
-		if cache_key in self.thumbnail_cache:
-			return self.thumbnail_cache[cache_key]
+		image_path = item.image_path
 		
-		# 画像読み込み（キャッシュがあればそれを使用）
-		if item.image_path not in self.image_cache:
-			with wx.LogNull():
-				img = wx.Image(item.image_path, wx.BITMAP_TYPE_ANY)
-			if not img.IsOk():
-				# 読み込み失敗時はエラー用のビットマップを生成してキャッシュ
-				bmp = wx.Bitmap(size[0], size[1])
-				dc = wx.MemoryDC(bmp)
-				dc.SetBackground(wx.Brush(wx.LIGHT_GREY))
-				dc.Clear()
-				dc.SelectObject(wx.NullBitmap)
-				self.thumbnail_cache[cache_key] = bmp
-				return bmp
-			self.image_cache[item.image_path] = img
+		# キャッシュに存在すればそれを返す
+		if image_path in self.thumbnail_cache:
+			return self.thumbnail_cache[image_path]
 		
-		img = self.image_cache[item.image_path]
+		# キャッシュになく、まだ生成中でなければ、非同期生成を依頼
+		if image_path not in self.pending_thumbnails:
+			self.pending_thumbnails.add(image_path)
+			self.thumbnail_queue.put((image_path, item_index))
 		
-		# サムネイル用にリサイズ（アスペクト比維持）
-		w, h = img.GetWidth(), img.GetHeight()
-		target_w, target_h = size
-		
-		# ゼロ除算や不正な画像サイズを避ける
-		if w <= 0 or h <= 0:
-			bmp = wx.Bitmap(target_w, target_h)
-			dc = wx.MemoryDC(bmp)
-			dc.SetBackground(wx.Brush(wx.WHITE))
-			dc.Clear()
-			dc.SelectObject(wx.NullBitmap)
-			self.thumbnail_cache[cache_key] = bmp
-			return bmp
-		
-		scale = min(target_w / w, target_h / h)
-		new_w = int(w * scale)
-		new_h = int(h * scale)
-		
-		scaled_img = img.Scale(new_w, new_h, wx.IMAGE_QUALITY_HIGH)
-		
-		# 指定サイズの背景に描画してサイズを統一
-		bmp = wx.Bitmap(target_w, target_h)
-		dc = wx.MemoryDC(bmp)
-		# 背景色（白）
-		dc.SetBackground(wx.Brush(wx.WHITE))
+		# プレースホルダーを返す
+		placeholder_bmp = wx.Bitmap(THUMBNAIL_CACHE_FIXED_SIZE[0], THUMBNAIL_CACHE_FIXED_SIZE[1])
+		dc = wx.MemoryDC(placeholder_bmp)
+		dc.SetBackground(wx.Brush(wx.LIGHT_GREY))
 		dc.Clear()
-		
-		# 中央に描画
-		x = (target_w - new_w) // 2
-		y = (target_h - new_h) // 2
-		dc.DrawBitmap(wx.Bitmap(scaled_img), x, y, True)
+		# 読み込み中を示すテキストを追加
+		text = "Loading..."
+		# フォントサイズをサムネイルの幅に合わせて調整
+		font_size = THUMBNAIL_CACHE_FIXED_SIZE[0] // 10
+		font = wx.Font(font_size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+		dc.SetFont(font)
+		tw, th = dc.GetTextExtent(text)
+		dc.SetTextForeground(wx.BLACK)
+		dc.DrawText(text, (THUMBNAIL_CACHE_FIXED_SIZE[0] - tw) // 2, (THUMBNAIL_CACHE_FIXED_SIZE[1] - th) // 2)
 		dc.SelectObject(wx.NullBitmap)
-		
-		self.thumbnail_cache[cache_key] = bmp
-		return bmp
+		return placeholder_bmp
 	
 	def OnDrawItem(self, dc: wx.DC, rect: wx.Rect, n: int):
 		"""
@@ -162,8 +264,10 @@ class ImageVListBox(wx.VListBox):
 		# 背景を描画
 		if self.IsSelected(n):
 			bg_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
+			text_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
 		else:
 			bg_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOX)
+			text_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_LISTBOXTEXT)
 		
 		dc.SetBrush(wx.Brush(bg_colour))
 		dc.SetPen(wx.TRANSPARENT_PEN)
@@ -176,22 +280,32 @@ class ImageVListBox(wx.VListBox):
 		
 		# サムネイルを取得して描画
 		# OnMeasureItemで計算された幅を使用
-		thumbnail_width = self._thumbnail_display_width
-		if thumbnail_width < 16:
-			thumbnail_width = 16
-		thumbnail_size = (thumbnail_width, thumbnail_width)
+		thumbnail_display_width = self._thumbnail_display_width
+		if thumbnail_display_width < 16:
+			thumbnail_display_width = 16
 		
 		try:
-			bmp = self._get_thumbnail(item, thumbnail_size)
-			# 中央に配置
-			x = rect.x + (rect.width - bmp.GetWidth()) // 2
+			bmp = self._get_thumbnail(item, dataset_index)
+			
+			draw_w = thumbnail_display_width
+			draw_h = thumbnail_display_width  # 正方形を想定
+			
+			x = rect.x + (rect.width - draw_w) // 2
 			y = rect.y + self.padding_v  # 上パディング
-			dc.DrawBitmap(bmp, x, y, True)  # useMask=True
+			
+			# wx.GraphicsContext を使用してスケーリング描画
+			gc = wx.GraphicsContext.Create(dc)
+			if gc:
+				gc.SetInterpolationQuality(wx.INTERPOLATION_BEST)  # 高品質な補間
+				gc.DrawBitmap(bmp, x, y, draw_w, draw_h)
+			else:
+				# GraphicsContextが利用できない場合のフォールバック
+				# このパスは通常通らないが、念のため元のサイズで描画
+				dc.DrawBitmap(bmp, x, y, True)
+		
 		except Exception as e:
 			# エラー発生時は代替テキストを描画
-			dc.SetTextForeground(
-				wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT) if not self.IsSelected(n) else wx.SystemSettings.GetColour(
-					wx.SYS_COLOUR_HIGHLIGHTTEXT))
+			dc.SetTextForeground(text_colour)
 			
 			error_text = 'Error loading image'
 			tw, th = dc.GetTextExtent(error_text)
