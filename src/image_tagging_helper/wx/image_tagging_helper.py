@@ -1046,16 +1046,16 @@ class ImageTaggingHelperFrame(wx.Frame):
 			self._append_menu_item(menu, ID_REPLACE_TAG_IN_ALL, __("action:replace_tags_in_all_items"), "", "Shift+7")
 		
 		# イベントバインド
-		self.Bind(wx.EVT_MENU, lambda evt: self.on_add_tags_to_filter(evt, selected_tags), id=ID_ADD_TAG_TO_FILTER)
-		self.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_current_items(evt, selected_tags), id=ID_APPEND_TAG_TO_CURRENT)
-		self.Bind(wx.EVT_MENU, lambda evt: self.on_remove_tags_from_current_items(evt, selected_tags), id=ID_REMOVE_TAG_FROM_CURRENT)
-		self.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_filtered_items(evt, selected_tags), id=ID_APPEND_TAG_TO_FILTERED)
-		self.Bind(wx.EVT_MENU, lambda evt: self.on_remove_tags_from_filtered_items(evt, selected_tags), id=ID_REMOVE_TAG_FROM_FILTERED)
-		self.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_all_items(evt, selected_tags), id=ID_APPEND_TAG_TO_ALL)
-		self.Bind(wx.EVT_MENU, lambda evt: self.on_remove_tags_from_all_items(evt, selected_tags), id=ID_REMOVE_TAG_FROM_ALL)
+		menu.Bind(wx.EVT_MENU, lambda evt: self.on_add_tags_to_filter(evt, selected_tags), id=ID_ADD_TAG_TO_FILTER)
+		menu.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_current_items(evt, selected_tags), id=ID_APPEND_TAG_TO_CURRENT)
+		menu.Bind(wx.EVT_MENU, lambda evt: self.on_remove_tags_from_current_items(evt, selected_tags), id=ID_REMOVE_TAG_FROM_CURRENT)
+		menu.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_filtered_items(evt, selected_tags), id=ID_APPEND_TAG_TO_FILTERED)
+		menu.Bind(wx.EVT_MENU, lambda evt: self.on_remove_tags_from_filtered_items(evt, selected_tags), id=ID_REMOVE_TAG_FROM_FILTERED)
+		menu.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_all_items(evt, selected_tags), id=ID_APPEND_TAG_TO_ALL)
+		menu.Bind(wx.EVT_MENU, lambda evt: self.on_remove_tags_from_all_items(evt, selected_tags), id=ID_REMOVE_TAG_FROM_ALL)
 		
 		if not multiple_tags:
-			self.Bind(wx.EVT_MENU, lambda evt: self.on_replace_tag_in_all_items(evt, selected_tags[0]), id=ID_REPLACE_TAG_IN_ALL)
+			menu.Bind(wx.EVT_MENU, lambda evt: self.on_replace_tag_in_all_items(evt, selected_tags[0]), id=ID_REPLACE_TAG_IN_ALL)
 		
 		client_pos = list_ctrl.ScreenToClient(pos)
 		list_ctrl.PopupMenu(menu, client_pos)
