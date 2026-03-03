@@ -287,7 +287,7 @@ class Dataset:
 			positions (tuple[int, ...]): 削除するタグの位置のリスト。降順にソート済みである必要があります。
 		"""
 		caption = self.items[target].caption
-		caption.delete_tags(positions)
+		caption.remove_tags_at(positions)
 	
 	def move_tag(self, target, old_position, new_position):
 		"""

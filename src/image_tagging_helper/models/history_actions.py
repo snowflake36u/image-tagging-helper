@@ -236,3 +236,79 @@ class CleanAction(HistoryAction):
 		inverse = BatchDiff(children=tuple(reversed(inverse_children)))
 		
 		return CleanAction(dataset, forward, inverse)
+
+class BatchAppendTagAction(HistoryAction):
+	"""
+	複数のキャプションにタグを追加するアクション。
+	"""
+	
+	@staticmethod
+	def create(dataset, targets, tag):
+		forward_children = []
+		inverse_children = []
+		for target_idx in targets:
+			caption = dataset[target_idx].caption
+			# 同じタグが既に存在しない場合のみ追加
+			if tag.text not in [t.text for t in caption.tags]:
+				position = len(caption.tags)
+				forward_children.append(AppendDiff(target=target_idx, tags=(tag,)))
+				inverse_children.append(DeleteDiff(target=target_idx, positions=(position,)))
+		
+		if not forward_children:
+			return None
+		
+		forward = BatchDiff(children=tuple(forward_children))
+		inverse = BatchDiff(children=tuple(reversed(inverse_children)))
+		return BatchAppendTagAction(dataset, forward, inverse)
+
+class BatchRemoveTagAction(HistoryAction):
+	"""
+	複数のキャプションから特定のタグを削除するアクション。
+	"""
+	
+	@staticmethod
+	def create(dataset, targets, tag_text):
+		deletions = []
+		for target_idx in targets:
+			caption = dataset[target_idx].caption
+			to_delete_indices = [i for i, tag in enumerate(caption.tags) if tag.text == tag_text]
+			if to_delete_indices:
+				action = DeleteTagsAction.create(dataset, target_idx, tuple(to_delete_indices))
+				deletions.append(action)
+		
+		if not deletions:
+			return None
+		
+		forward_children = []
+		inverse_children = []
+		for action in reversed(deletions):
+			forward_children.append(action.forward)
+			inverse_children.append(action.inverse)
+		
+		forward = BatchDiff(children=tuple(forward_children))
+		inverse = BatchDiff(children=tuple(reversed(inverse_children)))
+		return BatchRemoveTagAction(dataset, forward, inverse)
+
+class BatchReplaceTagAction(HistoryAction):
+	"""
+	複数のキャプション内の特定のタグを置換するアクション。
+	"""
+	
+	@staticmethod
+	def create(dataset, targets, old_tag_text, new_tag, keep_weight=False):
+		forward_children = []
+		inverse_children = []
+		for target_idx in targets:
+			caption = dataset[target_idx].caption
+			for i, old_tag in enumerate(caption.tags):
+				if old_tag.text == old_tag_text:
+					tag_to_insert = Tag(text=new_tag.text, weight=old_tag.weight) if keep_weight else new_tag
+					forward_children.append(MutateTagDiff(target=target_idx, position=i, new_tag=tag_to_insert))
+					inverse_children.append(MutateTagDiff(target=target_idx, position=i, new_tag=old_tag))
+		
+		if not forward_children:
+			return None
+		
+		forward = BatchDiff(children=tuple(forward_children))
+		inverse = BatchDiff(children=tuple(reversed(inverse_children)))
+		return BatchReplaceTagAction(dataset, forward, inverse)

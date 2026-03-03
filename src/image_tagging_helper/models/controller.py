@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 from src.image_tagging_helper.models.history_actions import (
 	AppendTagsAction, InsertTagsAction, MoveTagAction,
 	DeleteTagsAction, EditTagAction, CleanAction,
+	BatchAppendTagAction, BatchRemoveTagAction, BatchReplaceTagAction
 )
 
 if TYPE_CHECKING:
@@ -70,7 +71,7 @@ class DatasetController:
 		action = MoveTagAction.create(self.dataset, target, old_position, new_position)
 		self.dataset.execute(action, self.sender)
 	
-	def delete_tags(self, target: int, positions: tuple[int, ...]):
+	def remove_tags_at(self, target: int, positions: tuple[int, ...]):
 		"""
 		キャプションからタグを削除します。
 
@@ -98,6 +99,56 @@ class DatasetController:
 		データセット内の不要なタグ（空文字や重複）を削除します。
 		"""
 		action = CleanAction.create(self.dataset)
+		if action:
+			self.dataset.execute(action, self.sender)
+	
+	def remove_tag(self, target: int, tag_text: str):
+		"""
+		キャプションから特定のテキストを持つタグを削除します。
+
+		Args:
+			 target: 対象キャプションのインデックス。
+			 tag_text: 削除するタグのテキスト。
+		"""
+		caption = self.dataset[target].caption
+		positions = tuple(i for i, tag in enumerate(caption.tags) if tag.text == tag_text)
+		if positions:
+			self.remove_tags_at(target, positions)
+	
+	def batch_append_tag(self, targets: Iterable[int], tag: 'Tag', keep_weight=False):
+		"""
+		指定された複数のキャプションにタグを追加します。
+
+		Args:
+			 targets: 対象キャプションのインデックスのリスト。
+			 tag: 追加するタグ。
+		"""
+		action = BatchAppendTagAction.create(self.dataset, targets, tag, keep_weight)
+		if action:
+			self.dataset.execute(action, self.sender)
+	
+	def batch_remove_tag(self, targets: Iterable[int], tag_text: str):
+		"""
+		指定された複数のキャプションから特定のタグを削除します。
+
+		Args:
+			 targets: 対象キャプションのインデックスのリスト。
+			 tag_text: 削除するタグのテキスト。
+		"""
+		action = BatchRemoveTagAction.create(self.dataset, targets, tag_text)
+		if action:
+			self.dataset.execute(action, self.sender)
+	
+	def batch_replace_tag(self, targets: Iterable[int], old_tag_text: str, new_tag: 'Tag'):
+		"""
+		指定された複数のキャプション内の特定のタグを置換します。
+
+		Args:
+			 targets: 対象キャプションのインデックスのリスト。
+			 old_tag_text: 置換対象のタグのテキスト。
+			 new_tag: 新しいタグ。
+		"""
+		action = BatchReplaceTagAction.create(self.dataset, targets, old_tag_text, new_tag)
 		if action:
 			self.dataset.execute(action, self.sender)
 	
