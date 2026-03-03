@@ -992,7 +992,8 @@ class ImageTaggingHelperFrame(wx.Frame):
 		if replace_in_all_label:
 			self.Bind(wx.EVT_MENU, lambda evt: self.on_replace_tag_in_all_items(evt, selected_tags[0]), id=ID_REPLACE_TAG_IN_ALL)
 		
-		list_ctrl.PopupMenu(menu, pos)
+		client_pos = list_ctrl.ScreenToClient(pos)
+		list_ctrl.PopupMenu(menu, client_pos)
 		menu.Destroy()
 	
 	def on_append_tags_to_current_items(self, event: wx.CommandEvent, tags: list[str]):
