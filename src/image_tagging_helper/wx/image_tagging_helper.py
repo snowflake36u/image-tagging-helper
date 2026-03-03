@@ -106,13 +106,13 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""アクセラレータテーブルを初期化して設定します。"""
 		accel_tbl = wx.AcceleratorTable([
 			(wx.ACCEL_SHIFT, ord('F'), ID_ADD_TAG_TO_FILTER),
-			(wx.ACCEL_SHIFT, ord('1'), ID_APPEND_TAG_TO_CURRENT),
-			(wx.ACCEL_SHIFT, ord('2'), ID_REMOVE_TAG_FROM_CURRENT),
-			(wx.ACCEL_SHIFT, ord('3'), ID_APPEND_TAG_TO_FILTERED),
-			(wx.ACCEL_SHIFT, ord('4'), ID_REMOVE_TAG_FROM_FILTERED),
-			(wx.ACCEL_SHIFT, ord('5'), ID_APPEND_TAG_TO_ALL),
-			(wx.ACCEL_SHIFT, ord('6'), ID_REMOVE_TAG_FROM_ALL),
-			(wx.ACCEL_SHIFT, ord('7'), ID_REPLACE_TAG_IN_ALL),
+			(wx.ACCEL_SHIFT, ord('W'), ID_APPEND_TAG_TO_CURRENT),
+			(wx.ACCEL_SHIFT, ord('R'), ID_REMOVE_TAG_FROM_CURRENT),
+			(wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('W'), ID_APPEND_TAG_TO_FILTERED),
+			(wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('R'), ID_REMOVE_TAG_FROM_FILTERED),
+			(wx.ACCEL_CTRL, ord('W'), ID_APPEND_TAG_TO_ALL),
+			(wx.ACCEL_CTRL, ord('R'), ID_REMOVE_TAG_FROM_ALL),
+			(wx.ACCEL_CTRL, ord('L'), ID_REPLACE_TAG_IN_ALL),
 		])
 		self.SetAcceleratorTable(accel_tbl)
 		
@@ -254,8 +254,8 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		menu.AppendSeparator()
 		
-		move_tag_up_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_up"), __("tooltip:move_tag_up"), 'Shift+W')
-		move_tag_down_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_down"), __("tooltip:move_tag_down"), 'Shift+S')
+		move_tag_up_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_up"), __("tooltip:move_tag_up"), 'Ctrl+Up')
+		move_tag_down_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:move_tag_down"), __("tooltip:move_tag_down"), 'Ctrl+Down')
 		sort_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:sort_tag"), __("tooltip:sort_tag"), 'Ctrl+L')
 		sort_tag_menu.Enable(False)
 		self.Bind(wx.EVT_MENU, self.on_move_tag_up, move_tag_up_menu)
@@ -280,7 +280,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menu.AppendSeparator()
 		
 		filter_images_menu = self._append_menu_item(menu, wx.ID_FIND, __("action:filter_images"), __("tooltip:filter_images"), 'Ctrl+F')
-		clear_filter_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:clear_filter"), __("tooltip:clear_filter"), 'Ctrl+Shift+F')
+		clear_filter_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:clear_filter"), __("tooltip:clear_filter"), 'Shift+G')
 		self.Bind(wx.EVT_MENU, self.on_filter_images_menu, filter_images_menu)
 		self.Bind(wx.EVT_MENU, self.on_filter_cancel, clear_filter_menu)
 	
@@ -831,7 +831,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 			# 他のテキストコントロールなどの標準的なコピー動作
 			if hasattr(focus_win, "CanCopy") and focus_win.CanCopy():
 				focus_win.Copy()
-
+	
 	def on_paste(self, event: wx.CommandEvent):
 		if not self.controller or self.image_tags_grid.item_index is None:
 			return
@@ -1027,23 +1027,23 @@ class ImageTaggingHelperFrame(wx.Frame):
 		multiple_tags = len(selected_tags) > 1
 		
 		# 選択中のアイテムへの操作
-		self._append_menu_item(menu, ID_APPEND_TAG_TO_CURRENT, __("action:append_tags_to_current_items"), "", "Shift+1")
-		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_CURRENT, __("action:remove_tags_from_current_items"), "", "Shift+2")
+		self._append_menu_item(menu, ID_APPEND_TAG_TO_CURRENT, __("action:append_tags_to_current_items"), "", "Shift+W")
+		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_CURRENT, __("action:remove_tags_from_current_items"), "", "Shift+R")
 		
 		menu.AppendSeparator()
 		
 		# フィルター済みアイテムへの操作
-		self._append_menu_item(menu, ID_APPEND_TAG_TO_FILTERED, __("action:append_tags_to_filtered_items"), "", "Shift+3")
-		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_FILTERED, __("action:remove_tags_from_filtered_items"), "", "Shift+4")
+		self._append_menu_item(menu, ID_APPEND_TAG_TO_FILTERED, __("action:append_tags_to_filtered_items"), "", "Ctrl+Shift+W")
+		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_FILTERED, __("action:remove_tags_from_filtered_items"), "", "Ctrl+Shift+R")
 		
 		menu.AppendSeparator()
 		
 		# すべてのアイテムへの操作
-		self._append_menu_item(menu, ID_APPEND_TAG_TO_ALL, __("action:append_tags_to_all_items"), "", "Shift+5")
-		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_ALL, __("action:remove_tags_from_all_items"), "", "Shift+6")
+		self._append_menu_item(menu, ID_APPEND_TAG_TO_ALL, __("action:append_tags_to_all_items"), "", "Ctrl+W")
+		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_ALL, __("action:remove_tags_from_all_items"), "", "Ctrl+R")
 		
 		if not multiple_tags:
-			self._append_menu_item(menu, ID_REPLACE_TAG_IN_ALL, __("action:replace_tags_in_all_items"), "", "Shift+7")
+			self._append_menu_item(menu, ID_REPLACE_TAG_IN_ALL, __("action:replace_tags_in_all_items"), "", "Ctrl+L")
 		
 		# イベントバインド
 		menu.Bind(wx.EVT_MENU, lambda evt: self.on_add_tags_to_filter(evt, selected_tags), id=ID_ADD_TAG_TO_FILTER)
