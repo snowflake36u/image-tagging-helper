@@ -54,15 +54,15 @@ class ImageVListBox(wx.VListBox):
 			self.SetSelection(wx.NOT_FOUND)
 		self.Refresh()
 	
-	def get_dataset_index(self, n: int) -> int:
+	def get_dataset_index(self, view_index: int) -> int:
 		"""
 		表示上のインデックス n に対応するデータセットの実インデックスを返す。
 		"""
 		if self.filtered_indices is not None:
-			if 0 <= n < len(self.filtered_indices):
-				return self.filtered_indices[n]
+			if 0 <= view_index < len(self.filtered_indices):
+				return self.filtered_indices[view_index]
 			return -1  # Invalid
-		return n
+		return view_index
 	
 	def get_view_index(self, dataset_index: int) -> int:
 		"""
@@ -79,6 +79,14 @@ class ImageVListBox(wx.VListBox):
 		if idx < len(self.filtered_indices) and self.filtered_indices[idx] == dataset_index:
 			return idx
 		return wx.NOT_FOUND
+	
+	def select_item(self, item_index: int):
+		"""
+		指定されたインデックスのアイテムを選択する
+		"""
+		view_index = self.get_view_index(item_index)
+		if view_index != wx.NOT_FOUND:
+			self.SetSelection(view_index)
 	
 	def _get_thumbnail(self, item: DatasetItem, size: tuple[int, int]) -> wx.Bitmap:
 		"""

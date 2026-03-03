@@ -60,7 +60,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.dataset = Dataset()
 		self.controller: DatasetController | None = None
 		self.caption_format_config = CaptionFormatConfig()
-		self.last_thumbnail_selection: int = wx.NOT_FOUND
+		self.current_item_index: int = wx.NOT_FOUND
 		
 		# === UIの初期化 ===
 		self._init_ui()
@@ -456,25 +456,24 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# 選択状態の更新
 		if matched_indices:
 			# 現在選択中の画像がマッチしたか確認
-			current_selection = self.last_thumbnail_selection
-			if current_selection in matched_indices:
+			current_item_idx = self.current_item_index
+			if current_item_idx in matched_indices:
 				# マッチした場合はその画像を選択状態にする
-				view_index = self.thumbnail_list.get_view_index(current_selection)
-				self.thumbnail_list.SetSelection(view_index)
+				self.thumbnail_list.select_item(current_item_idx)
 			else:
 				# マッチしなかった場合は、直前の画像を選択する
-				idx = bisect.bisect_left(matched_indices, current_selection)
+				idx = bisect.bisect_left(matched_indices, current_item_idx)
 				if idx > 0:
 					new_selection = matched_indices[idx - 1]
 				else:
 					new_selection = matched_indices[0]
 				
-				self.thumbnail_list.SetSelection(new_selection)
-				self.last_thumbnail_selection = new_selection
+				self.thumbnail_list.select_item(new_selection)
+				self.current_item_index = new_selection
 				self._update_views_for_item_selection(new_selection)
 		else:
 			# マッチする画像がない場合
-			self.last_thumbnail_selection = wx.NOT_FOUND
+			self.current_item_index = wx.NOT_FOUND
 			self._update_views_for_item_selection(wx.NOT_FOUND)
 	
 	def on_filter_cancel(self, event: wx.CommandEvent):
@@ -483,9 +482,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.thumbnail_list.set_filter(None)
 		
 		# 選択状態の復元
-		if self.last_thumbnail_selection != wx.NOT_FOUND:
-			self.thumbnail_list.SetSelection(self.last_thumbnail_selection)
-			self._update_views_for_item_selection(self.last_thumbnail_selection)
+		if self.current_item_index != wx.NOT_FOUND:
+			self.thumbnail_list.select_item(self.current_item_index)
+			self._update_views_for_item_selection(self.current_item_index)
 	
 	def on_filter_images_menu(self, event: wx.CommandEvent):
 		"""検索バーにフォーカスを移動します。"""
@@ -640,20 +639,18 @@ class ImageTaggingHelperFrame(wx.Frame):
 		if view_index == wx.NOT_FOUND:
 			# 選択が解除された場合、最後の選択状態に戻す
 			# ただし、フィルタリングによって選択項目が消えた場合は戻さない
-			if self.last_thumbnail_selection != wx.NOT_FOUND:
+			if self.current_item_index != wx.NOT_FOUND:
 				# 現在のフィルタで表示されているか確認
-				restored_view_index = self.thumbnail_list.get_view_index(self.last_thumbnail_selection)
-				if restored_view_index != wx.NOT_FOUND:
-					self.thumbnail_list.SetSelection(restored_view_index)
+				self.thumbnail_list.select_item(self.current_item_index)
 			return
 		
 		dataset_index = self.thumbnail_list.get_dataset_index(view_index)
 		
 		# 同じアイテムが再度選択された場合は何もしない
-		if dataset_index == self.last_thumbnail_selection:
+		if dataset_index == self.current_item_index:
 			return
 		
-		self.last_thumbnail_selection = dataset_index
+		self.current_item_index = dataset_index
 		self._update_views_for_item_selection(dataset_index)
 	
 	def on_thumbnail_context_menu(self, event: wx.ContextMenuEvent):
@@ -662,17 +659,17 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		# キーボード操作（メニューキー）の場合、posは(-1, -1)になることが多い
 		if pos == wx.DefaultPosition:
-			item_index = self.thumbnail_list.GetSelection()
+			view_index = self.thumbnail_list.GetSelection()
 		else:
 			# マウス操作の場合、クリック位置のアイテムを選択する
 			client_pos = self.thumbnail_list.ScreenToClient(pos)
-			item_index = self.thumbnail_list.VirtualHitTest(client_pos.y)
+			view_index = self.thumbnail_list.VirtualHitTest(client_pos.y)
 			
-			if item_index != wx.NOT_FOUND:
-				self.thumbnail_list.SetSelection(item_index)
+			if view_index != wx.NOT_FOUND:
+				self.thumbnail_list.SetSelection(view_index)
 				self.on_thumbnail_select(None)
 		
-		if item_index != wx.NOT_FOUND:
+		if view_index != wx.NOT_FOUND:
 			menu = wx.Menu()
 			
 			view_image_item = menu.Append(wx.ID_ANY, __("action:view_image"))
@@ -868,10 +865,10 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	def on_view_image(self, event: wx.CommandEvent):
 		"""選択されている画像を既定のビューアで開きます。"""
-		if self.last_thumbnail_selection == wx.NOT_FOUND:
+		if self.current_item_index == wx.NOT_FOUND:
 			return
 		
-		item = self.dataset[self.last_thumbnail_selection]
+		item = self.dataset[self.current_item_index]
 		image_path = item.image_path
 		
 		if not wx.LaunchDefaultApplication(image_path):
@@ -879,10 +876,10 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	def on_open_in_folder(self, event: wx.CommandEvent):
 		"""選択されている画像が存在する場所をエクスプローラ等で開きます。"""
-		if self.last_thumbnail_selection == wx.NOT_FOUND:
+		if self.current_item_index == wx.NOT_FOUND:
 			return
 		
-		item = self.dataset[self.last_thumbnail_selection]
+		item = self.dataset[self.current_item_index]
 		image_path = os.path.abspath(item.image_path)
 		
 		if sys.platform == 'win32':
@@ -998,18 +995,18 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	def on_append_tags_to_current_items(self, event: wx.CommandEvent, tags: list[str]):
 		"""選択中のアイテムにタグを追加します。"""
-		if not self.controller or self.last_thumbnail_selection == wx.NOT_FOUND:
+		if not self.controller or self.current_item_index == wx.NOT_FOUND:
 			return
 		position = self.image_tags_grid.GetGridCursorRow()
 		tags_obj = tuple(Tag(t) for t in tags)
-		self.controller.append_tags(self.last_thumbnail_selection, tags_obj)
+		self.controller.append_tags(self.current_item_index, tags_obj)
 	
 	def on_remove_tags_from_current_items(self, event: wx.CommandEvent, tags: list[str]):
 		"""選択中のアイテムからタグを削除します。"""
-		if not self.controller or self.last_thumbnail_selection == wx.NOT_FOUND:
+		if not self.controller or self.current_item_index == wx.NOT_FOUND:
 			return
 		for tag_text in tags:
-			self.controller.batch_remove_tags([self.last_thumbnail_selection], (tag_text,))
+			self.controller.batch_remove_tags([self.current_item_index], (tag_text,))
 	
 	def on_append_tags_to_filtered_items(self, event: wx.CommandEvent, tags: list[str]):
 		"""フィルター済みアイテムにタグを追加します。"""
@@ -1193,11 +1190,11 @@ class ImageTaggingHelperFrame(wx.Frame):
 		if dataset and len(dataset) > 0:
 			self.thumbnail_list.SetSelection(0)
 			# SetSelectionはイベントを発生させないため、手動で更新処理を呼び出す
-			self.last_thumbnail_selection = 0
+			self.current_item_index = 0
 			self._update_views_for_item_selection(0)
 		else:
 			# データセットが空の場合のビュー更新
-			self.last_thumbnail_selection = wx.NOT_FOUND
+			self.current_item_index = wx.NOT_FOUND
 			self._update_views_for_item_selection(wx.NOT_FOUND)
 	
 	@staticmethod
