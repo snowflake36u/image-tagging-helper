@@ -1,6 +1,7 @@
 from typing import List, TYPE_CHECKING, Dict, Callable
 import glob
 import os
+import shlex
 from collections import Counter, deque
 
 from src.image_tagging_helper.models.caption import Caption
@@ -353,7 +354,39 @@ class Dataset:
 	
 	# === フィルタ機能 ===
 	
-	def match_items(self, include_tags: set[str], exclude_tags: set[str]) -> list[int]:
+	def match_items(self, query: str) -> list[int]:
+		"""
+		クエリ文字列に基づいてアイテムをフィルタリングします。
+
+		Args:
+			query: 検索クエリ文字列。
+
+		Returns:
+			マッチしたアイテムのインデックスのリスト。
+		"""
+		include_tags = set()
+		exclude_tags = set()
+		
+		try:
+			parts = shlex.split(query)
+		except ValueError:
+			# パースエラー時は単純なsplitにフォールバック
+			parts = query.split()
+		
+		for part in parts:
+			part = part.strip()
+			if not part:
+				continue
+			if part.startswith('-'):
+				tag = part[1:].strip()
+				if tag:
+					exclude_tags.add(tag)
+			else:
+				include_tags.add(part)
+		
+		return self._match_items_by_tags(include_tags, exclude_tags)
+	
+	def _match_items_by_tags(self, include_tags: set[str], exclude_tags: set[str]) -> list[int]:
 		return [
 			i for i, item in enumerate(self.items)
 			if item.caption.match(include_tags, exclude_tags)

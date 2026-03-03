@@ -32,6 +32,7 @@ ID_REMOVE_TAG_FROM_FILTERED = wx.NewIdRef()
 ID_APPEND_TAG_TO_ALL = wx.NewIdRef()
 ID_REMOVE_TAG_FROM_ALL = wx.NewIdRef()
 ID_REPLACE_TAG_IN_ALL = wx.NewIdRef()
+ID_ADD_TAG_TO_FILTER = wx.NewIdRef()
 
 class ImageTaggingHelperFrame(wx.Frame):
 	"""
@@ -434,23 +435,8 @@ class ImageTaggingHelperFrame(wx.Frame):
 			self.on_filter_cancel(event)
 			return
 		
-		# クエリのパース
-		include_tags = set()
-		exclude_tags = set()
-		
-		for part in query.split():
-			part = part.strip()
-			if not part:
-				continue
-			if part.startswith('-'):
-				tag = part[1:].strip()
-				if tag:
-					exclude_tags.add(tag)
-			else:
-				include_tags.add(part)
-		
 		# フィルタリング実行
-		matched_indices = self.dataset.match_items(include_tags, exclude_tags)
+		matched_indices = self.dataset.match_items(query)
 		self.thumbnail_list.set_filter(matched_indices)
 		
 		# 選択状態の更新
@@ -940,6 +926,14 @@ class ImageTaggingHelperFrame(wx.Frame):
 		"""
 		menu = wx.Menu()
 		
+		# 「フィルタに追加」メニュー
+		if len(selected_tags) == 1:
+			add_to_filter_label = __("action:add_tag_to_filter").format(tag=selected_tags[0])
+		else:
+			add_to_filter_label = __("action:add_n_tags_to_filter").format(count=len(selected_tags))
+		menu.Append(ID_ADD_TAG_TO_FILTER, add_to_filter_label)
+		menu.AppendSeparator()
+		
 		# 選択されたタグの数に応じてラベルを変更
 		if len(selected_tags) == 1:
 			tag_label = selected_tags[0]
@@ -979,6 +973,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 			menu.Append(ID_REPLACE_TAG_IN_ALL, replace_in_all_label)
 		
 		# イベントバインド
+		self.Bind(wx.EVT_MENU, lambda evt: self.on_add_tags_to_filter(evt, selected_tags), id=ID_ADD_TAG_TO_FILTER)
 		self.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_current_items(evt, selected_tags), id=ID_APPEND_TAG_TO_CURRENT)
 		self.Bind(wx.EVT_MENU, lambda evt: self.on_remove_tags_from_current_items(evt, selected_tags), id=ID_REMOVE_TAG_FROM_CURRENT)
 		self.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_filtered_items(evt, selected_tags), id=ID_APPEND_TAG_TO_FILTERED)
@@ -1064,6 +1059,29 @@ class ImageTaggingHelperFrame(wx.Frame):
 		if new_tag_text and new_tag_text != old_tag_text:
 			all_indices = range(len(self.dataset))
 			self.controller.batch_replace_tag(all_indices, old_tag_text, Tag(new_tag_text), keep_weight=True)
+	
+	def on_add_tags_to_filter(self, event: wx.CommandEvent, tags: list[str]):
+		"""
+		選択されたタグをフィルターコントロールに追加します。
+		"""
+		current_filter = self.filter_ctrl.GetValue()
+		
+		# 新しいタグを追加
+		new_filter = ' '.join([
+			# タグにスペースが含まれる場合は引用符で囲む
+			f'"{tag}"' if ' ' in tag else tag
+			for tag in tags
+		])
+		
+		if current_filter.rstrip(' '):
+			new_filter = current_filter + ' ' + new_filter
+		else:
+			new_filter = current_filter + new_filter
+		
+		self.filter_ctrl.SetValue(new_filter)
+		
+		# フィルタを適用
+		self.on_filter_items(None)
 	
 	# === ダイアログボックス ===
 	
