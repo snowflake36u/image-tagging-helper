@@ -36,6 +36,7 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
 		self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.on_cell_left_click)
 		self.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
+		self.Bind(wx.EVT_MENU, self.on_select_all, id=wx.ID_SELECTALL)
 	
 	def _init_grid(self):
 		"""グリッドの初期設定を行います。
@@ -202,6 +203,12 @@ class ImageTagsGrid(wx.grid.Grid):
 			writer.writerow(row_data)
 		
 		self._copy_text_to_clipboard(output.getvalue())
+	
+	def on_select_all(self, event: wx.CommandEvent):
+		"""
+		グリッド内のすべてのセルを選択します。
+		"""
+		self.SelectAll()
 	
 	def _copy_text_to_clipboard(self, text: str):
 		"""

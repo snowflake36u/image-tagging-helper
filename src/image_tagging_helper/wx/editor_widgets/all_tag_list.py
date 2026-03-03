@@ -29,6 +29,7 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		
 		# コンテキストメニューイベントをバインド
 		self.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
+		self.Bind(wx.EVT_MENU, self.on_select_all, id=wx.ID_SELECTALL)
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""
@@ -135,6 +136,13 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		parent_frame: wx.Frame = wx.GetTopLevelParent(self)
 		if hasattr(parent_frame, 'show_all_tags_context_menu'):
 			parent_frame.show_all_tags_context_menu(self, selected_tags, pos)
+	
+	def on_select_all(self, event: wx.CommandEvent):
+		"""
+		リスト内のすべてのアイテムを選択します。
+		"""
+		for i in range(self.GetItemCount()):
+			self.Select(i)
 	
 	def copy_selected_tags_to_clipboard(self):
 		"""

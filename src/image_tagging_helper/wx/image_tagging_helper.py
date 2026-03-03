@@ -239,6 +239,11 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		menu.AppendSeparator()
 		
+		select_all_menu = self._append_menu_item(menu, wx.ID_SELECTALL, __("action:select_all"), __("tooltip:select_all"), 'Ctrl+A')
+		self.Bind(wx.EVT_MENU, self.on_select_all, select_all_menu)
+		
+		menu.AppendSeparator()
+		
 		insert_blank_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:insert_blank_tag"), __("tooltip:insert_blank_tag"), 'Ctrl+E')
 		delete_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:delete_tag"), __("tooltip:delete_tag"), 'Ctrl+D')
 		replace_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:replace_tag"), __("tooltip:replace_tag"), 'Ctrl+R')
@@ -868,6 +873,34 @@ class ImageTaggingHelperFrame(wx.Frame):
 			row = self.image_tags_grid.GetGridCursorRow()
 			insert_pos = row + 1 if row >= 0 else self.image_tags_grid.GetNumberRows()
 			self.controller.insert_tags(self.image_tags_grid.item_index, insert_pos, tuple(tags))
+	
+	def on_select_all(self, event: wx.CommandEvent):
+		"""
+		フォーカスがあるコントロールに応じて全選択を実行します。
+		"""
+		focus_win = wx.Window.FindFocus()
+		
+		# ImageTagsGridまたはその内部のウィンドウにフォーカスがあるかチェック
+		is_grid_focus = False
+		win = focus_win
+		while win:
+			if win == self.image_tags_grid:
+				is_grid_focus = True
+				break
+			win = win.GetParent()
+		
+		if is_grid_focus:
+			# ImageTagsGridにwx.ID_SELECTALLイベントを転送
+			select_all_event = wx.CommandEvent(wx.EVT_MENU.typeId, wx.ID_SELECTALL)
+			self.image_tags_grid.GetEventHandler().ProcessEvent(select_all_event)
+		elif focus_win == self.all_tags_list:
+			# AllTagsListにwx.ID_SELECTALLイベントを転送
+			select_all_event = wx.CommandEvent(wx.EVT_MENU.typeId, wx.ID_SELECTALL)
+			self.all_tags_list.GetEventHandler().ProcessEvent(select_all_event)
+		else:
+			# 他のテキストコントロールなどの標準的な全選択動作
+			if hasattr(focus_win, "SelectAll"):
+				focus_win.SelectAll()
 	
 	def on_insert_blank_tag(self, event: wx.CommandEvent):
 		if not self.controller or self.image_tags_grid.item_index is None:
