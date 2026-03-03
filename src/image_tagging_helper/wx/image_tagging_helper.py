@@ -12,7 +12,7 @@ from src.image_tagging_helper.core.config import Config
 from src.image_tagging_helper.models.caption import CaptionFormatConfig, Tag
 from src.image_tagging_helper.models.dataset import Dataset
 from src.image_tagging_helper.models.controller import DatasetController
-from src.image_tagging_helper.wx.editor_widgets.dataset_tag_list import DatasetTagsList
+from src.image_tagging_helper.wx.editor_widgets.all_tag_list import AllTagsList
 from src.image_tagging_helper.wx.editor_widgets.image_list import ImageVListBox
 from src.image_tagging_helper.wx.editor_widgets.image_tags_grid import ImageTagsGrid
 from src.image_tagging_helper.wx.preferences import PreferencesDialog
@@ -82,7 +82,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 			self.filter_ctrl,
 			self.thumbnail_list,
 			self.image_tags_grid,
-			self.dataset_tags_list,
+			self.all_tags_list,
 		]
 		
 		# Tabキーによるフォーカス遷移を制御するためのイベントフック
@@ -185,9 +185,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:view"))
 		
-		self.toggle_dataset_tags_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_dataset_tags"), __("tooltip:toggle_dataset_tags"), kind=wx.ITEM_CHECK)
-		self.toggle_dataset_tags_menu.Check(True)
-		self.Bind(wx.EVT_MENU, self.on_toggle_dataset_tags, self.toggle_dataset_tags_menu)
+		self.toggle_all_tags_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:toggle_all_tags"), __("tooltip:toggle_all_tags"), kind=wx.ITEM_CHECK)
+		self.toggle_all_tags_menu.Check(True)
+		self.Bind(wx.EVT_MENU, self.on_toggle_all_tags, self.toggle_all_tags_menu)
 		
 		menu.AppendSeparator()
 		
@@ -287,12 +287,12 @@ class ImageTaggingHelperFrame(wx.Frame):
 		# 各ペインの作成
 		self._create_thumbnail_panel(self.splitter_1)
 		self._create_image_tags_panel(self.splitter_2)
-		self._create_dataset_tags_panel(self.splitter_2)
+		self._create_all_tags_panel(self.splitter_2)
 		
 		# スプリッターの分割設定
 		# 全体幅1200に対して各パネル400ずつ割り当てる
 		self.splitter_1.SplitVertically(self.thumbnail_panel, self.splitter_2, 400)
-		self.splitter_2.SplitVertically(self.image_tags_panel, self.dataset_tags_panel, 400)
+		self.splitter_2.SplitVertically(self.image_tags_panel, self.all_tags_panel, 400)
 		
 		# UI設定を復元
 		wx.CallAfter(self.load_ui_settings)
@@ -335,21 +335,21 @@ class ImageTaggingHelperFrame(wx.Frame):
 		sizer.Add(self.image_tags_grid, 1, wx.EXPAND)
 		self.image_tags_panel.SetSizer(sizer)
 	
-	def _create_dataset_tags_panel(self, parent: wx.Window):
+	def _create_all_tags_panel(self, parent: wx.Window):
 		"""データセット全体のタグ一覧パネルを作成します。"""
-		self.dataset_tags_panel = wx.Panel(parent)
-		self.dataset_tags_panel.SetMinSize((SASH_MIN_WIDTH, -1))
-		self.dataset_tags_toolbar = wx.ToolBar(self.dataset_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
-		self.dataset_tags_toolbar.AddControl(wx.StaticText(self.dataset_tags_toolbar, label=__("label:dataset_tags")))
-		self.dataset_tags_toolbar.AddSeparator()
-		self.dataset_tags_toolbar.Realize()
+		self.all_tags_panel = wx.Panel(parent)
+		self.all_tags_panel.SetMinSize((SASH_MIN_WIDTH, -1))
+		self.all_tags_toolbar = wx.ToolBar(self.all_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
+		self.all_tags_toolbar.AddControl(wx.StaticText(self.all_tags_toolbar, label=__("label:all_tags")))
+		self.all_tags_toolbar.AddSeparator()
+		self.all_tags_toolbar.Realize()
 		
-		self.dataset_tags_list = DatasetTagsList(self.dataset_tags_panel)
+		self.all_tags_list = AllTagsList(self.all_tags_panel)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
-		sizer.Add(self.dataset_tags_toolbar, 0, wx.EXPAND)
-		sizer.Add(self.dataset_tags_list, 1, wx.EXPAND)
-		self.dataset_tags_panel.SetSizer(sizer)
+		sizer.Add(self.all_tags_toolbar, 0, wx.EXPAND)
+		sizer.Add(self.all_tags_list, 1, wx.EXPAND)
+		self.all_tags_panel.SetSizer(sizer)
 	
 	# === イベントハンドラ ===
 	
@@ -689,7 +689,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 						wx.OK | wx.ICON_INFORMATION
 					)
 	
-	def on_toggle_dataset_tags(self, event: wx.CommandEvent):
+	def on_toggle_all_tags(self, event: wx.CommandEvent):
 		"""データセットタグの表示/非表示を切り替えます。"""
 		self._update_layout_visibility()
 	
@@ -943,16 +943,16 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	def _update_layout_visibility(self):
 		"""メニューのチェック状態に基づいてパネルの表示/非表示を更新します。"""
-		show_dataset_tags = self.toggle_dataset_tags_menu.IsChecked()
+		show_all_tags = self.toggle_all_tags_menu.IsChecked()
 		
-		# splitter_2 の状態更新 (dataset_tags_panel の表示/非表示)
-		if show_dataset_tags:
+		# splitter_2 の状態更新 (all_tags_panel の表示/非表示)
+		if show_all_tags:
 			if not self.splitter_2.IsSplit():
-				self.splitter_2.SplitVertically(self.image_tags_panel, self.dataset_tags_panel)
+				self.splitter_2.SplitVertically(self.image_tags_panel, self.all_tags_panel)
 				self.splitter_2.SetSashPosition(self.splitter_2.GetSize().GetWidth() // 2)
 		else:
 			if self.splitter_2.IsSplit():
-				self.splitter_2.Unsplit(self.dataset_tags_panel)
+				self.splitter_2.Unsplit(self.all_tags_panel)
 		
 		self.Layout()
 	
@@ -1013,7 +1013,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.image_tags_grid.ForceRefresh()
 		
 		# DatasetTagsListへの適用
-		self.dataset_tags_list.apply_font(font)
+		self.all_tags_list.apply_font(font)
 	
 	def _update_views_for_item_selection(self, selection: int):
 		"""指定された選択に基づいて関連するビューを更新します。"""
@@ -1049,7 +1049,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		self.thumbnail_list.set_dataset(dataset)
 		self.image_tags_grid.set_dataset(dataset)
-		self.dataset_tags_list.set_dataset(dataset)
+		self.all_tags_list.set_dataset(dataset)
 		
 		if dataset and len(dataset) > 0:
 			self.thumbnail_list.SetSelection(0)

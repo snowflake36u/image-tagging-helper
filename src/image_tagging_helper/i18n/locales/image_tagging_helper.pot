@@ -124,10 +124,10 @@ msgstr ""
 msgid "ui_group:view"
 msgstr ""
 
-msgid "action:toggle_dataset_tags"
+msgid "action:toggle_all_tags"
 msgstr ""
 
-msgid "tooltip:toggle_dataset_tags"
+msgid "tooltip:toggle_all_tags"
 msgstr ""
 
 msgid "action:fullscreen"
@@ -157,7 +157,7 @@ msgstr ""
 msgid "label:image_tags"
 msgstr ""
 
-msgid "label:dataset_tags"
+msgid "label:all_tags"
 msgstr ""
 
 msgid "title:choose_a_directory"

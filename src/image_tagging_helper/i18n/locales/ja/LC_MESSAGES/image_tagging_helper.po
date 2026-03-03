@@ -124,10 +124,10 @@ msgstr "画像をフィルタ"
 msgid "ui_group:view"
 msgstr "表示(&V)"
 
-msgid "action:toggle_dataset_tags"
+msgid "action:toggle_all_tags"
 msgstr "全タグ一覧(&A)"
 
-msgid "tooltip:toggle_dataset_tags"
+msgid "tooltip:toggle_all_tags"
 msgstr "全タグ一覧の表示切り替え"
 
 msgid "action:fullscreen"
@@ -157,7 +157,7 @@ msgstr "画像一覧"
 msgid "label:image_tags"
 msgstr "画像のタグ"
 
-msgid "label:dataset_tags"
+msgid "label:all_tags"
 msgstr "全タグ一覧"
 
 msgid "title:choose_a_directory"

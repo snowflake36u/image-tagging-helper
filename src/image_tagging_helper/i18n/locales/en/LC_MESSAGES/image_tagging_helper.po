@@ -124,11 +124,11 @@ msgstr "Filter Images"
 msgid "ui_group:view"
 msgstr "&View"
 
-msgid "action:toggle_dataset_tags"
-msgstr "Toggle D&ataset Tags"
+msgid "action:toggle_all_tags"
+msgstr "Toggle &All Tags"
 
-msgid "tooltip:toggle_dataset_tags"
-msgstr "Toggle Dataset Tags"
+msgid "tooltip:toggle_all_tags"
+msgstr "Toggle All Tags"
 
 msgid "action:fullscreen"
 msgstr "&Fullscreen"
@@ -157,8 +157,8 @@ msgstr "Image List"
 msgid "label:image_tags"
 msgstr "Image Tags"
 
-msgid "label:dataset_tags"
-msgstr "Dataset Tags"
+msgid "label:all_tags"
+msgstr "All Tags"
 
 msgid "title:choose_a_directory"
 msgstr "Choose a Directory"
