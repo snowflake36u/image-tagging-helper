@@ -169,43 +169,28 @@ msgstr ""
 msgid "title:restart_required"
 msgstr ""
 
-msgid "action:append_tag_to_current_items"
+msgid "action:add_tags_to_filter"
 msgstr ""
 
-msgid "action:remove_tag_from_current_items"
+msgid "action:append_tags_to_current_items"
 msgstr ""
 
-msgid "action:append_tag_to_filtered_items"
+msgid "action:remove_tags_from_current_items"
 msgstr ""
 
-msgid "action:remove_tag_from_filtered_items"
+msgid "action:append_tags_to_filtered_items"
 msgstr ""
 
-msgid "action:append_tag_to_all_items"
+msgid "action:remove_tags_from_filtered_items"
 msgstr ""
 
-msgid "action:remove_tag_from_all_items"
+msgid "action:append_tags_to_all_items"
 msgstr ""
 
-msgid "action:replace_tag_in_all_items"
+msgid "action:remove_tags_from_all_items"
 msgstr ""
 
-msgid "action:append_n_tags_to_current_items"
-msgstr ""
-
-msgid "action:remove_n_tags_from_current_items"
-msgstr ""
-
-msgid "action:append_n_tags_to_filtered_items"
-msgstr ""
-
-msgid "action:remove_n_tags_from_filtered_items"
-msgstr ""
-
-msgid "action:append_n_tags_to_all_items"
-msgstr ""
-
-msgid "action:remove_n_tags_from_all_items"
+msgid "action:replace_tags_in_all_items"
 msgstr ""
 
 msgid "dialog:enter_new_tag_for_replacement"

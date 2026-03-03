@@ -169,44 +169,29 @@ msgstr "言語の変更にはアプリの再起動が必要です。"
 msgid "title:restart_required"
 msgstr "再起動が必要"
 
-msgid "action:append_tag_to_current_items"
-msgstr "現在のアイテムに '{tag}' を追加(&1)"
+msgid "action:add_tags_to_filter"
+msgstr ""
 
-msgid "action:remove_tag_from_current_items"
-msgstr "現在のアイテムから '{tag}' を削除(&2)"
+msgid "action:append_tags_to_current_items"
+msgstr "現在の項目にタグを追加(&1)"
 
-msgid "action:append_tag_to_filtered_items"
-msgstr "フィルター済みアイテムに '{tag}' を追加(&3)"
+msgid "action:remove_tags_from_current_items"
+msgstr "現在の項目からタグを削除(&2)"
 
-msgid "action:remove_tag_from_filtered_items"
-msgstr "フィルター済みアイテムから '{tag}' を削除(&4)"
+msgid "action:append_tags_to_filtered_items"
+msgstr "フィルター済み項目にタグを追加(&3)"
 
-msgid "action:append_tag_to_all_items"
-msgstr "全てのアイテムに '{tag}' を追加(&5)"
+msgid "action:remove_tags_from_filtered_items"
+msgstr "フィルター済み項目からタグを削除(&4)"
 
-msgid "action:remove_tag_from_all_items"
-msgstr "全てのアイテムから '{tag}' を削除(&6)"
+msgid "action:append_tags_to_all_items"
+msgstr "全ての項目にタグを追加(&5)"
 
-msgid "action:replace_tag_in_all_items"
-msgstr "全てのアイテムで '{tag}' を置換...(&7)"
+msgid "action:remove_tags_from_all_items"
+msgstr "全ての項目からタグを削除(&6)"
 
-msgid "action:append_n_tags_to_current_items"
-msgstr "現在のアイテムに {count} 個のタグを追加(&1)"
-
-msgid "action:remove_n_tags_from_current_items"
-msgstr "現在のアイテムから {count} 個のタグを削除(&2)"
-
-msgid "action:append_n_tags_to_filtered_items"
-msgstr "フィルター済みアイテムに {count} 個のタグを追加(&3)"
-
-msgid "action:remove_n_tags_from_filtered_items"
-msgstr "フィルター済みアイテムから {count} 個のタグを削除(&4)"
-
-msgid "action:append_n_tags_to_all_items"
-msgstr "全てのアイテムに {count} 個のタグを追加(&5)"
-
-msgid "action:remove_n_tags_from_all_items"
-msgstr "全てのアイテムから {count} 個のタグを削除(&6)"
+msgid "action:replace_tags_in_all_items"
+msgstr "全ての項目でタグを置換(&7)..."
 
 msgid "dialog:enter_new_tag_for_replacement"
 msgstr "'{old_tag}' の置換先のタグを入力してください。"
@@ -249,4 +234,28 @@ msgstr "重み"
 
 #~ msgid "label:font"
 #~ msgstr "フォント"
+
+msgid "action:add_tag_to_filter"
+msgstr "フィルタにタグを追加(&F)"
+
+#~ msgid "action:add_n_tags_to_filter"
+#~ msgstr "フィルタにタグを追加(&F)"
+
+#~ msgid "action:append_n_tags_to_current_items"
+#~ msgstr "現在の項目にタグを追加(&1)"
+
+#~ msgid "action:remove_n_tags_from_current_items"
+#~ msgstr "現在の項目からタグを削除(&2)"
+
+#~ msgid "action:append_n_tags_to_filtered_items"
+#~ msgstr "フィルター済み項目にタグを追加(&3)"
+
+#~ msgid "action:remove_n_tags_from_filtered_items"
+#~ msgstr "フィルター済み項目からタグを削除(&4)"
+
+#~ msgid "action:append_n_tags_to_all_items"
+#~ msgstr "全ての項目にタグを追加(&5)"
+
+#~ msgid "action:remove_n_tags_from_all_items"
+#~ msgstr "全ての項目からタグを削除(&6)"
 

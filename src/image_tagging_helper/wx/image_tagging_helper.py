@@ -927,50 +927,30 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menu = wx.Menu()
 		
 		# 「フィルタに追加」メニュー
-		if len(selected_tags) == 1:
-			add_to_filter_label = __("action:add_tag_to_filter").format(tag=selected_tags[0])
-		else:
-			add_to_filter_label = __("action:add_n_tags_to_filter").format(count=len(selected_tags))
-		menu.Append(ID_ADD_TAG_TO_FILTER, add_to_filter_label)
+		menu.Append(ID_ADD_TAG_TO_FILTER, __("action:add_tag_to_filter"))
 		menu.AppendSeparator()
 		
 		# 選択されたタグの数に応じてラベルを変更
-		if len(selected_tags) == 1:
-			tag_label = selected_tags[0]
-			append_to_current_label = __("action:append_tag_to_current_items").format(tag=tag_label)
-			remove_from_current_label = __("action:remove_tag_from_current_items").format(tag=tag_label)
-			append_to_filtered_label = __("action:append_tag_to_filtered_items").format(tag=tag_label)
-			remove_from_filtered_label = __("action:remove_tag_from_filtered_items").format(tag=tag_label)
-			append_to_all_label = __("action:append_tag_to_all_items").format(tag=tag_label)
-			remove_from_all_label = __("action:remove_tag_from_all_items").format(tag=tag_label)
-			replace_in_all_label = __("action:replace_tag_in_all_items").format(tag=tag_label)
-		else:
-			append_to_current_label = __("action:append_n_tags_to_current_items").format(count=len(selected_tags))
-			remove_from_current_label = __("action:remove_n_tags_from_current_items").format(count=len(selected_tags))
-			append_to_filtered_label = __("action:append_n_tags_to_filtered_items").format(count=len(selected_tags))
-			remove_from_filtered_label = __("action:remove_n_tags_from_filtered_items").format(count=len(selected_tags))
-			append_to_all_label = __("action:append_n_tags_to_all_items").format(count=len(selected_tags))
-			remove_from_all_label = __("action:remove_n_tags_from_all_items").format(count=len(selected_tags))
-			replace_in_all_label = None  # 複数タグの置換は未対応
+		multiple_tags = len(selected_tags) > 1
 		
 		# 選択中のアイテムへの操作
-		menu.Append(ID_APPEND_TAG_TO_CURRENT, append_to_current_label)
-		menu.Append(ID_REMOVE_TAG_FROM_CURRENT, remove_from_current_label)
+		menu.Append(ID_APPEND_TAG_TO_CURRENT, __("action:append_tags_to_current_items"))
+		menu.Append(ID_REMOVE_TAG_FROM_CURRENT, __("action:remove_tags_from_current_items"))
 		
 		menu.AppendSeparator()
 		
 		# フィルター済みアイテムへの操作
-		menu.Append(ID_APPEND_TAG_TO_FILTERED, append_to_filtered_label)
-		menu.Append(ID_REMOVE_TAG_FROM_FILTERED, remove_from_filtered_label)
+		menu.Append(ID_APPEND_TAG_TO_FILTERED, __("action:append_tags_to_filtered_items"))
+		menu.Append(ID_REMOVE_TAG_FROM_FILTERED, __("action:remove_tags_from_filtered_items"))
 		
 		menu.AppendSeparator()
 		
 		# すべてのアイテムへの操作
-		menu.Append(ID_APPEND_TAG_TO_ALL, append_to_all_label)
-		menu.Append(ID_REMOVE_TAG_FROM_ALL, remove_from_all_label)
+		menu.Append(ID_APPEND_TAG_TO_ALL, __("action:append_tags_to_all_items"))
+		menu.Append(ID_REMOVE_TAG_FROM_ALL, __("action:remove_tags_from_all_items"))
 		
-		if replace_in_all_label:
-			menu.Append(ID_REPLACE_TAG_IN_ALL, replace_in_all_label)
+		if not multiple_tags:
+			menu.Append(ID_REPLACE_TAG_IN_ALL, __("action:replace_tags_in_all_items"))
 		
 		# イベントバインド
 		self.Bind(wx.EVT_MENU, lambda evt: self.on_add_tags_to_filter(evt, selected_tags), id=ID_ADD_TAG_TO_FILTER)
@@ -981,7 +961,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_all_items(evt, selected_tags), id=ID_APPEND_TAG_TO_ALL)
 		self.Bind(wx.EVT_MENU, lambda evt: self.on_remove_tags_from_all_items(evt, selected_tags), id=ID_REMOVE_TAG_FROM_ALL)
 		
-		if replace_in_all_label:
+		if not multiple_tags:
 			self.Bind(wx.EVT_MENU, lambda evt: self.on_replace_tag_in_all_items(evt, selected_tags[0]), id=ID_REPLACE_TAG_IN_ALL)
 		
 		client_pos = list_ctrl.ScreenToClient(pos)
