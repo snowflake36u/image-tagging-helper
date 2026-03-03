@@ -169,6 +169,51 @@ msgstr "言語の変更にはアプリの再起動が必要です。"
 msgid "title:restart_required"
 msgstr "再起動が必要"
 
+msgid "action:append_tag_to_current_items"
+msgstr "現在のアイテムに '{tag}' を追加(&1)"
+
+msgid "action:remove_tag_from_current_items"
+msgstr "現在のアイテムから '{tag}' を削除(&2)"
+
+msgid "action:append_tag_to_filtered_items"
+msgstr "フィルター済みアイテムに '{tag}' を追加(&3)"
+
+msgid "action:remove_tag_from_filtered_items"
+msgstr "フィルター済みアイテムから '{tag}' を削除(&4)"
+
+msgid "action:append_tag_to_all_items"
+msgstr "全てのアイテムに '{tag}' を追加(&5)"
+
+msgid "action:remove_tag_from_all_items"
+msgstr "全てのアイテムから '{tag}' を削除(&6)"
+
+msgid "action:replace_tag_in_all_items"
+msgstr "全てのアイテムで '{tag}' を置換...(&7)"
+
+msgid "action:append_n_tags_to_current_items"
+msgstr "現在のアイテムに {count} 個のタグを追加(&1)"
+
+msgid "action:remove_n_tags_from_current_items"
+msgstr "現在のアイテムから {count} 個のタグを削除(&2)"
+
+msgid "action:append_n_tags_to_filtered_items"
+msgstr "フィルター済みアイテムに {count} 個のタグを追加(&3)"
+
+msgid "action:remove_n_tags_from_filtered_items"
+msgstr "フィルター済みアイテムから {count} 個のタグを削除(&4)"
+
+msgid "action:append_n_tags_to_all_items"
+msgstr "全てのアイテムに {count} 個のタグを追加(&5)"
+
+msgid "action:remove_n_tags_from_all_items"
+msgstr "全てのアイテムから {count} 個のタグを削除(&6)"
+
+msgid "dialog:enter_new_tag_for_replacement"
+msgstr "'{old_tag}' の置換先のタグを入力してください。"
+
+msgid "title:replace_tag"
+msgstr "タグの置換"
+
 msgid "message:unsaved_changes"
 msgstr "キャプションデータが変更されています。保存しますか？"
 

@@ -26,6 +26,9 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		self.InsertColumn(0, __("label:tag"), width=150)
 		self.InsertColumn(1, __("label:image_count"), width=50, format=wx.LIST_FORMAT_RIGHT)
 		self.setResizeColumn(0)
+		
+		# コンテキストメニューイベントをバインド
+		self.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""
@@ -94,3 +97,41 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		"""
 		self.SetFont(font)
 		self.Refresh()
+	
+	def on_context_menu(self, event: wx.ContextMenuEvent):
+		"""
+		リストアイテムのコンテキストメニューを表示します。
+		"""
+		# コンテキストメニューの表示位置を取得
+		pos = event.GetPosition()
+		
+		# 選択されている全てのアイテムを取得
+		selected_indices = []
+		item_index = self.GetFirstSelected()
+		while item_index != wx.NOT_FOUND:
+			selected_indices.append(item_index)
+			item_index = self.GetNextSelected(item_index)
+		
+		if not selected_indices:
+			# マウス操作の場合、クリック位置のアイテムを選択状態にする
+			if pos != wx.DefaultPosition:
+				client_pos = self.ScreenToClient(pos)
+				hit_index, flags = self.HitTest(client_pos)
+				if hit_index != wx.NOT_FOUND:
+					self.Select(hit_index)
+					selected_indices.append(hit_index)
+		
+		if not selected_indices:
+			return
+		
+		# キーボード操作の場合のメニュー表示位置を調整
+		if pos == wx.DefaultPosition:
+			rect = self.GetItemRect(selected_indices[0])
+			pos = self.ClientToScreen(rect.GetTopLeft())
+		
+		selected_tags = [self.GetItemText(idx) for idx in selected_indices]
+		
+		# 親フレームにメニュー作成を依頼
+		parent_frame: wx.Frame = wx.GetTopLevelParent(self)
+		if hasattr(parent_frame, 'show_all_tags_context_menu'):
+			parent_frame.show_all_tags_context_menu(self, selected_tags, pos)

@@ -221,7 +221,7 @@ class Caption:
 				self.on_tag_usage_changed(tag.text, True)
 			self.counter[tag.text] += 1
 	
-	def delete_tags(self, positions):
+	def remove_tags_at(self, positions):
 		for i in positions:
 			tag = self.tags.pop(i)
 			self.counter[tag.text] -= 1

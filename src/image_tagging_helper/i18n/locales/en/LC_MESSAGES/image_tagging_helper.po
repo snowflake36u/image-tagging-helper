@@ -169,6 +169,51 @@ msgstr "Restart the application to apply the language change."
 msgid "title:restart_required"
 msgstr "Restart Required"
 
+msgid "action:append_tag_to_current_items"
+msgstr "Append '{tag}' to current items (&1)"
+
+msgid "action:remove_tag_from_current_items"
+msgstr "Remove '{tag}' from current items (&2)"
+
+msgid "action:append_tag_to_filtered_items"
+msgstr "Append '{tag}' to filtered items (&3)"
+
+msgid "action:remove_tag_from_filtered_items"
+msgstr "Remove '{tag}' from filtered items (&4)"
+
+msgid "action:append_tag_to_all_items"
+msgstr "Append '{tag}' to all items (&5)"
+
+msgid "action:remove_tag_from_all_items"
+msgstr "Remove '{tag}' from all items (&6)"
+
+msgid "action:replace_tag_in_all_items"
+msgstr "Replace '{tag}' in all items (&7)"
+
+msgid "action:append_n_tags_to_current_items"
+msgstr "Append {count} tags to current items (&1)"
+
+msgid "action:remove_n_tags_from_current_items"
+msgstr "Remove {count} tags from current items (&2)"
+
+msgid "action:append_n_tags_to_filtered_items"
+msgstr "Append {count} tags to filtered items (&3)"
+
+msgid "action:remove_n_tags_from_filtered_items"
+msgstr "Remove {count} tags from filtered items (&4)"
+
+msgid "action:append_n_tags_to_all_items"
+msgstr "Add {count} tags to all items (&5)"
+
+msgid "action:remove_n_tags_from_all_items"
+msgstr "Remove {count} tags from all items (&6)"
+
+msgid "dialog:enter_new_tag_for_replacement"
+msgstr "Enter new tag for replacement of '{old_tag}'"
+
+msgid "title:replace_tag"
+msgstr "Replace Tag"
+
 msgid "message:unsaved_changes"
 msgstr "There are unsaved changes. Do you want to save?"
 

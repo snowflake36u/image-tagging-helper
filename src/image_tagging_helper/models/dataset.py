@@ -210,7 +210,7 @@ class Dataset:
 		elif isinstance(diff, MoveDiff):
 			self.move_tag(diff.target, diff.old_position, diff.new_position)
 		elif isinstance(diff, DeleteDiff):
-			self.delete_tags(diff.target, diff.positions)
+			self.remove_tags_at(diff.target, diff.positions)
 		elif isinstance(diff, MutateTagDiff):
 			self.mutate_tag(diff.target, diff.position, diff.new_tag)
 		elif isinstance(diff, BatchDiff):
@@ -278,7 +278,7 @@ class Dataset:
 		caption = self.items[target].caption
 		caption.insert_tags(position, tags)
 	
-	def delete_tags(self, target, positions):
+	def remove_tags_at(self, target, positions):
 		"""
 		指定された位置のタグを削除します。
 		

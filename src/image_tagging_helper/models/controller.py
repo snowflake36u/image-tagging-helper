@@ -115,31 +115,31 @@ class DatasetController:
 		if positions:
 			self.remove_tags_at(target, positions)
 	
-	def batch_append_tag(self, targets: Iterable[int], tag: 'Tag', keep_weight=False):
+	def batch_append_tags(self, targets: Iterable[int], tags: tuple['Tag', ...]):
 		"""
 		指定された複数のキャプションにタグを追加します。
 
 		Args:
 			 targets: 対象キャプションのインデックスのリスト。
-			 tag: 追加するタグ。
+			 tags: 追加するタグのタプル。
 		"""
-		action = BatchAppendTagAction.create(self.dataset, targets, tag, keep_weight)
+		action = BatchAppendTagAction.create(self.dataset, targets, tags)
 		if action:
 			self.dataset.execute(action, self.sender)
 	
-	def batch_remove_tag(self, targets: Iterable[int], tag_text: str):
+	def batch_remove_tags(self, targets: Iterable[int], tag_texts: tuple[str, ...]):
 		"""
 		指定された複数のキャプションから特定のタグを削除します。
 
 		Args:
 			 targets: 対象キャプションのインデックスのリスト。
-			 tag_text: 削除するタグのテキスト。
+			 tag_texts: 削除するタグのテキストのタプル。
 		"""
-		action = BatchRemoveTagAction.create(self.dataset, targets, tag_text)
+		action = BatchRemoveTagAction.create(self.dataset, targets, tag_texts)
 		if action:
 			self.dataset.execute(action, self.sender)
 	
-	def batch_replace_tag(self, targets: Iterable[int], old_tag_text: str, new_tag: 'Tag'):
+	def batch_replace_tag(self, targets: Iterable[int], old_tag_text: str, new_tag: 'Tag', keep_weight=False):
 		"""
 		指定された複数のキャプション内の特定のタグを置換します。
 
@@ -148,7 +148,7 @@ class DatasetController:
 			 old_tag_text: 置換対象のタグのテキスト。
 			 new_tag: 新しいタグ。
 		"""
-		action = BatchReplaceTagAction.create(self.dataset, targets, old_tag_text, new_tag)
+		action = BatchReplaceTagAction.create(self.dataset, targets, old_tag_text, new_tag, keep_weight)
 		if action:
 			self.dataset.execute(action, self.sender)
 	

@@ -243,16 +243,23 @@ class BatchAppendTagAction(HistoryAction):
 	"""
 	
 	@staticmethod
-	def create(dataset, targets, tag):
+	def create(dataset, targets, tags: tuple['Tag', ...]):
 		forward_children = []
 		inverse_children = []
 		for target_idx in targets:
 			caption = dataset[target_idx].caption
-			# 同じタグが既に存在しない場合のみ追加
-			if tag.text not in [t.text for t in caption.tags]:
+			
+			# 既存のタグテキストをセットとして保持
+			existing_tag_texts = { t.text for t in caption.tags }
+			# 追加対象のタグのうち、まだ存在しないものだけをフィルタリング
+			tags_to_add = tuple(tag for tag in tags if tag.text not in existing_tag_texts)
+			
+			if tags_to_add:
 				position = len(caption.tags)
-				forward_children.append(AppendDiff(target=target_idx, tags=(tag,)))
-				inverse_children.append(DeleteDiff(target=target_idx, positions=(position,)))
+				forward_children.append(AppendDiff(target=target_idx, tags=tags_to_add))
+				
+				delete_positions = range(position, position + len(tags_to_add))
+				inverse_children.append(DeleteDiff(target=target_idx, positions=tuple(reversed(delete_positions))))
 		
 		if not forward_children:
 			return None
@@ -267,11 +274,12 @@ class BatchRemoveTagAction(HistoryAction):
 	"""
 	
 	@staticmethod
-	def create(dataset, targets, tag_text):
+	def create(dataset, targets, tag_texts: tuple[str, ...]):
 		deletions = []
+		tag_texts_set = set(tag_texts)
 		for target_idx in targets:
 			caption = dataset[target_idx].caption
-			to_delete_indices = [i for i, tag in enumerate(caption.tags) if tag.text == tag_text]
+			to_delete_indices = [i for i, tag in enumerate(caption.tags) if tag.text in tag_texts_set]
 			if to_delete_indices:
 				action = DeleteTagsAction.create(dataset, target_idx, tuple(to_delete_indices))
 				deletions.append(action)
