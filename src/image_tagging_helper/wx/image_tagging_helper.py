@@ -65,6 +65,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		# === UIの初期化 ===
 		self._init_ui()
+		self._init_accelerators()
 		
 		# === イベントのバインド ===
 		self.Bind(wx.EVT_CLOSE, self.on_close)
@@ -100,6 +101,91 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		# 初期フォーカスをサムネイルリストに設定
 		wx.CallAfter(self.thumbnail_list.SetFocus)
+	
+	def _init_accelerators(self):
+		"""アクセラレータテーブルを初期化して設定します。"""
+		accel_tbl = wx.AcceleratorTable([
+			(wx.ACCEL_SHIFT, ord('F'), ID_ADD_TAG_TO_FILTER),
+			(wx.ACCEL_SHIFT, ord('1'), ID_APPEND_TAG_TO_CURRENT),
+			(wx.ACCEL_SHIFT, ord('2'), ID_REMOVE_TAG_FROM_CURRENT),
+			(wx.ACCEL_SHIFT, ord('3'), ID_APPEND_TAG_TO_FILTERED),
+			(wx.ACCEL_SHIFT, ord('4'), ID_REMOVE_TAG_FROM_FILTERED),
+			(wx.ACCEL_SHIFT, ord('5'), ID_APPEND_TAG_TO_ALL),
+			(wx.ACCEL_SHIFT, ord('6'), ID_REMOVE_TAG_FROM_ALL),
+			(wx.ACCEL_SHIFT, ord('7'), ID_REPLACE_TAG_IN_ALL),
+		])
+		self.SetAcceleratorTable(accel_tbl)
+		
+		# イベントバインド
+		self.Bind(wx.EVT_MENU, self.on_accel_add_tags_to_filter, id=ID_ADD_TAG_TO_FILTER)
+		self.Bind(wx.EVT_MENU, self.on_accel_append_tags_to_current_items, id=ID_APPEND_TAG_TO_CURRENT)
+		self.Bind(wx.EVT_MENU, self.on_accel_remove_tags_from_current_items, id=ID_REMOVE_TAG_FROM_CURRENT)
+		self.Bind(wx.EVT_MENU, self.on_accel_append_tags_to_filtered_items, id=ID_APPEND_TAG_TO_FILTERED)
+		self.Bind(wx.EVT_MENU, self.on_accel_remove_tags_from_filtered_items, id=ID_REMOVE_TAG_FROM_FILTERED)
+		self.Bind(wx.EVT_MENU, self.on_accel_append_tags_to_all_items, id=ID_APPEND_TAG_TO_ALL)
+		self.Bind(wx.EVT_MENU, self.on_accel_remove_tags_from_all_items, id=ID_REMOVE_TAG_FROM_ALL)
+		self.Bind(wx.EVT_MENU, self.on_accel_replace_tag_in_all_items, id=ID_REPLACE_TAG_IN_ALL)
+	
+	def _get_selected_tags_from_all_tags_list(self) -> list[str]:
+		"""all_tags_listで選択されているタグのリストを取得します。"""
+		selected_indices = []
+		item_index = self.all_tags_list.GetFirstSelected()
+		while item_index != wx.NOT_FOUND:
+			selected_indices.append(item_index)
+			item_index = self.all_tags_list.GetNextSelected(item_index)
+		
+		if not selected_indices:
+			return []
+		
+		return [self.all_tags_list.GetItemText(idx) for idx in selected_indices]
+	
+	def on_accel_add_tags_to_filter(self, event: wx.CommandEvent):
+		"""(ACCEL) 選択中のタグをフィルターに追加します。"""
+		tags = self._get_selected_tags_from_all_tags_list()
+		if tags:
+			self.on_add_tags_to_filter(event, tags)
+	
+	def on_accel_append_tags_to_current_items(self, event: wx.CommandEvent):
+		"""(ACCEL) 選択中のアイテムにタグを追加します。"""
+		tags = self._get_selected_tags_from_all_tags_list()
+		if tags:
+			self.on_append_tags_to_current_items(event, tags)
+	
+	def on_accel_remove_tags_from_current_items(self, event: wx.CommandEvent):
+		"""(ACCEL) 選択中のアイテムからタグを削除します。"""
+		tags = self._get_selected_tags_from_all_tags_list()
+		if tags:
+			self.on_remove_tags_from_current_items(event, tags)
+	
+	def on_accel_append_tags_to_filtered_items(self, event: wx.CommandEvent):
+		"""(ACCEL) フィルター済みアイテムにタグを追加します。"""
+		tags = self._get_selected_tags_from_all_tags_list()
+		if tags:
+			self.on_append_tags_to_filtered_items(event, tags)
+	
+	def on_accel_remove_tags_from_filtered_items(self, event: wx.CommandEvent):
+		"""(ACCEL) フィルター済みアイテムからタグを削除します。"""
+		tags = self._get_selected_tags_from_all_tags_list()
+		if tags:
+			self.on_remove_tags_from_filtered_items(event, tags)
+	
+	def on_accel_append_tags_to_all_items(self, event: wx.CommandEvent):
+		"""(ACCEL) すべてのアイテムにタグを追加します。"""
+		tags = self._get_selected_tags_from_all_tags_list()
+		if tags:
+			self.on_append_tags_to_all_items(event, tags)
+	
+	def on_accel_remove_tags_from_all_items(self, event: wx.CommandEvent):
+		"""(ACCEL) すべてのアイテムからタグを削除します。"""
+		tags = self._get_selected_tags_from_all_tags_list()
+		if tags:
+			self.on_remove_tags_from_all_items(event, tags)
+	
+	def on_accel_replace_tag_in_all_items(self, event: wx.CommandEvent):
+		"""(ACCEL) すべてのアイテムでタグを置換します。"""
+		tags = self._get_selected_tags_from_all_tags_list()
+		if len(tags) == 1:
+			self.on_replace_tag_in_all_items(event, tags[0])
 	
 	def _init_menubar(self):
 		"""メニューバーを初期化します。"""
@@ -929,30 +1015,30 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menu = wx.Menu()
 		
 		# 「フィルタに追加」メニュー
-		menu.Append(ID_ADD_TAG_TO_FILTER, __("action:add_tag_to_filter"))
+		self._append_menu_item(menu, ID_ADD_TAG_TO_FILTER, __("action:add_tag_to_filter"), "", "Shift+F")
 		menu.AppendSeparator()
 		
 		# 選択されたタグの数に応じてラベルを変更
 		multiple_tags = len(selected_tags) > 1
 		
 		# 選択中のアイテムへの操作
-		menu.Append(ID_APPEND_TAG_TO_CURRENT, __("action:append_tags_to_current_items"))
-		menu.Append(ID_REMOVE_TAG_FROM_CURRENT, __("action:remove_tags_from_current_items"))
+		self._append_menu_item(menu, ID_APPEND_TAG_TO_CURRENT, __("action:append_tags_to_current_items"), "", "Shift+1")
+		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_CURRENT, __("action:remove_tags_from_current_items"), "", "Shift+2")
 		
 		menu.AppendSeparator()
 		
 		# フィルター済みアイテムへの操作
-		menu.Append(ID_APPEND_TAG_TO_FILTERED, __("action:append_tags_to_filtered_items"))
-		menu.Append(ID_REMOVE_TAG_FROM_FILTERED, __("action:remove_tags_from_filtered_items"))
+		self._append_menu_item(menu, ID_APPEND_TAG_TO_FILTERED, __("action:append_tags_to_filtered_items"), "", "Shift+3")
+		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_FILTERED, __("action:remove_tags_from_filtered_items"), "", "Shift+4")
 		
 		menu.AppendSeparator()
 		
 		# すべてのアイテムへの操作
-		menu.Append(ID_APPEND_TAG_TO_ALL, __("action:append_tags_to_all_items"))
-		menu.Append(ID_REMOVE_TAG_FROM_ALL, __("action:remove_tags_from_all_items"))
+		self._append_menu_item(menu, ID_APPEND_TAG_TO_ALL, __("action:append_tags_to_all_items"), "", "Shift+5")
+		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_ALL, __("action:remove_tags_from_all_items"), "", "Shift+6")
 		
 		if not multiple_tags:
-			menu.Append(ID_REPLACE_TAG_IN_ALL, __("action:replace_tags_in_all_items"))
+			self._append_menu_item(menu, ID_REPLACE_TAG_IN_ALL, __("action:replace_tags_in_all_items"), "", "Shift+7")
 		
 		# イベントバインド
 		self.Bind(wx.EVT_MENU, lambda evt: self.on_add_tags_to_filter(evt, selected_tags), id=ID_ADD_TAG_TO_FILTER)
