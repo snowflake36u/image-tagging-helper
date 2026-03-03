@@ -1,5 +1,7 @@
 import wx
 import wx.grid
+import io
+import csv
 
 from src.image_tagging_helper.models.dataset import Dataset
 from src.image_tagging_helper.models.caption import Tag
@@ -33,6 +35,7 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.on_cell_changed)
 		self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
 		self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.on_cell_left_click)
+		self.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
 	
 	def _init_grid(self):
 		"""グリッドの初期設定を行います。
@@ -148,6 +151,68 @@ class ImageTagsGrid(wx.grid.Grid):
 		row = event.GetRow()
 		col = event.GetCol()
 		self.focus_cell(row, col)
+	
+	def on_copy(self, event: wx.CommandEvent):
+		"""
+		選択されているセルの内容をTSV形式でクリップボードにコピーします。
+		"""
+		# 選択されているブロックを取得
+		top_left = self.GetSelectionBlockTopLeft()
+		bottom_right = self.GetSelectionBlockBottomRight()
+		
+		# 選択されているセルを取得
+		selected_cells = self.GetSelectedCells()
+		
+		if not top_left and not selected_cells:
+			# 単一セルの選択の場合 (カーソル位置)
+			row = self.GetGridCursorRow()
+			col = self.GetGridCursorCol()
+			if row != -1 and col != -1:
+				data = self.GetCellValue(row, col)
+				self._copy_text_to_clipboard(data)
+			return
+		
+		output = io.StringIO()
+		writer = csv.writer(output, delimiter='\t')
+		
+		# 選択範囲の行と列を特定
+		min_row, max_row = float('inf'), float('-inf')
+		min_col, max_col = float('inf'), float('-inf')
+		
+		if top_left:
+			for (r1, c1), (r2, c2) in zip(top_left, bottom_right):
+				min_row = min(min_row, r1)
+				max_row = max(max_row, r2)
+				min_col = min(min_col, c1)
+				max_col = max(max_col, c2)
+		
+		if selected_cells:
+			for r, c in selected_cells:
+				min_row = min(min_row, r)
+				max_row = max(max_row, r)
+				min_col = min(min_col, c)
+				max_col = max(max_col, c)
+		
+		if min_row == float('inf'):  # No selection
+			return
+		
+		# データを書き込み
+		for r in range(min_row, max_row + 1):
+			row_data = [self.GetCellValue(r, c) for c in range(min_col, max_col + 1)]
+			writer.writerow(row_data)
+		
+		self._copy_text_to_clipboard(output.getvalue())
+	
+	def _copy_text_to_clipboard(self, text: str):
+		"""
+		指定されたテキストをクリップボードにコピーします。
+		"""
+		if not text:
+			return
+		
+		if wx.TheClipboard.Open():
+			wx.TheClipboard.SetData(wx.TextDataObject(text))
+			wx.TheClipboard.Close()
 	
 	def _sync_selection_with_cursor(self):
 		"""現在のカーソル位置に合わせて選択範囲を更新します。"""

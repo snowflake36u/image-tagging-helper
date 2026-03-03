@@ -798,64 +798,35 @@ class ImageTaggingHelperFrame(wx.Frame):
 		event.Enable(can_redo)
 	
 	def on_copy(self, event: wx.CommandEvent):
-		# 選択範囲の取得
-		selected_cells = set()
+		"""
+		フォーカスがあるコントロールに応じてコピー動作を実行します。
+		- image_tags_gridにフォーカス時: ImageTagsGridにwx.ID_COPYイベントを転送。
+		- all_tags_listにフォーカス時: 選択中のタグをコピー。
+		- その他のテキストコントロール: デフォルトのコピー動作を実行。
+		"""
+		focus_win = wx.Window.FindFocus()
 		
-		# ブロック選択
-		top_left = self.image_tags_grid.GetSelectionBlockTopLeft()
-		bottom_right = self.image_tags_grid.GetSelectionBlockBottomRight()
-		for (r1, c1), (r2, c2) in zip(top_left, bottom_right):
-			for r in range(r1, r2 + 1):
-				for c in range(c1, c2 + 1):
-					selected_cells.add((r, c))
+		# ImageTagsGridまたはその内部のウィンドウにフォーカスがあるかチェック
+		is_grid_focus = False
+		win = focus_win
+		while win:
+			if win == self.image_tags_grid:
+				is_grid_focus = True
+				break
+			win = win.GetParent()
 		
-		# 行選択
-		for r in self.image_tags_grid.GetSelectedRows():
-			for c in range(self.image_tags_grid.GetNumberCols()):
-				selected_cells.add((r, c))
-		
-		# 個別セル選択
-		for r, c in self.image_tags_grid.GetSelectedCells():
-			selected_cells.add((r, c))
-		
-		# 選択がない場合はカーソル位置
-		if not selected_cells:
-			row = self.image_tags_grid.GetGridCursorRow()
-			col = self.image_tags_grid.GetGridCursorCol()
-			if row >= 0:
-				selected_cells.add((row, col))
-		
-		if not selected_cells:
-			return
-		
-		# 範囲の特定
-		min_r = min(r for r, c in selected_cells)
-		max_r = max(r for r, c in selected_cells)
-		min_c = min(c for r, c in selected_cells)
-		max_c = max(c for r, c in selected_cells)
-		
-		rows_data = []
-		for r in range(min_r, max_r + 1):
-			# 行内に選択セルがあるか確認
-			if any((r, c) in selected_cells for c in range(min_c, max_c + 1)):
-				row_items = []
-				for c in range(min_c, max_c + 1):
-					if (r, c) in selected_cells:
-						row_items.append(self.image_tags_grid.GetCellValue(r, c))
-					else:
-						row_items.append("")
-				rows_data.append(row_items)
-		
-		# TSV生成
-		output = io.StringIO()
-		writer = csv.writer(output, delimiter='\t', lineterminator='\n')
-		writer.writerows(rows_data)
-		text = output.getvalue()
-		
-		if wx.TheClipboard.Open():
-			wx.TheClipboard.SetData(wx.TextDataObject(text))
-			wx.TheClipboard.Close()
-	
+		if is_grid_focus:
+			# ImageTagsGridにwx.ID_COPYイベントを転送
+			# wx.CommandEventを新たに作成し、IDをwx.ID_COPYに設定してQueueEventで送る
+			copy_event = wx.CommandEvent(wx.EVT_MENU.typeId, wx.ID_COPY)
+			self.image_tags_grid.GetEventHandler().ProcessEvent(copy_event)
+		elif focus_win == self.all_tags_list:
+			self.all_tags_list.copy_selected_tags_to_clipboard()
+		else:
+			# 他のテキストコントロールなどの標準的なコピー動作
+			if hasattr(focus_win, "CanCopy") and focus_win.CanCopy():
+				focus_win.Copy()
+
 	def on_paste(self, event: wx.CommandEvent):
 		if not self.controller or self.image_tags_grid.item_index is None:
 			return

@@ -135,3 +135,19 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		parent_frame: wx.Frame = wx.GetTopLevelParent(self)
 		if hasattr(parent_frame, 'show_all_tags_context_menu'):
 			parent_frame.show_all_tags_context_menu(self, selected_tags, pos)
+	
+	def copy_selected_tags_to_clipboard(self):
+		"""
+		選択されているタグをクリップボードにコピーします。
+		"""
+		selected_tags = []
+		item_index = self.GetFirstSelected()
+		while item_index != wx.NOT_FOUND:
+			selected_tags.append(self.GetItemText(item_index))
+			item_index = self.GetNextSelected(item_index)
+		
+		if selected_tags:
+			text_to_copy = '\n'.join(selected_tags)
+			if wx.TheClipboard.Open():
+				wx.TheClipboard.SetData(wx.TextDataObject(text_to_copy))
+				wx.TheClipboard.Close()
