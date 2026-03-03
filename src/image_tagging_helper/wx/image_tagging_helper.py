@@ -556,9 +556,10 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.thumbnail_list.set_filter(None)
 		
 		# 選択状態の復元
-		if self.current_item_index != wx.NOT_FOUND:
-			self.thumbnail_list.select_item(self.current_item_index)
-			self._update_views_for_item_selection(self.current_item_index)
+		current_item_index = self.current_item_index if self.current_item_index != wx.NOT_FOUND else 0
+		if current_item_index < self.thumbnail_list.GetItemCount():
+			self.thumbnail_list.select_item(current_item_index)
+			self._update_views_for_item_selection(current_item_index)
 	
 	def on_filter_images_menu(self, event: wx.CommandEvent):
 		"""検索バーにフォーカスを移動します。"""
