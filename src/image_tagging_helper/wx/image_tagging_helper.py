@@ -189,7 +189,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		menu.AppendSeparator()
 		
 		filter_images_menu = self._append_menu_item(menu, wx.ID_FIND, __("action:filter_images"), __("tooltip:filter_images"), 'Ctrl+F')
+		clear_filter_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:clear_filter"), __("tooltip:clear_filter"), 'Ctrl+Shift+F')
 		self.Bind(wx.EVT_MENU, self.on_filter_images_menu, filter_images_menu)
+		self.Bind(wx.EVT_MENU, self.on_filter_cancel, clear_filter_menu)
 	
 	def _init_view_menu(self, menubar):
 		menu = wx.Menu()
