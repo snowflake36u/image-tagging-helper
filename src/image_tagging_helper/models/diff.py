@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from abc import ABC
 
-from src.image_tagging_helper.models.caption import Tag
+from image_tagging_helper.models.caption import Tag
 
 @dataclass(frozen=True)
 class DatasetDiff(ABC):

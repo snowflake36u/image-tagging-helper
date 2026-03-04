@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING, Iterable, Sequence
 
-from src.image_tagging_helper.models.history_actions import (
+from image_tagging_helper.models.history_actions import (
 	AppendTagsAction, InsertTagsAction, MoveTagAction,
 	DeleteTagsAction, EditTagAction, CleanAction,
 	BatchAppendTagAction, BatchRemoveTagAction, BatchReplaceTagAction
 )
 
 if TYPE_CHECKING:
-	from src.image_tagging_helper.models.dataset import Dataset
-	from src.image_tagging_helper.models.caption import Tag
+	from image_tagging_helper.models.dataset import Dataset
+	from image_tagging_helper.models.caption import Tag
 
 class DatasetController:
 	"""

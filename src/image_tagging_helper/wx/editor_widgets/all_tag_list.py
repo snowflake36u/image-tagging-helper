@@ -1,8 +1,8 @@
 import wx
 import wx.lib.mixins.listctrl as listmix
 
-from src.image_tagging_helper.i18n import __
-from src.image_tagging_helper.models.dataset import Dataset
+from image_tagging_helper.i18n import __
+from image_tagging_helper.models.dataset import Dataset
 
 class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSorterMixin):
 	"""

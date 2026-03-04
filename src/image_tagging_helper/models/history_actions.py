@@ -1,5 +1,5 @@
-from src.image_tagging_helper.models.caption import Tag
-from src.image_tagging_helper.models.diff import (
+from image_tagging_helper.models.caption import Tag
+from image_tagging_helper.models.diff import (
 	DatasetDiff, AppendDiff, InsertDiff, MoveDiff, DeleteDiff, MutateTagDiff, BatchDiff
 )
 

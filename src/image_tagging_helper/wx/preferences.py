@@ -1,7 +1,7 @@
 import wx
 
-from src.image_tagging_helper.core.config import Config
-from src.image_tagging_helper.i18n import __
+from image_tagging_helper.core.config import Config
+from image_tagging_helper.i18n import __
 
 class PreferencesDialog(wx.Dialog):
 	"""設定画面のダイアログ。"""

@@ -8,15 +8,15 @@ import os
 import sys
 import subprocess
 
-from src.image_tagging_helper.core.config import Config
-from src.image_tagging_helper.models.caption import CaptionFormatConfig, Tag
-from src.image_tagging_helper.models.dataset import Dataset
-from src.image_tagging_helper.models.controller import DatasetController
-from src.image_tagging_helper.wx.editor_widgets.all_tag_list import AllTagsList
-from src.image_tagging_helper.wx.editor_widgets.image_list import ImageVListBox
-from src.image_tagging_helper.wx.editor_widgets.image_tags_grid import ImageTagsGrid
-from src.image_tagging_helper.wx.preferences import PreferencesDialog
-from src.image_tagging_helper.i18n import setup_translation, __
+from image_tagging_helper.core.config import Config
+from image_tagging_helper.models.caption import CaptionFormatConfig, Tag
+from image_tagging_helper.models.dataset import Dataset
+from image_tagging_helper.models.controller import DatasetController
+from image_tagging_helper.wx.editor_widgets.all_tag_list import AllTagsList
+from image_tagging_helper.wx.editor_widgets.image_list import ImageVListBox
+from image_tagging_helper.wx.editor_widgets.image_tags_grid import ImageTagsGrid
+from image_tagging_helper.wx.preferences import PreferencesDialog
+from image_tagging_helper.i18n import setup_translation, __
 
 # アプリケーションのドメイン名を設定
 APP_NAME = "Image Tagging Helper"

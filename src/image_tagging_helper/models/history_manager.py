@@ -1,5 +1,5 @@
 from typing import List
-from src.image_tagging_helper.models.history_actions import HistoryAction
+from image_tagging_helper.models.history_actions import HistoryAction
 
 class HistoryManager:
 	"""

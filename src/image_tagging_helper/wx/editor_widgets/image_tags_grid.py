@@ -3,14 +3,14 @@ import wx.grid
 import io
 import csv
 
-from src.image_tagging_helper.models.dataset import Dataset
-from src.image_tagging_helper.models.caption import Tag
-from src.image_tagging_helper.models.controller import DatasetController
-from src.image_tagging_helper.models.diff import (
+from image_tagging_helper.models.dataset import Dataset
+from image_tagging_helper.models.caption import Tag
+from image_tagging_helper.models.controller import DatasetController
+from image_tagging_helper.models.diff import (
 	DatasetDiff, AppendDiff, InsertDiff, MoveDiff, DeleteDiff, MutateTagDiff, BatchDiff
 )
 
-from src.image_tagging_helper.i18n import __
+from image_tagging_helper.i18n import __
 
 class ImageTagsGrid(wx.grid.Grid):
 	"""画像のタグを表示・編集するためのグリッドコントロール。

@@ -6,7 +6,7 @@ import bisect
 
 import wx
 
-from src.image_tagging_helper.models.dataset import Dataset, DatasetItem
+from image_tagging_helper.models.dataset import Dataset, DatasetItem
 
 # サムネイルの固定サイズを定義。メモリと品質のバランスを考慮して調整可能。
 THUMBNAIL_CACHE_FIXED_SIZE = (384, 384)
