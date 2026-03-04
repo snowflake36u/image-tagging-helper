@@ -1351,7 +1351,7 @@ def main():
 	except (AttributeError, OSError):
 		try:
 			# Windows Vista以降: System DPI Aware
-			ctypes.windll.user32.SetProcessDpiAware()
+			ctypes.windll.user32.SetProcessDPIAware()
 		except (AttributeError, OSError):
 			# DPI設定に対応していないOSの場合は何もしない
 			pass
