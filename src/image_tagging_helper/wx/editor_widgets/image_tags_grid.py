@@ -27,7 +27,8 @@ class ImageTagsGrid(wx.grid.Grid):
 		"""
 		super().__init__(parent, wx.ID_ANY)
 		self.dataset: Dataset | None = None
-		self.controller: DatasetController | None = None
+		self.ui_driven_controller: DatasetController | None = None
+		self.remote_controller: DatasetController | None = None
 		self.item_index: int | None = None
 		
 		self._init_grid()
@@ -68,7 +69,8 @@ class ImageTagsGrid(wx.grid.Grid):
 		
 		self.dataset = dataset
 		if dataset:
-			self.controller = dataset.get_controller(self.SENDER_ID)
+			self.ui_driven_controller = dataset.get_controller(self.SENDER_ID)
+			self.remote_controller = dataset.get_controller()
 			self.dataset.add_diff_applied_listener(self.on_model_changed)
 		
 		self.refresh_grid()
@@ -84,8 +86,8 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.GetCellValue(r, 0), weight
 		)
 		
-		if self.controller and self.item_index is not None:
-			self.controller.edit_tag(self.item_index, r, new_tag)
+		if self.ui_driven_controller and self.item_index is not None:
+			self.ui_driven_controller.edit_tag(self.item_index, r, new_tag)
 		
 		evt.Skip()
 	
@@ -136,6 +138,13 @@ class ImageTagsGrid(wx.grid.Grid):
 			if new_row != current_row or new_col != current_col:
 				self.focus_cell(new_row, new_col)
 				self.MakeCellVisible(new_row, new_col)
+			return
+		
+		if key_code == wx.WXK_DELETE:
+			if self.dataset and self.item_index is not None:
+				# ユーザー操作として実行するため、senderがNoneのコントローラーを取得して実行する
+				# これにより、変更通知がUIに正しく反映される
+				self.remote_controller.remove_tags_at(self.item_index, self.get_selected_rows())
 			return
 		
 		event.Skip()

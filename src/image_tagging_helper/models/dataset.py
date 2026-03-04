@@ -63,7 +63,7 @@ class Dataset:
 		self.tag_usages = Counter()
 		self.history = HistoryManager()
 		self.folder_path = None
-		self._origin_controller = self.get_controller()
+		self._remote_controller = self.get_controller()
 		
 		# タグの使用回数の更新後イベント。(tag, count) -> None
 		self._tag_usage_changed_listeners: List[Callable[[str, int], None]] = []
@@ -123,7 +123,7 @@ class Dataset:
 		if not self.items:
 			return
 		
-		self._origin_controller.clean()
+		self._remote_controller.clean()
 		self.history.mark_saved()
 		
 		for item in self.items:

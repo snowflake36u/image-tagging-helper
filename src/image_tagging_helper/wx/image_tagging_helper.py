@@ -59,7 +59,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		self.image_exts = ['.jpg', '.jpeg', '.png', '.webp']
 		self.caption_ext = '.caption'
 		self.dataset = Dataset()
-		self.controller: DatasetController | None = None
+		self.remote_controller: DatasetController | None = None
 		self.caption_format_config = CaptionFormatConfig()
 		self.current_item_index: int = wx.NOT_FOUND
 		
@@ -804,22 +804,22 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	def on_undo(self, event: wx.CommandEvent):
 		"""直前の操作を元に戻します。"""
-		if self.controller:
-			self.controller.undo()
+		if self.remote_controller:
+			self.remote_controller.undo()
 	
 	def on_redo(self, event: wx.CommandEvent):
 		"""元に戻した操作をやり直します。"""
-		if self.controller:
-			self.controller.redo()
+		if self.remote_controller:
+			self.remote_controller.redo()
 	
 	def on_update_ui_undo(self, event: wx.UpdateUIEvent):
 		"""アンドゥメニュー項目のUIを更新します。"""
-		can_undo = self.controller.can_undo() if self.controller else False
+		can_undo = self.remote_controller.can_undo() if self.remote_controller else False
 		event.Enable(can_undo)
 	
 	def on_update_ui_redo(self, event: wx.UpdateUIEvent):
 		"""リドゥメニュー項目のUIを更新します。"""
-		can_redo = self.controller.can_redo() if self.controller else False
+		can_redo = self.remote_controller.can_redo() if self.remote_controller else False
 		event.Enable(can_redo)
 	
 	def on_copy(self, event: wx.CommandEvent):
@@ -853,7 +853,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 				focus_win.Copy()
 	
 	def on_paste(self, event: wx.CommandEvent):
-		if not self.controller or self.image_tags_grid.item_index is None:
+		if not self.remote_controller or self.image_tags_grid.item_index is None:
 			return
 		
 		text = ""
@@ -892,7 +892,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		if tags:
 			row = self.image_tags_grid.GetGridCursorRow()
 			insert_pos = row + 1 if row >= 0 else self.image_tags_grid.GetNumberRows()
-			self.controller.insert_tags(self.image_tags_grid.item_index, insert_pos, tuple(tags))
+			self.remote_controller.insert_tags(self.image_tags_grid.item_index, insert_pos, tuple(tags))
 	
 	def on_select_all(self, event: wx.CommandEvent):
 		"""
@@ -923,14 +923,14 @@ class ImageTaggingHelperFrame(wx.Frame):
 				focus_win.SelectAll()
 	
 	def on_insert_blank_tag(self, event: wx.CommandEvent):
-		if not self.controller or self.image_tags_grid.item_index is None:
+		if not self.remote_controller or self.image_tags_grid.item_index is None:
 			return
 		
 		row = self.image_tags_grid.GetGridCursorRow()
-		self.controller.insert_tags(self.image_tags_grid.item_index, row + 1, (Tag(),))
+		self.remote_controller.insert_tags(self.image_tags_grid.item_index, row + 1, (Tag(),))
 	
 	def on_delete_tag(self, event: wx.CommandEvent):
-		if not self.controller or self.image_tags_grid.item_index is None:
+		if not self.remote_controller or self.image_tags_grid.item_index is None:
 			return
 		
 		rows = self.image_tags_grid.get_selected_rows()
@@ -940,27 +940,27 @@ class ImageTaggingHelperFrame(wx.Frame):
 				return
 			rows = [row]
 		
-		self.controller.remove_tags_at(self.image_tags_grid.item_index, tuple(rows))
+		self.remote_controller.remove_tags_at(self.image_tags_grid.item_index, tuple(rows))
 	
 	def on_move_tag_up(self, event: wx.CommandEvent):
-		if not self.controller or self.image_tags_grid.item_index is None:
+		if not self.remote_controller or self.image_tags_grid.item_index is None:
 			return
 		
 		row = self.image_tags_grid.GetGridCursorRow()
 		if row <= 0:
 			return
 		
-		self.controller.move_tag(self.image_tags_grid.item_index, row, row - 1)
+		self.remote_controller.move_tag(self.image_tags_grid.item_index, row, row - 1)
 	
 	def on_move_tag_down(self, event: wx.CommandEvent):
-		if not self.controller or self.image_tags_grid.item_index is None:
+		if not self.remote_controller or self.image_tags_grid.item_index is None:
 			return
 		
 		row = self.image_tags_grid.GetGridCursorRow()
 		if row < 0 or row >= self.image_tags_grid.GetNumberRows() - 1:
 			return
 		
-		self.controller.move_tag(self.image_tags_grid.item_index, row, row + 1)
+		self.remote_controller.move_tag(self.image_tags_grid.item_index, row, row + 1)
 	
 	def on_view_image(self, event: wx.CommandEvent):
 		"""選択されている画像を既定のビューアで開きます。"""
@@ -1083,62 +1083,62 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	def on_append_tags_to_current_items(self, event: wx.CommandEvent, tags: list[str]):
 		"""選択中のアイテムにタグを追加します。"""
-		if not self.controller or self.current_item_index == wx.NOT_FOUND:
+		if not self.remote_controller or self.current_item_index == wx.NOT_FOUND:
 			return
 		position = self.image_tags_grid.GetGridCursorRow()
 		tags_obj = tuple(Tag(t) for t in tags)
-		self.controller.append_tags(self.current_item_index, tags_obj)
+		self.remote_controller.append_tags(self.current_item_index, tags_obj)
 	
 	def on_remove_tags_from_current_items(self, event: wx.CommandEvent, tags: list[str]):
 		"""選択中のアイテムからタグを削除します。"""
-		if not self.controller or self.current_item_index == wx.NOT_FOUND:
+		if not self.remote_controller or self.current_item_index == wx.NOT_FOUND:
 			return
 		for tag_text in tags:
-			self.controller.batch_remove_tags([self.current_item_index], (tag_text,))
+			self.remote_controller.batch_remove_tags([self.current_item_index], (tag_text,))
 	
 	def on_append_tags_to_filtered_items(self, event: wx.CommandEvent, tags: list[str]):
 		"""フィルター済みアイテムにタグを追加します。"""
-		if not self.controller:
+		if not self.remote_controller:
 			return
 		filtered_indices = self.thumbnail_list.filtered_indices
 		if not filtered_indices:
 			return
 		
 		for tag_text in tags:
-			self.controller.batch_append_tags(filtered_indices, (Tag(tag_text),))
+			self.remote_controller.batch_append_tags(filtered_indices, (Tag(tag_text),))
 	
 	def on_remove_tags_from_filtered_items(self, event: wx.CommandEvent, tags: list[str]):
 		"""フィルター済みアイテムからタグを削除します。"""
-		if not self.controller:
+		if not self.remote_controller:
 			return
 		filtered_indices = self.thumbnail_list.filtered_indices
 		if not filtered_indices:
 			return
 		
 		for tag_text in tags:
-			self.controller.batch_remove_tags(filtered_indices, (tag_text,))
+			self.remote_controller.batch_remove_tags(filtered_indices, (tag_text,))
 	
 	def on_append_tags_to_all_items(self, event: wx.CommandEvent, tags: list[str]):
 		"""すべてのアイテムにタグを追加します。"""
-		if not self.controller or not self.dataset:
+		if not self.remote_controller or not self.dataset:
 			return
 		
 		all_indices = range(len(self.dataset))
 		for tag_text in tags:
-			self.controller.batch_append_tags(all_indices, (Tag(tag_text),))
+			self.remote_controller.batch_append_tags(all_indices, (Tag(tag_text),))
 	
 	def on_remove_tags_from_all_items(self, event: wx.CommandEvent, tags: list[str]):
 		"""すべてのアイテムからタグを削除します。"""
-		if not self.controller or not self.dataset:
+		if not self.remote_controller or not self.dataset:
 			return
 		
 		all_indices = range(len(self.dataset))
 		for tag_text in tags:
-			self.controller.batch_remove_tags(all_indices, (tag_text,))
+			self.remote_controller.batch_remove_tags(all_indices, (tag_text,))
 	
 	def on_replace_tag_in_all_items(self, event: wx.CommandEvent, old_tag_text: str):
 		"""すべてのアイテムでタグを置換します。"""
-		if not self.controller or not self.dataset:
+		if not self.remote_controller or not self.dataset:
 			return
 		
 		# 置換後のタグを入力するダイアログを表示
@@ -1151,7 +1151,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		if new_tag_text and new_tag_text != old_tag_text:
 			all_indices = range(len(self.dataset))
-			self.controller.batch_replace_tag(all_indices, old_tag_text, Tag(new_tag_text), keep_weight=True)
+			self.remote_controller.batch_replace_tag(all_indices, old_tag_text, Tag(new_tag_text), keep_weight=True)
 	
 	def on_add_tags_to_filter(self, event: wx.CommandEvent, tags: list[str]):
 		"""
@@ -1312,7 +1312,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 			caption_ext=self.caption_ext,
 			caption_format_config=self.caption_format_config,
 		)
-		self.controller = self.dataset.get_controller('frame')
+		self.remote_controller = self.dataset.get_controller()
 		dataset = self.dataset
 		
 		self.thumbnail_list.set_dataset(dataset)

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, Sequence
 
 from src.image_tagging_helper.models.history_actions import (
 	AppendTagsAction, InsertTagsAction, MoveTagAction,
@@ -71,7 +71,7 @@ class DatasetController:
 		action = MoveTagAction.create(self.dataset, target, old_position, new_position)
 		self.dataset.execute(action, self.sender)
 	
-	def remove_tags_at(self, target: int, positions: tuple[int, ...]):
+	def remove_tags_at(self, target: int, positions: Sequence[int]):
 		"""
 		キャプションからタグを削除します。
 
