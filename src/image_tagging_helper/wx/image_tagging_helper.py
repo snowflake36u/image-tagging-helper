@@ -417,6 +417,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		self.thumbnail_list = ImageVListBox(self.thumbnail_panel, style=wx.VSCROLL | wx.ALWAYS_SHOW_SB)
 		self.thumbnail_list.Bind(wx.EVT_LISTBOX, self.on_thumbnail_select)
+		self.thumbnail_list.Bind(wx.EVT_LISTBOX_DCLICK, self.on_thumbnail_double_click)  # AI_REVIEW: ダブルクリックイベントを追加
 		self.thumbnail_list.Bind(wx.EVT_CONTEXT_MENU, self.on_thumbnail_context_menu)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
@@ -736,6 +737,21 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		self.current_item_index = dataset_index
 		self._update_views_for_item_selection(dataset_index)
+	
+	def on_thumbnail_double_click(self, event: wx.CommandEvent):
+		"""
+		サムネイルリストの項目がダブルクリックされたときの処理。
+		選択されている画像を既定のビューアで開きます。
+		"""
+		view_index = self.thumbnail_list.GetSelection()
+		if view_index == wx.NOT_FOUND:
+			return
+		
+		dataset_index = self.thumbnail_list.get_dataset_index(view_index)
+		
+		# current_item_indexを更新してからon_view_imageを呼び出す
+		self.current_item_index = dataset_index
+		self.on_view_image(event)
 	
 	def on_thumbnail_context_menu(self, event: wx.ContextMenuEvent):
 		"""サムネイルリストのコンテキストメニューを表示します。"""
@@ -1335,7 +1351,7 @@ def main():
 	except (AttributeError, OSError):
 		try:
 			# Windows Vista以降: System DPI Aware
-			ctypes.windll.user32.SetProcessDPIAware()
+			ctypes.windll.user32.SetProcessDpiAware()
 		except (AttributeError, OSError):
 			# DPI設定に対応していないOSの場合は何もしない
 			pass
