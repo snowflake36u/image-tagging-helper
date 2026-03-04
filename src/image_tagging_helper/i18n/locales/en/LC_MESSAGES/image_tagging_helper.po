@@ -53,10 +53,10 @@ msgid "tooltip:paste"
 msgstr "Paste"
 
 msgid "action:select_all"
-msgstr ""
+msgstr "Select &All"
 
 msgid "tooltip:select_all"
-msgstr ""
+msgstr "Select All"
 
 msgid "action:insert_blank_tag"
 msgstr "Insert &Blank Tag"
@@ -128,10 +128,10 @@ msgid "tooltip:filter_images"
 msgstr "Filter Images"
 
 msgid "action:clear_filter"
-msgstr ""
+msgstr "C&lear Filter"
 
 msgid "tooltip:clear_filter"
-msgstr ""
+msgstr "Clear Filter"
 
 msgid "ui_group:view"
 msgstr "&View"

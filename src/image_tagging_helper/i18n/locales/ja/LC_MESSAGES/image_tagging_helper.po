@@ -53,10 +53,10 @@ msgid "tooltip:paste"
 msgstr "貼り付け"
 
 msgid "action:select_all"
-msgstr ""
+msgstr "全て選択(&A)"
 
 msgid "tooltip:select_all"
-msgstr ""
+msgstr "全て選択"
 
 msgid "action:insert_blank_tag"
 msgstr "空のタグを挿入(&B)"
@@ -128,10 +128,10 @@ msgid "tooltip:filter_images"
 msgstr "画像をフィルタ"
 
 msgid "action:clear_filter"
-msgstr ""
+msgstr "フィルタをクリア(&L)"
 
 msgid "tooltip:clear_filter"
-msgstr ""
+msgstr "フィルタをクリア"
 
 msgid "ui_group:view"
 msgstr "表示(&V)"
@@ -252,3 +252,4 @@ msgstr "重み"
 
 #~ msgid "label:font"
 #~ msgstr "フォント"
+
