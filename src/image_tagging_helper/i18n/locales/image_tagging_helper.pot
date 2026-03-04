@@ -52,6 +52,12 @@ msgstr ""
 msgid "tooltip:paste"
 msgstr ""
 
+msgid "action:select_all"
+msgstr ""
+
+msgid "tooltip:select_all"
+msgstr ""
+
 msgid "action:insert_blank_tag"
 msgstr ""
 
@@ -121,6 +127,12 @@ msgstr ""
 msgid "tooltip:filter_images"
 msgstr ""
 
+msgid "action:clear_filter"
+msgstr ""
+
+msgid "tooltip:clear_filter"
+msgstr ""
+
 msgid "ui_group:view"
 msgstr ""
 
@@ -169,7 +181,7 @@ msgstr ""
 msgid "title:restart_required"
 msgstr ""
 
-msgid "action:add_tags_to_filter"
+msgid "action:add_tag_to_filter"
 msgstr ""
 
 msgid "action:append_tags_to_current_items"
@@ -203,6 +215,12 @@ msgid "message:unsaved_changes"
 msgstr ""
 
 msgid "title:save_changes"
+msgstr ""
+
+msgid "statusbar:filtered_items"
+msgstr ""
+
+msgid "statusbar:total_items"
 msgstr ""
 
 msgid "title:app_main_window"

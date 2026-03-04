@@ -73,6 +73,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def _init_ui(self):
 		"""UI全体の初期化"""
 		self._init_menubar()
+		self.CreateStatusBar()
 		
 		main_panel = wx.Panel(self)
 		
@@ -101,6 +102,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		# 初期フォーカスをサムネイルリストに設定
 		wx.CallAfter(self.thumbnail_list.SetFocus)
+		self._update_statusbar()
 	
 	def _init_accelerators(self):
 		"""アクセラレータテーブルを初期化して設定します。"""
@@ -554,6 +556,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 			# マッチする画像がない場合
 			self.current_item_index = wx.NOT_FOUND
 			self._update_views_for_item_selection(wx.NOT_FOUND)
+		self._update_statusbar()
 	
 	def on_filter_cancel(self, event: wx.CommandEvent):
 		"""検索コントロールでキャンセルボタンが押されたときの処理。"""
@@ -565,6 +568,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		if current_item_index < self.thumbnail_list.GetItemCount():
 			self.thumbnail_list.select_item(current_item_index)
 			self._update_views_for_item_selection(current_item_index)
+		self._update_statusbar()
 	
 	def on_filter_images_menu(self, event: wx.CommandEvent):
 		"""検索バーにフォーカスを移動します。"""
@@ -1168,6 +1172,27 @@ class ImageTaggingHelperFrame(wx.Frame):
 	
 	# === UI更新メソッド ===
 	
+	def _update_statusbar(self):
+		"""ステータスバーのテキストを更新します。"""
+		if self.dataset is None or not self.dataset.initialized:
+			self.SetStatusText("")
+			return
+		
+		total_items = len(self.dataset)
+		
+		if self.thumbnail_list.filtered_indices is not None:
+			filtered_items = self.thumbnail_list.GetItemCount()
+			status_text = __("statusbar:filtered_items").format(
+				filtered_count=filtered_items,
+				total_count=total_items
+			)
+		else:
+			status_text = __("statusbar:total_items").format(
+				total_count=total_items
+			)
+		
+		self.SetStatusText(' ' + status_text)
+	
 	def _update_layout_visibility(self):
 		"""メニューのチェック状態に基づいてパネルの表示/非表示を更新します。"""
 		show_all_tags = self.toggle_all_tags_menu.IsChecked()
@@ -1287,6 +1312,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 			# データセットが空の場合のビュー更新
 			self.current_item_index = wx.NOT_FOUND
 			self._update_views_for_item_selection(wx.NOT_FOUND)
+		self._update_statusbar()
 	
 	@staticmethod
 	def launch(config: Config):

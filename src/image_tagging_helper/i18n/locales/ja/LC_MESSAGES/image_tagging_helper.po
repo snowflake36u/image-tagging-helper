@@ -52,6 +52,12 @@ msgstr "貼り付け(&P)"
 msgid "tooltip:paste"
 msgstr "貼り付け"
 
+msgid "action:select_all"
+msgstr ""
+
+msgid "tooltip:select_all"
+msgstr ""
+
 msgid "action:insert_blank_tag"
 msgstr "空のタグを挿入(&B)"
 
@@ -121,6 +127,12 @@ msgstr "フィルタ(&F)"
 msgid "tooltip:filter_images"
 msgstr "画像をフィルタ"
 
+msgid "action:clear_filter"
+msgstr ""
+
+msgid "tooltip:clear_filter"
+msgstr ""
+
 msgid "ui_group:view"
 msgstr "表示(&V)"
 
@@ -169,8 +181,8 @@ msgstr "言語の変更にはアプリの再起動が必要です。"
 msgid "title:restart_required"
 msgstr "再起動が必要"
 
-msgid "action:add_tags_to_filter"
-msgstr ""
+msgid "action:add_tag_to_filter"
+msgstr "フィルタにタグを追加(&F)"
 
 msgid "action:append_tags_to_current_items"
 msgstr "現在の項目にタグを追加(&1)"
@@ -205,6 +217,12 @@ msgstr "キャプションデータが変更されています。保存します
 msgid "title:save_changes"
 msgstr "変更の保存"
 
+msgid "statusbar:filtered_items"
+msgstr "{filtered_count} / {total_count} 項目"
+
+msgid "statusbar:total_items"
+msgstr "{total_count} 項目"
+
 msgid "title:app_main_window"
 msgstr "Image Tagging Helper"
 
@@ -234,28 +252,3 @@ msgstr "重み"
 
 #~ msgid "label:font"
 #~ msgstr "フォント"
-
-msgid "action:add_tag_to_filter"
-msgstr "フィルタにタグを追加(&F)"
-
-#~ msgid "action:add_n_tags_to_filter"
-#~ msgstr "フィルタにタグを追加(&F)"
-
-#~ msgid "action:append_n_tags_to_current_items"
-#~ msgstr "現在の項目にタグを追加(&1)"
-
-#~ msgid "action:remove_n_tags_from_current_items"
-#~ msgstr "現在の項目からタグを削除(&2)"
-
-#~ msgid "action:append_n_tags_to_filtered_items"
-#~ msgstr "フィルター済み項目にタグを追加(&3)"
-
-#~ msgid "action:remove_n_tags_from_filtered_items"
-#~ msgstr "フィルター済み項目からタグを削除(&4)"
-
-#~ msgid "action:append_n_tags_to_all_items"
-#~ msgstr "全ての項目にタグを追加(&5)"
-
-#~ msgid "action:remove_n_tags_from_all_items"
-#~ msgstr "全ての項目からタグを削除(&6)"
-
