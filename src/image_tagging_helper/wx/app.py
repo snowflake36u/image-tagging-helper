@@ -23,6 +23,7 @@ APP_NAME = "Image Tagging Helper"
 APP_ID = "image_tagging_helper"
 
 SASH_MIN_WIDTH = 120
+STATUSBAR_PADDING = 10
 
 # 新しいメニュー項目IDを定義
 ID_APPEND_TAG_TO_CURRENT = wx.NewIdRef()
@@ -73,8 +74,12 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def _init_ui(self):
 		"""UI全体の初期化"""
 		self._init_menubar()
-		self.CreateStatusBar()
 		
+		# ステータスバーの作成
+		self.statusbar = self.CreateStatusBar(2)
+		self.statusbar.SetStatusWidths([STATUSBAR_PADDING, -1])
+		
+		# 各コントロールの配置
 		main_panel = wx.Panel(self)
 		
 		path_panel = self._create_path_panel(main_panel)
@@ -99,6 +104,9 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		# Tabキーによるフォーカス遷移を制御するためのイベントフック
 		self.Bind(wx.EVT_CHAR_HOOK, self.on_char_hook)
+		
+		# メニュー項目のヘルプ文字列をステータスバーの1番目のフィールドに表示するためのイベントバインド
+		self.Bind(wx.EVT_MENU_HIGHLIGHT, self.on_menu_highlight)
 		
 		# 初期フォーカスをサムネイルリストに設定
 		wx.CallAfter(self.thumbnail_list.SetFocus)
@@ -417,7 +425,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 		
 		self.thumbnail_list = ImageVListBox(self.thumbnail_panel, style=wx.VSCROLL | wx.ALWAYS_SHOW_SB)
 		self.thumbnail_list.Bind(wx.EVT_LISTBOX, self.on_thumbnail_select)
-		self.thumbnail_list.Bind(wx.EVT_LISTBOX_DCLICK, self.on_thumbnail_double_click)  # AI_REVIEW: ダブルクリックイベントを追加
+		self.thumbnail_list.Bind(wx.EVT_LISTBOX_DCLICK, self.on_thumbnail_double_click)
 		self.thumbnail_list.Bind(wx.EVT_CONTEXT_MENU, self.on_thumbnail_context_menu)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
@@ -1191,7 +1199,7 @@ class ImageTaggingHelperFrame(wx.Frame):
 	def _update_statusbar(self):
 		"""ステータスバーのテキストを更新します。"""
 		if self.dataset is None or not self.dataset.initialized:
-			self.SetStatusText("")
+			self.SetStatusText("", 0)
 			return
 		
 		total_items = len(self.dataset)
@@ -1207,7 +1215,29 @@ class ImageTaggingHelperFrame(wx.Frame):
 				total_count=total_items
 			)
 		
-		self.SetStatusText(' ' + status_text)
+		status_text = ' ' + status_text
+		self.statusbar.SetStatusText(status_text, 0)
+		
+		# 幅を計算
+		w, h = self.statusbar.GetTextExtent(status_text)
+		self.statusbar.SetStatusWidths([w + STATUSBAR_PADDING, -1])
+	
+	def on_menu_highlight(self, event: wx.MenuEvent):
+		"""
+		メニュー項目がハイライトされたときにステータスバーの1番目のフィールドにヘルプ文字列を表示します。
+		"""
+		menu_id = event.GetMenuId()
+		item = self.GetMenuBar().FindItemById(menu_id)
+		
+		if item:
+			# メニュー項目のヘルプテキストを取得
+			help_text = item.GetHelp()
+			
+			# 2番目のフィールド（インデックス1）に表示
+			self.statusbar.SetStatusText(help_text, 1)
+		else:
+			# ハイライトされたメニュー項目がない場合、ステータスバーの1番目のフィールドをクリア
+			self.statusbar.SetStatusText("", 1)
 	
 	def _update_layout_visibility(self):
 		"""メニューのチェック状態に基づいてパネルの表示/非表示を更新します。"""
