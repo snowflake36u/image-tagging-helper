@@ -1,27 +1,31 @@
-import bisect
 import wx
 import wx.lib.mixins.listctrl as listmix
 
 from src.image_tagging_helper.i18n import __
 from src.image_tagging_helper.models.dataset import Dataset
 
-class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
+class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSorterMixin):
 	"""
 	データセット全体のタグとその出現回数を表示・管理するリストコントロール。
+	ヘッダーをクリックすることで、各列でソートが可能です。
 	"""
 	
 	def __init__(self, parent: wx.Window, *args, **kwargs):
 		"""
-		DatasetTagsListを初期化します。
+		AllTagsListを初期化します。
 
 		Args:
 			 parent: 親ウィンドウ。
 		"""
-		super().__init__(parent, *args, style=wx.LC_REPORT, **kwargs)
+		wx.ListCtrl.__init__(self, parent, *args, style=wx.LC_REPORT, **kwargs)
 		listmix.ListCtrlAutoWidthMixin.__init__(self)
 		
+		# ソートのためにitemDataMapを初期化
+		self.itemDataMap = { }
+		# ColumnSorterMixinを初期化（2列）
+		listmix.ColumnSorterMixin.__init__(self, 2)
+		
 		self.dataset: Dataset | None = None
-		self.all_tags: list[str] = []
 		
 		self.InsertColumn(0, __("label:tag"), width=150)
 		self.InsertColumn(1, __("label:image_count"), width=50, format=wx.LIST_FORMAT_RIGHT)
@@ -30,6 +34,10 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		# コンテキストメニューイベントをバインド
 		self.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
 		self.Bind(wx.EVT_MENU, self.on_select_all, id=wx.ID_SELECTALL)
+	
+	def GetListCtrl(self):
+		"""ColumnSorterMixinのためにListCtrlインスタンスを返します。"""
+		return self
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""
@@ -52,45 +60,61 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		データセット全体のタグとその出現回数をリストに表示します。
 		"""
 		self.DeleteAllItems()
+		self.itemDataMap.clear()
 		
 		if not self.dataset or len(self.dataset) == 0:
-			self.all_tags = []
 			return
 		
-		# タグをアルファベット順にソートして表示
-		sorted_tags = sorted(self.dataset.tag_usages.items())
-		
 		# 空白タグを除外
-		valid_tags = [(t, c) for t, c in sorted_tags if t.strip()]
+		valid_tags = [(t, c) for t, c in self.dataset.tag_usages.items() if t.strip()]
 		
+		# リストにアイテムを追加
 		for i, (tag_text, count) in enumerate(valid_tags):
-			self.InsertItem(i, tag_text)
-			self.SetItem(i, 1, str(count))
+			index = self.InsertItem(self.GetItemCount(), tag_text)
+			self.SetItem(index, 1, str(count))
+			# ソート用のデータを設定
+			self.SetItemData(index, i)
+			self.itemDataMap[i] = (tag_text, count)
 		
-		# タグリストを保存（更新用）
-		self.all_tags = [tag_text for tag_text, _ in valid_tags]
+		# 初期ソート（タグ名、昇順）
+		self.SortListItems(0, 1)
 	
 	def on_tag_usage_changed(self, tag_text: str, count: int):
 		"""
 		タグの使用回数が変更されたときの処理。
-		リスト内の該当するタグのカウントを更新します。
+		リスト内の該当するタグのカウントを更新、またはアイテムの追加・削除を行います。
 		"""
 		if not tag_text.strip():
 			return
 		
-		idx = bisect.bisect_left(self.all_tags, tag_text)
-		exists = idx < len(self.all_tags) and self.all_tags[idx] == tag_text
+		# FindItemを使用して、タグ名でアイテムを検索
+		item_index = self.FindItem(-1, tag_text)
 		
-		if exists:
+		if item_index != wx.NOT_FOUND:  # アイテムが存在する場合
 			if count > 0:
-				self.SetItem(idx, 1, str(count))
+				# カウントを更新
+				self.SetItem(item_index, 1, str(count))
+				# ソート用データを更新
+				item_data_key = self.GetItemData(item_index)
+				self.itemDataMap[item_data_key] = (tag_text, count)
 			else:
-				self.DeleteItem(idx)
-				del self.all_tags[idx]
-		elif count > 0:
-			self.InsertItem(idx, tag_text)
-			self.SetItem(idx, 1, str(count))
-			self.all_tags.insert(idx, tag_text)
+				# アイテムを削除
+				item_data_key = self.GetItemData(item_index)
+				del self.itemDataMap[item_data_key]
+				self.DeleteItem(item_index)
+		elif count > 0:  # アイテムが存在せず、追加する必要がある場合
+			# 新しいキーを決定
+			new_key = max(self.itemDataMap.keys()) + 1 if self.itemDataMap else 0
+			# アイテムを追加
+			index = self.InsertItem(self.GetItemCount(), tag_text)
+			self.SetItem(index, 1, str(count))
+			self.SetItemData(index, new_key)
+			self.itemDataMap[new_key] = (tag_text, count)
+		
+		# 現在のソート状態を維持して再ソート
+		col, asc = self.GetSortState()
+		if col != -1:
+			self.SortListItems(col, asc)
 	
 	def apply_font(self, font: wx.Font):
 		"""
