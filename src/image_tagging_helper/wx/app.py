@@ -694,8 +694,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			self.image_tags_grid.SelectAll()
 		elif focus_win == self.all_tags_list:
 			# AllTagsListにwx.ID_SELECTALLイベントを転送
-			select_all_event = wx.CommandEvent(wx.EVT_MENU.typeId, wx.ID_SELECTALL)
-			self.all_tags_list.GetEventHandler().ProcessEvent(select_all_event)
+			self.all_tags_list.select_all()
 		else:
 			# 他のテキストコントロールなどの標準的な全選択動作
 			if hasattr(focus_win, "SelectAll"):

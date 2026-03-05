@@ -165,6 +165,9 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		"""
 		リスト内のすべてのアイテムを選択します。
 		"""
+		self.select_all()
+	
+	def select_all(self):
 		for i in range(self.GetItemCount()):
 			self.Select(i)
 	
