@@ -186,3 +186,25 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 			if wx.TheClipboard.Open():
 				wx.TheClipboard.SetData(wx.TextDataObject(text_to_copy))
 				wx.TheClipboard.Close()
+	
+	def clear_selection(self):
+		for i in range(self.GetItemCount()):
+			self.Select(i, on=False)
+	
+	def select_tags(self, tags: list[str]):
+		"""
+		指定されたタグのリストに一致するアイテムを選択します。
+		"""
+		# 最初にすべての選択を解除
+		self.clear_selection()
+		
+		first_selected_index = -1
+		for tag in tags:
+			item_index = self.FindItem(-1, tag)
+			if item_index != wx.NOT_FOUND:
+				self.Select(item_index, on=True)
+				if first_selected_index == -1:
+					first_selected_index = item_index
+		
+		if first_selected_index != -1:
+			self.EnsureVisible(first_selected_index)
