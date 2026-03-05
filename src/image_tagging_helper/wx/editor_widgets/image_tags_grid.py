@@ -1,8 +1,5 @@
 import wx
 import wx.grid
-import io
-import csv
-
 from image_tagging_helper.models.dataset import Dataset
 from image_tagging_helper.models.caption import Tag
 from image_tagging_helper.models.controller import DatasetController
@@ -103,6 +100,14 @@ class ImageTagsGrid(wx.grid.Grid):
 		"""
 		key_code = event.GetKeyCode()
 		
+		if event.ControlDown() and key_code == ord('C'):
+			self.copy_selection()
+			return
+		
+		if event.ControlDown() and key_code == ord('A'):
+			self.SelectAll()
+			return
+		
 		if key_code == wx.WXK_TAB:
 			if event.ShiftDown():
 				self.Navigate(wx.NAVDIR_PREVIOUS)
@@ -163,55 +168,50 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.focus_cell(row, col)
 	
 	def on_copy(self, event: wx.CommandEvent):
+		self.copy_selection()
+	
+	def copy_selection(self):
 		"""
 		選択されているセルの内容をTSV形式でクリップボードにコピーします。
 		"""
-		# 選択されているブロックを取得
-		top_left = self.GetSelectionBlockTopLeft()
-		bottom_right = self.GetSelectionBlockBottomRight()
-		
-		# 選択されているセルを取得
-		selected_cells = self.GetSelectedCells()
-		
-		if not top_left and not selected_cells:
-			# 単一セルの選択の場合 (カーソル位置)
-			row = self.GetGridCursorRow()
-			col = self.GetGridCursorCol()
-			if row != -1 and col != -1:
-				data = self.GetCellValue(row, col)
-				self._copy_text_to_clipboard(data)
+		if self.GetNumberRows() == 0:
 			return
 		
-		output = io.StringIO()
-		writer = csv.writer(output, delimiter='\t')
+		rows = self.GetNumberRows()
+		cols = self.GetNumberCols()
 		
-		# 選択範囲の行と列を特定
-		min_row, max_row = float('inf'), float('-inf')
-		min_col, max_col = float('inf'), float('-inf')
+		# 選択範囲の境界を求める
+		min_row, max_row = rows, -1
+		min_col, max_col = cols, -1
 		
-		if top_left:
-			for (r1, c1), (r2, c2) in zip(top_left, bottom_right):
-				min_row = min(min_row, r1)
-				max_row = max(max_row, r2)
-				min_col = min(min_col, c1)
-				max_col = max(max_col, c2)
+		has_selection = False
 		
-		if selected_cells:
-			for r, c in selected_cells:
-				min_row = min(min_row, r)
-				max_row = max(max_row, r)
-				min_col = min(min_col, c)
-				max_col = max(max_col, c)
+		for r in range(rows):
+			for c in range(cols):
+				if self.IsInSelection(r, c):
+					has_selection = True
+					min_row = min(min_row, r)
+					max_row = max(max_row, r)
+					min_col = min(min_col, c)
+					max_col = max(max_col, c)
 		
-		if min_row == float('inf'):  # No selection
+		if not has_selection:
 			return
 		
-		# データを書き込み
+		# 矩形範囲内のデータを取得してTSV形式にする
+		text_rows = []
 		for r in range(min_row, max_row + 1):
-			row_data = [self.GetCellValue(r, c) for c in range(min_col, max_col + 1)]
-			writer.writerow(row_data)
+			row_data = []
+			for c in range(min_col, max_col + 1):
+				if self.IsInSelection(r, c):
+					row_data.append(self.GetCellValue(r, c))
+				else:
+					row_data.append("")
+			text_rows.append("\t".join(row_data))
 		
-		self._copy_text_to_clipboard(output.getvalue())
+		text = "\n".join(text_rows)
+		
+		self._copy_text_to_clipboard(text)
 	
 	def on_select_all(self, event: wx.CommandEvent):
 		"""

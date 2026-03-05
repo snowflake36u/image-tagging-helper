@@ -645,10 +645,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			win = win.GetParent()
 		
 		if is_grid_focus:
-			# ImageTagsGridにwx.ID_COPYイベントを転送
-			# wx.CommandEventを新たに作成し、IDをwx.ID_COPYに設定してQueueEventで送る
-			copy_event = wx.CommandEvent(wx.EVT_MENU.typeId, wx.ID_COPY)
-			self.image_tags_grid.GetEventHandler().ProcessEvent(copy_event)
+			self.image_tags_grid.copy_selection()
 		elif focus_win == self.all_tags_list:
 			self.all_tags_list.copy_selected_tags_to_clipboard()
 		else:
