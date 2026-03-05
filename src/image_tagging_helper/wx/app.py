@@ -7,6 +7,7 @@ import bisect
 import os
 import sys
 import subprocess
+from typing import TYPE_CHECKING
 
 from image_tagging_helper.core.config import Config
 from image_tagging_helper.models.caption import CaptionFormatConfig, Tag
@@ -28,6 +29,9 @@ from image_tagging_helper.wx.frame_menu import (
 	ID_ADD_TAG_TO_FILTER,
 )
 from image_tagging_helper.i18n import setup_translation, __
+
+if TYPE_CHECKING:
+	from image_tagging_helper.models.diff import DatasetDiff
 
 # アプリケーションのドメイン名を設定
 APP_NAME = "Image Tagging Helper"
@@ -52,6 +56,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			config: アプリケーション設定。
 		"""
 		self.config = config
+		self.base_title = title
 		
 		# ウィンドウサイズを復元
 		window_size = self.load_window_size_settings()
@@ -511,6 +516,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		"""データセットを保存します。"""
 		if self.dataset.initialized:
 			self.dataset.save(self.caption_ext, self.caption_format_config)
+			self._update_title()
 	
 	def on_thumbnail_select(self, event: wx.CommandEvent):
 		"""
@@ -986,9 +992,28 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 	
 	# === UI更新メソッド ===
 	
+	def _on_dataset_diff_applied(self, sender: str, diff: 'DatasetDiff'):
+		"""
+		データセットの変更が適用されたときに呼び出されます。
+		
+		Args:
+			sender: 変更の送信元ID (未使用)。
+			diff: 適用された変更内容 (未使用)。
+		"""
+		self._update_title()
+	
+	def _update_title(self):
+		"""ウィンドウタイトルを更新して、ダーティ状態を示します。"""
+		title = self.base_title
+		if self.dataset.initialized and self.dataset.is_dirty:
+			title += " *"
+		
+		if self.GetTitle() != title:
+			wx.CallAfter(self.SetTitle, title)
+	
 	def _update_statusbar(self):
 		"""ステータスバーのテキストを更新します。"""
-		if self.dataset is None or not self.dataset.initialized:
+		if not self.dataset.initialized:
 			self.SetStatusText("", 0)
 			return
 		
@@ -1126,12 +1151,16 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		Args:
 			folder_path: 画像とキャプションファイルが含まれるフォルダのパス。
 		"""
+		if self.dataset.initialized:
+			self.dataset.remove_diff_applied_listener(self._on_dataset_diff_applied)
+		
 		self.dataset.load(
 			folder_path,
 			self.image_exts,
 			caption_ext=self.caption_ext,
 			caption_format_config=self.caption_format_config,
 		)
+		self.dataset.add_diff_applied_listener(self._on_dataset_diff_applied)
 		self.remote_controller = self.dataset.get_controller()
 		dataset = self.dataset
 		
@@ -1139,7 +1168,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.image_tags_grid.set_dataset(dataset)
 		self.all_tags_list.set_dataset(dataset)
 		
-		if dataset and len(dataset) > 0:
+		if dataset.initialized is not None and len(dataset) > 0:
 			self.thumbnail_list.SetSelection(0)
 			# SetSelectionはイベントを発生させないため、手動で更新処理を呼び出す
 			self.current_item_index = 0
@@ -1149,6 +1178,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			self.current_item_index = wx.NOT_FOUND
 			self._update_views_for_item_selection(wx.NOT_FOUND)
 		self._update_statusbar()
+		self._update_title()
 	
 	@staticmethod
 	def launch(config: Config):

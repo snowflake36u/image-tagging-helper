@@ -33,8 +33,6 @@ class HistoryManager:
 			action (HistoryAction): 実行するアクション。
 			sender (str): 操作の送信元ID。
 		"""
-		action.apply(sender)
-		
 		# 保存された状態からUndoして新しい操作を行った場合、
 		# 以前の保存状態には戻れなくなるため、saved_indexを無効化する
 		if self._saved_index > len(self.undo_stack):
@@ -42,6 +40,8 @@ class HistoryManager:
 		
 		self.undo_stack.append(action)
 		self.redo_stack.clear()
+		
+		action.apply(sender)
 	
 	def undo(self, sender: str = None):
 		"""

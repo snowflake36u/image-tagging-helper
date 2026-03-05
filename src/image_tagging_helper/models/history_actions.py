@@ -44,7 +44,7 @@ class InsertBlankAction(HistoryAction):
 	"""
 	
 	@staticmethod
-	def create(self, dataset, target, position):
+	def create(dataset, target, position):
 		"""
 		空タグ挿入アクションを生成します。
 		
