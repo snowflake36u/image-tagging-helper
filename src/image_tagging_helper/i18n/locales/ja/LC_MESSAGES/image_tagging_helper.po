@@ -1,3 +1,78 @@
+msgid "label:file_path"
+msgstr "ファイルパス"
+
+msgid "hint:search_filter"
+msgstr "画像をタグでフィルタ..."
+
+msgid "label:image_list"
+msgstr "画像一覧"
+
+msgid "label:image_tags"
+msgstr "画像のタグ"
+
+msgid "label:all_tags"
+msgstr "全タグ一覧"
+
+msgid "title:choose_a_directory"
+msgstr "フォルダを選択"
+
+msgid "action:view_image"
+msgstr "画像を表示(&V)"
+
+msgid "action:open_in_folder"
+msgstr "ファイルの場所を開く(&I)"
+
+msgid "message:restart_to_apply_language"
+msgstr "言語の変更にはアプリの再起動が必要です。"
+
+msgid "title:restart_required"
+msgstr "再起動が必要"
+
+msgid "action:add_tag_to_filter"
+msgstr "フィルタにタグを追加(&F)"
+
+msgid "action:append_tags_to_current_items"
+msgstr "現在の項目にタグを追加(&1)"
+
+msgid "action:remove_tags_from_current_items"
+msgstr "現在の項目からタグを削除(&2)"
+
+msgid "action:append_tags_to_filtered_items"
+msgstr "フィルター済み項目にタグを追加(&3)"
+
+msgid "action:remove_tags_from_filtered_items"
+msgstr "フィルター済み項目からタグを削除(&4)"
+
+msgid "action:append_tags_to_all_items"
+msgstr "全ての項目にタグを追加(&5)"
+
+msgid "action:remove_tags_from_all_items"
+msgstr "全ての項目からタグを削除(&6)"
+
+msgid "action:replace_tags_in_all_items"
+msgstr "全ての項目でタグを置換(&7)..."
+
+msgid "dialog:enter_new_tag_for_replacement"
+msgstr "'{old_tag}' の置換先のタグを入力してください。"
+
+msgid "title:replace_tag"
+msgstr "タグの置換"
+
+msgid "message:unsaved_changes"
+msgstr "キャプションデータが変更されています。保存しますか？"
+
+msgid "title:save_changes"
+msgstr "変更の保存"
+
+msgid "statusbar:filtered_items"
+msgstr "{filtered_count} / {total_count} 項目"
+
+msgid "statusbar:total_items"
+msgstr "{total_count} 項目"
+
+msgid "title:app_main_window"
+msgstr "Image Tagging Helper"
+
 msgid "ui_group:file"
 msgstr "ファイル(&F)"
 
@@ -64,10 +139,10 @@ msgstr "空のタグを挿入(&B)"
 msgid "tooltip:insert_blank_tag"
 msgstr "空のタグを挿入"
 
-msgid "action:delete_tag"
+msgid "action:delete"
 msgstr "削除(&D)"
 
-msgid "tooltip:delete_tag"
+msgid "tooltip:delete"
 msgstr "削除"
 
 msgid "action:replace_tag"
@@ -97,14 +172,8 @@ msgstr "並べ替え"
 msgid "ui_group:dataset"
 msgstr "データセット(&D)"
 
-msgid "action:view_image"
-msgstr "画像を表示(&V)"
-
 msgid "tooltip:view_image"
 msgstr "画像を表示"
-
-msgid "action:open_in_folder"
-msgstr "ファイルの場所を開く(&I)"
 
 msgid "tooltip:open_in_folder"
 msgstr "ファイルが存在するフォルダを開く"
@@ -157,75 +226,6 @@ msgstr "環境設定(&P)..."
 msgid "tooltip:preferences"
 msgstr "環境設定"
 
-msgid "label:file_path"
-msgstr "ファイルパス"
-
-msgid "hint:search_filter"
-msgstr "画像をタグでフィルタ..."
-
-msgid "label:image_list"
-msgstr "画像一覧"
-
-msgid "label:image_tags"
-msgstr "画像のタグ"
-
-msgid "label:all_tags"
-msgstr "全タグ一覧"
-
-msgid "title:choose_a_directory"
-msgstr "フォルダを選択"
-
-msgid "message:restart_to_apply_language"
-msgstr "言語の変更にはアプリの再起動が必要です。"
-
-msgid "title:restart_required"
-msgstr "再起動が必要"
-
-msgid "action:add_tag_to_filter"
-msgstr "フィルタにタグを追加(&F)"
-
-msgid "action:append_tags_to_current_items"
-msgstr "現在の項目にタグを追加(&1)"
-
-msgid "action:remove_tags_from_current_items"
-msgstr "現在の項目からタグを削除(&2)"
-
-msgid "action:append_tags_to_filtered_items"
-msgstr "フィルター済み項目にタグを追加(&3)"
-
-msgid "action:remove_tags_from_filtered_items"
-msgstr "フィルター済み項目からタグを削除(&4)"
-
-msgid "action:append_tags_to_all_items"
-msgstr "全ての項目にタグを追加(&5)"
-
-msgid "action:remove_tags_from_all_items"
-msgstr "全ての項目からタグを削除(&6)"
-
-msgid "action:replace_tags_in_all_items"
-msgstr "全ての項目でタグを置換(&7)..."
-
-msgid "dialog:enter_new_tag_for_replacement"
-msgstr "'{old_tag}' の置換先のタグを入力してください。"
-
-msgid "title:replace_tag"
-msgstr "タグの置換"
-
-msgid "message:unsaved_changes"
-msgstr "キャプションデータが変更されています。保存しますか？"
-
-msgid "title:save_changes"
-msgstr "変更の保存"
-
-msgid "statusbar:filtered_items"
-msgstr "{filtered_count} / {total_count} 項目"
-
-msgid "statusbar:total_items"
-msgstr "{total_count} 項目"
-
-msgid "title:app_main_window"
-msgstr "Image Tagging Helper"
-
 msgid "title:preferences"
 msgstr "環境設定"
 
@@ -250,6 +250,8 @@ msgstr "画像数"
 msgid "label:weight"
 msgstr "重み"
 
+msgid "action:select_in_all_tags"
+msgstr "全タグ一覧で選択"
+
 #~ msgid "label:font"
 #~ msgstr "フォント"
-

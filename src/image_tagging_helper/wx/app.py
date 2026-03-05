@@ -1,8 +1,6 @@
 import wx
 import wx.grid
 import ctypes
-import csv
-import io
 import bisect
 import os
 import sys
@@ -16,6 +14,7 @@ from image_tagging_helper.models.controller import DatasetController
 from image_tagging_helper.wx.editor_widgets.all_tag_list import AllTagsList
 from image_tagging_helper.wx.editor_widgets.image_list import ImageVListBox
 from image_tagging_helper.wx.editor_widgets.image_tags_grid import ImageTagsGrid
+from image_tagging_helper.wx.events import EVT_SELECT_IN_ALL_TAGS
 from image_tagging_helper.wx.preferences import PreferencesDialog
 from image_tagging_helper.wx.frame_menu import (
 	FrameMenuMixin,
@@ -238,6 +237,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.image_tags_toolbar.Realize()
 		
 		self.image_tags_grid = ImageTagsGrid(self.image_tags_panel)
+		self.image_tags_grid.Bind(EVT_SELECT_IN_ALL_TAGS, self.on_select_in_all_tags)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.image_tags_toolbar, 0, wx.EXPAND)
@@ -786,6 +786,10 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			
 			if not self.thumbnail_list.IsVisible(prev_idx):
 				self.thumbnail_list.ScrollToLine(prev_idx)
+	
+	def on_select_in_all_tags(self, event):
+		"""ImageTagsGridからのイベントを処理し、AllTagsListでタグを選択します。"""
+		self.all_tags_list.select_tags(event.tag_texts)
 	
 	def show_all_tags_context_menu(self, list_ctrl: AllTagsList, selected_tags: list[str], pos: wx.Point):
 		"""

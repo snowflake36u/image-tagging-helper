@@ -79,7 +79,7 @@ class FrameMenuMixin:
 		menu.AppendSeparator()
 		
 		insert_blank_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:insert_blank_tag"), __("tooltip:insert_blank_tag"), 'Ctrl+E')
-		delete_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:delete_tag"), __("tooltip:delete_tag"), 'Ctrl+D')
+		delete_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:delete"), __("tooltip:delete"), 'Ctrl+D')
 		replace_tag_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:replace_tag"), __("tooltip:replace_tag"), 'Ctrl+R')
 		replace_tag_menu.Enable(False)
 		self.Bind(wx.EVT_MENU, self.on_insert_blank_tag, insert_blank_tag_menu)
@@ -113,7 +113,7 @@ class FrameMenuMixin:
 		
 		menu.AppendSeparator()
 		
-		filter_images_menu = self._append_menu_item(menu, wx.ID_FIND, __("action:filter_images"), __("tooltip:filter_images"), 'Ctrl+F')
+		filter_images_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:filter_images"), __("tooltip:filter_images"), 'Ctrl+F')
 		clear_filter_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:clear_filter"), __("tooltip:clear_filter"), 'Shift+G')
 		self.Bind(wx.EVT_MENU, self.on_filter_images_menu, filter_images_menu)
 		self.Bind(wx.EVT_MENU, self.on_filter_cancel, clear_filter_menu)

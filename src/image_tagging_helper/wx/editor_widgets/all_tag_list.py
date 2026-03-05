@@ -191,7 +191,7 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		for i in range(self.GetItemCount()):
 			self.Select(i, on=False)
 	
-	def select_tags(self, tags: list[str]):
+	def select_tags(self, tags: set[str]):
 		"""
 		指定されたタグのリストに一致するアイテムを選択します。
 		"""

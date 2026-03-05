@@ -8,6 +8,7 @@ from image_tagging_helper.models.controller import DatasetController
 from image_tagging_helper.models.diff import (
 	DatasetDiff, AppendDiff, InsertDiff, MoveDiff, DeleteDiff, MutateTagDiff, BatchDiff
 )
+from image_tagging_helper.wx.events import SelectInAllTagsEvent
 
 from image_tagging_helper.i18n import __
 
@@ -35,8 +36,12 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.on_cell_changed)
 		self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
 		self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.on_cell_left_click)
+		self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_context_menu)
 		self.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
+		self.Bind(wx.EVT_MENU, self.on_paste, id=wx.ID_PASTE)
+		self.Bind(wx.EVT_MENU, self.on_delete, id=wx.ID_DELETE)
 		self.Bind(wx.EVT_MENU, self.on_select_all, id=wx.ID_SELECTALL)
+		self.Bind(wx.EVT_MENU, self.on_select_in_all_tags, id=wx.ID_ANY)
 	
 	def _init_grid(self):
 		"""グリッドの初期設定を行います。
@@ -101,6 +106,10 @@ class ImageTagsGrid(wx.grid.Grid):
 			event: wx.KeyEventオブジェクト。
 		"""
 		key_code = event.GetKeyCode()
+		
+		if key_code == wx.WXK_WINDOWS_MENU:
+			self.show_context_menu()
+			return
 		
 		if event.ControlDown() and key_code == ord('C'):
 			self.copy_selection()
@@ -170,8 +179,64 @@ class ImageTagsGrid(wx.grid.Grid):
 		col = event.GetCol()
 		self.focus_cell(row, col)
 	
+	def on_context_menu(self, event):
+		"""コンテキストメニューを表示します。"""
+		# 右クリックされたセルを選択状態にする
+		row = event.GetRow()
+		col = event.GetCol()
+		if not self.IsInSelection(row, col):
+			self.focus_cell(row, col)
+		
+		self.show_context_menu()
+	
+	def show_context_menu(self):
+		"""コンテキストメニューを作成して表示します。"""
+		menu = wx.Menu()
+		
+		# 全タグ一覧で選択
+		item = menu.Append(wx.ID_FIND, __("action:select_in_all_tags"))
+		if not self.get_selected_rows():
+			item.Enable(False)
+		
+		menu.AppendSeparator()
+		
+		# コピー
+		menu.Append(wx.ID_COPY, __("action:copy"))
+		
+		# 貼り付け
+		menu.Append(wx.ID_PASTE, __("action:paste"))
+		
+		# 削除
+		menu.Append(wx.ID_DELETE, __("action:delete"))
+		
+		menu.AppendSeparator()
+		
+		# 全て選択
+		menu.Append(wx.ID_SELECTALL, __("action:select_all"))
+		
+		self.PopupMenu(menu)
+		menu.Destroy()
+	
 	def on_copy(self, event: wx.CommandEvent):
 		self.copy_selection()
+	
+	def on_paste(self, event: wx.CommandEvent):
+		self.paste_from_clipboard()
+	
+	def on_delete(self, event: wx.CommandEvent):
+		self.delete_selected_tags()
+	
+	def on_select_in_all_tags(self, event: wx.CommandEvent):
+		"""選択されたタグを全タグ一覧で選択するためのイベントを発行します。"""
+		tag_texts = set([
+			self.GetCellValue(row, 0) for row in self.get_selected_rows()
+		])
+		
+		if not tag_texts:
+			return
+		
+		evt = SelectInAllTagsEvent(self.GetId(), tag_texts)
+		wx.PostEvent(self, evt)
 	
 	def copy_selection(self):
 		"""

@@ -1,3 +1,78 @@
+msgid "label:file_path"
+msgstr "File Path"
+
+msgid "hint:search_filter"
+msgstr "Filter images by tag..."
+
+msgid "label:image_list"
+msgstr "Image List"
+
+msgid "label:image_tags"
+msgstr "Image Tags"
+
+msgid "label:all_tags"
+msgstr "All Tags"
+
+msgid "title:choose_a_directory"
+msgstr "Choose a Directory"
+
+msgid "action:view_image"
+msgstr "&View Image"
+
+msgid "action:open_in_folder"
+msgstr "Open &in Folder"
+
+msgid "message:restart_to_apply_language"
+msgstr "Restart the application to apply the language change."
+
+msgid "title:restart_required"
+msgstr "Restart Required"
+
+msgid "action:add_tag_to_filter"
+msgstr "Add tags to &filter"
+
+msgid "action:append_tags_to_current_items"
+msgstr "Append tags to current items (&1)"
+
+msgid "action:remove_tags_from_current_items"
+msgstr "Remove tags from current items (&2)"
+
+msgid "action:append_tags_to_filtered_items"
+msgstr "Append tags to filtered items (&3)"
+
+msgid "action:remove_tags_from_filtered_items"
+msgstr "Remove tags from filtered items (&4)"
+
+msgid "action:append_tags_to_all_items"
+msgstr "Append tags to all items (&5)"
+
+msgid "action:remove_tags_from_all_items"
+msgstr "Remove tags from all items (&6)"
+
+msgid "action:replace_tags_in_all_items"
+msgstr "Replace tags in all items (&7)..."
+
+msgid "dialog:enter_new_tag_for_replacement"
+msgstr "Enter new tag for replacement of '{old_tag}'"
+
+msgid "title:replace_tag"
+msgstr "Replace Tag"
+
+msgid "message:unsaved_changes"
+msgstr "There are unsaved changes. Do you want to save?"
+
+msgid "title:save_changes"
+msgstr "Save Changes"
+
+msgid "statusbar:filtered_items"
+msgstr "{filtered_count} / {total_count} items"
+
+msgid "statusbar:total_items"
+msgstr "{total_count} items"
+
+msgid "title:app_main_window"
+msgstr "Image Tagging Helper"
+
 msgid "ui_group:file"
 msgstr "&File"
 
@@ -64,10 +139,10 @@ msgstr "Insert &Blank Tag"
 msgid "tooltip:insert_blank_tag"
 msgstr "Insert Blank Tag"
 
-msgid "action:delete_tag"
+msgid "action:delete"
 msgstr "&Delete"
 
-msgid "tooltip:delete_tag"
+msgid "tooltip:delete"
 msgstr "Delete"
 
 msgid "action:replace_tag"
@@ -97,14 +172,8 @@ msgstr "Sort"
 msgid "ui_group:dataset"
 msgstr "&Dataset"
 
-msgid "action:view_image"
-msgstr "&View Image"
-
 msgid "tooltip:view_image"
 msgstr "View Image"
-
-msgid "action:open_in_folder"
-msgstr "Open &in Folder"
 
 msgid "tooltip:open_in_folder"
 msgstr "Open in Folder"
@@ -157,75 +226,6 @@ msgstr "&Preferences..."
 msgid "tooltip:preferences"
 msgstr "Preferences"
 
-msgid "label:file_path"
-msgstr "File Path"
-
-msgid "hint:search_filter"
-msgstr "Filter images by tag..."
-
-msgid "label:image_list"
-msgstr "Image List"
-
-msgid "label:image_tags"
-msgstr "Image Tags"
-
-msgid "label:all_tags"
-msgstr "All Tags"
-
-msgid "title:choose_a_directory"
-msgstr "Choose a Directory"
-
-msgid "message:restart_to_apply_language"
-msgstr "Restart the application to apply the language change."
-
-msgid "title:restart_required"
-msgstr "Restart Required"
-
-msgid "action:add_tag_to_filter"
-msgstr "Add tags to &filter"
-
-msgid "action:append_tags_to_current_items"
-msgstr "Append tags to current items (&1)"
-
-msgid "action:remove_tags_from_current_items"
-msgstr "Remove tags from current items (&2)"
-
-msgid "action:append_tags_to_filtered_items"
-msgstr "Append tags to filtered items (&3)"
-
-msgid "action:remove_tags_from_filtered_items"
-msgstr "Remove tags from filtered items (&4)"
-
-msgid "action:append_tags_to_all_items"
-msgstr "Append tags to all items (&5)"
-
-msgid "action:remove_tags_from_all_items"
-msgstr "Remove tags from all items (&6)"
-
-msgid "action:replace_tags_in_all_items"
-msgstr "Replace tags in all items (&7)..."
-
-msgid "dialog:enter_new_tag_for_replacement"
-msgstr "Enter new tag for replacement of '{old_tag}'"
-
-msgid "title:replace_tag"
-msgstr "Replace Tag"
-
-msgid "message:unsaved_changes"
-msgstr "There are unsaved changes. Do you want to save?"
-
-msgid "title:save_changes"
-msgstr "Save Changes"
-
-msgid "statusbar:filtered_items"
-msgstr "{filtered_count} / {total_count} items"
-
-msgid "statusbar:total_items"
-msgstr "{total_count} items"
-
-msgid "title:app_main_window"
-msgstr "Image Tagging Helper"
-
 msgid "title:preferences"
 msgstr "Preferences"
 
@@ -250,6 +250,8 @@ msgstr "#images"
 msgid "label:weight"
 msgstr "Weight"
 
+msgid "action:select_in_all_tags"
+msgstr "&Select in All Tags"
+
 #~ msgid "label:font"
 #~ msgstr "Font"
-
