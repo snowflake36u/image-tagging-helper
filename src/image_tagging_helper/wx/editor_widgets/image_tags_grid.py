@@ -1,5 +1,7 @@
 import wx
 import wx.grid
+import csv
+import io
 from image_tagging_helper.models.dataset import Dataset
 from image_tagging_helper.models.caption import Tag
 from image_tagging_helper.models.controller import DatasetController
@@ -108,6 +110,10 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.SelectAll()
 			return
 		
+		if event.ControlDown() and key_code == ord('V'):
+			self.paste_from_clipboard()
+			return
+		
 		if key_code == wx.WXK_TAB:
 			if event.ShiftDown():
 				self.Navigate(wx.NAVDIR_PREVIOUS)
@@ -146,10 +152,7 @@ class ImageTagsGrid(wx.grid.Grid):
 			return
 		
 		if key_code == wx.WXK_DELETE:
-			if self.dataset and self.item_index is not None:
-				# ユーザー操作として実行するため、senderがNoneのコントローラーを取得して実行する
-				# これにより、変更通知がUIに正しく反映される
-				self.remote_controller.remove_tags_at(self.item_index, self.get_selected_rows())
+			self.delete_selected_tags()
 			return
 		
 		event.Skip()
@@ -213,12 +216,6 @@ class ImageTagsGrid(wx.grid.Grid):
 		
 		self._copy_text_to_clipboard(text)
 	
-	def on_select_all(self, event: wx.CommandEvent):
-		"""
-		グリッド内のすべてのセルを選択します。
-		"""
-		self.SelectAll()
-	
 	def _copy_text_to_clipboard(self, text: str):
 		"""
 		指定されたテキストをクリップボードにコピーします。
@@ -229,6 +226,55 @@ class ImageTagsGrid(wx.grid.Grid):
 		if wx.TheClipboard.Open():
 			wx.TheClipboard.SetData(wx.TextDataObject(text))
 			wx.TheClipboard.Close()
+	
+	def paste_from_clipboard(self):
+		"""クリップボードからタグを貼り付けます。"""
+		if not self.remote_controller or self.item_index is None:
+			return
+		
+		text = ""
+		if wx.TheClipboard.Open():
+			if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_TEXT)):
+				data = wx.TextDataObject()
+				wx.TheClipboard.GetData(data)
+				text = data.GetText()
+			wx.TheClipboard.Close()
+		
+		if not text:
+			return
+		
+		tags = []
+		# TSVパース
+		f = io.StringIO(text)
+		reader = csv.reader(f, delimiter='\t')
+		
+		for row in reader:
+			if not row:
+				continue
+			
+			tag_text = row[0].strip()
+			if not tag_text:
+				continue
+			
+			weight = 1.0
+			if len(row) > 1:
+				try:
+					weight = float(row[1])
+				except ValueError:
+					pass
+			
+			tags.append(Tag(tag_text, weight))
+		
+		if tags:
+			row = self.GetGridCursorRow()
+			insert_pos = row + 1 if row >= 0 else self.GetNumberRows()
+			self.remote_controller.insert_tags(self.item_index, insert_pos, tuple(tags))
+	
+	def on_select_all(self, event: wx.CommandEvent):
+		"""
+		グリッド内のすべてのセルを選択します。
+		"""
+		self.SelectAll()
 	
 	def _sync_selection_with_cursor(self):
 		"""現在のカーソル位置に合わせて選択範囲を更新します。"""
@@ -304,6 +350,50 @@ class ImageTagsGrid(wx.grid.Grid):
 			rows.extend(range(r1, r2 + 1))
 		
 		return sorted(list(set(rows)))
+	
+	def insert_blank_tag(self):
+		"""カーソル位置の下に空のタグを挿入します。"""
+		if not self.remote_controller or self.item_index is None:
+			return
+		
+		row = self.GetGridCursorRow()
+		self.remote_controller.insert_tags(self.item_index, row + 1, (Tag(),))
+	
+	def delete_selected_tags(self):
+		"""選択されているタグを削除します。選択がない場合はカーソル行のタグを削除します。"""
+		if not self.remote_controller or self.item_index is None:
+			return
+		
+		rows = self.get_selected_rows()
+		if not rows:
+			row = self.GetGridCursorRow()
+			if row < 0:
+				return
+			rows = [row]
+		
+		self.remote_controller.remove_tags_at(self.item_index, tuple(rows))
+	
+	def move_tag_up(self):
+		"""カーソル行のタグを上に移動します。"""
+		if not self.remote_controller or self.item_index is None:
+			return
+		
+		row = self.GetGridCursorRow()
+		if row <= 0:
+			return
+		
+		self.remote_controller.move_tag(self.item_index, row, row - 1)
+	
+	def move_tag_down(self):
+		"""カーソル行のタグを下に移動します。"""
+		if not self.remote_controller or self.item_index is None:
+			return
+		
+		row = self.GetGridCursorRow()
+		if row < 0 or row >= self.GetNumberRows() - 1:
+			return
+		
+		self.remote_controller.move_tag(self.item_index, row, row + 1)
 	
 	def refresh_grid(self):
 		"""グリッドの内容を現在のデータセットとインデックスに基づいて完全に更新します。

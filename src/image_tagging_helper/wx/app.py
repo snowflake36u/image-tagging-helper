@@ -654,46 +654,26 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 				focus_win.Copy()
 	
 	def on_paste(self, event: wx.CommandEvent):
-		if not self.remote_controller or self.image_tags_grid.item_index is None:
-			return
+		"""
+		フォーカスがあるコントロールに応じて貼り付け動作を実行します。
+		"""
+		focus_win = wx.Window.FindFocus()
 		
-		text = ""
-		if wx.TheClipboard.Open():
-			if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_TEXT)):
-				data = wx.TextDataObject()
-				wx.TheClipboard.GetData(data)
-				text = data.GetText()
-			wx.TheClipboard.Close()
+		# ImageTagsGridまたはその内部のウィンドウにフォーカスがあるかチェック
+		is_grid_focus = False
+		win = focus_win
+		while win:
+			if win == self.image_tags_grid:
+				is_grid_focus = True
+				break
+			win = win.GetParent()
 		
-		if not text:
-			return
-		
-		tags = []
-		# TSVパース
-		f = io.StringIO(text)
-		reader = csv.reader(f, delimiter='\t')
-		
-		for row in reader:
-			if not row:
-				continue
-			
-			tag_text = row[0].strip()
-			if not tag_text:
-				continue
-			
-			weight = 1.0
-			if len(row) > 1:
-				try:
-					weight = float(row[1])
-				except ValueError:
-					pass
-			
-			tags.append(Tag(tag_text, weight))
-		
-		if tags:
-			row = self.image_tags_grid.GetGridCursorRow()
-			insert_pos = row + 1 if row >= 0 else self.image_tags_grid.GetNumberRows()
-			self.remote_controller.insert_tags(self.image_tags_grid.item_index, insert_pos, tuple(tags))
+		if is_grid_focus:
+			self.image_tags_grid.paste_from_clipboard()
+		else:
+			# 他のテキストコントロールなどの標準的な貼り付け動作
+			if hasattr(focus_win, "CanPaste") and focus_win.CanPaste():
+				focus_win.Paste()
 	
 	def on_select_all(self, event: wx.CommandEvent):
 		"""
@@ -711,9 +691,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			win = win.GetParent()
 		
 		if is_grid_focus:
-			# ImageTagsGridにwx.ID_SELECTALLイベントを転送
-			select_all_event = wx.CommandEvent(wx.EVT_MENU.typeId, wx.ID_SELECTALL)
-			self.image_tags_grid.GetEventHandler().ProcessEvent(select_all_event)
+			self.image_tags_grid.SelectAll()
 		elif focus_win == self.all_tags_list:
 			# AllTagsListにwx.ID_SELECTALLイベントを転送
 			select_all_event = wx.CommandEvent(wx.EVT_MENU.typeId, wx.ID_SELECTALL)
@@ -724,44 +702,20 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 				focus_win.SelectAll()
 	
 	def on_insert_blank_tag(self, event: wx.CommandEvent):
-		if not self.remote_controller or self.image_tags_grid.item_index is None:
-			return
-		
-		row = self.image_tags_grid.GetGridCursorRow()
-		self.remote_controller.insert_tags(self.image_tags_grid.item_index, row + 1, (Tag(),))
+		"""ImageTagsGridに空のタグを挿入します。"""
+		self.image_tags_grid.insert_blank_tag()
 	
 	def on_delete_tag(self, event: wx.CommandEvent):
-		if not self.remote_controller or self.image_tags_grid.item_index is None:
-			return
-		
-		rows = self.image_tags_grid.get_selected_rows()
-		if not rows:
-			row = self.image_tags_grid.GetGridCursorRow()
-			if row < 0:
-				return
-			rows = [row]
-		
-		self.remote_controller.remove_tags_at(self.image_tags_grid.item_index, tuple(rows))
+		"""ImageTagsGridで選択されているタグを削除します。"""
+		self.image_tags_grid.delete_selected_tags()
 	
 	def on_move_tag_up(self, event: wx.CommandEvent):
-		if not self.remote_controller or self.image_tags_grid.item_index is None:
-			return
-		
-		row = self.image_tags_grid.GetGridCursorRow()
-		if row <= 0:
-			return
-		
-		self.remote_controller.move_tag(self.image_tags_grid.item_index, row, row - 1)
+		"""ImageTagsGridでカーソル行のタグを上に移動します。"""
+		self.image_tags_grid.move_tag_up()
 	
 	def on_move_tag_down(self, event: wx.CommandEvent):
-		if not self.remote_controller or self.image_tags_grid.item_index is None:
-			return
-		
-		row = self.image_tags_grid.GetGridCursorRow()
-		if row < 0 or row >= self.image_tags_grid.GetNumberRows() - 1:
-			return
-		
-		self.remote_controller.move_tag(self.image_tags_grid.item_index, row, row + 1)
+		"""ImageTagsGridでカーソル行のタグを下に移動します。"""
+		self.image_tags_grid.move_tag_down()
 	
 	def on_view_image(self, event: wx.CommandEvent):
 		"""選択されている画像を既定のビューアで開きます。"""
