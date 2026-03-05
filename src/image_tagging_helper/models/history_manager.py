@@ -54,8 +54,9 @@ class HistoryManager:
 			return
 		
 		action = self.undo_stack.pop()
-		action.revert(sender)
 		self.redo_stack.append(action)
+		
+		action.revert(sender)
 	
 	def redo(self, sender: str = None):
 		"""
@@ -68,8 +69,9 @@ class HistoryManager:
 			return
 		
 		action = self.redo_stack.pop()
-		action.apply(sender)
 		self.undo_stack.append(action)
+		
+		action.apply(sender)
 	
 	def can_undo(self) -> bool:
 		return len(self.undo_stack) > 0
