@@ -3,6 +3,28 @@ import wx.lib.mixins.listctrl as listmix
 
 from image_tagging_helper.i18n import __
 from image_tagging_helper.models.dataset import Dataset
+from image_tagging_helper.wx.events import (
+	TagsEvent,
+	ReplaceTagEvent,
+	myEVT_ADD_TAGS_TO_FILTER,
+	myEVT_APPEND_TAGS_TO_CURRENT,
+	myEVT_REMOVE_TAGS_FROM_CURRENT,
+	myEVT_APPEND_TAGS_TO_FILTERED,
+	myEVT_REMOVE_TAGS_FROM_FILTERED,
+	myEVT_APPEND_TAGS_TO_ALL,
+	myEVT_REMOVE_TAGS_FROM_ALL,
+	myEVT_REPLACE_TAG_IN_ALL,
+)
+
+# コンテキストメニューID
+ID_ADD_TAG_TO_FILTER = wx.NewIdRef()
+ID_APPEND_TAG_TO_CURRENT = wx.NewIdRef()
+ID_REMOVE_TAG_FROM_CURRENT = wx.NewIdRef()
+ID_APPEND_TAG_TO_FILTERED = wx.NewIdRef()
+ID_REMOVE_TAG_FROM_FILTERED = wx.NewIdRef()
+ID_APPEND_TAG_TO_ALL = wx.NewIdRef()
+ID_REMOVE_TAG_FROM_ALL = wx.NewIdRef()
+ID_REPLACE_TAG_IN_ALL = wx.NewIdRef()
 
 class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSorterMixin):
 	"""
@@ -156,10 +178,58 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		
 		selected_tags = [self.GetItemText(idx) for idx in selected_indices]
 		
-		# 親フレームにメニュー作成を依頼
-		parent_frame: wx.Frame = wx.GetTopLevelParent(self)
-		if hasattr(parent_frame, 'show_all_tags_context_menu'):
-			parent_frame.show_all_tags_context_menu(self, selected_tags, pos)
+		self._show_context_menu(selected_tags, pos)
+	
+	def _show_context_menu(self, selected_tags: list[str], pos: wx.Point):
+		"""
+		コンテキストメニューを表示し、選択されたアクションに応じてイベントを発行します。
+		"""
+		menu = wx.Menu()
+		
+		# メニュー項目の作成
+		menu.Append(ID_ADD_TAG_TO_FILTER, __("action:add_tag_to_filter") + "\tShift+F")
+		menu.AppendSeparator()
+		
+		multiple_tags = len(selected_tags) > 1
+		
+		menu.Append(ID_APPEND_TAG_TO_CURRENT, __("action:append_tags_to_current_items") + "\tShift+W")
+		menu.Append(ID_REMOVE_TAG_FROM_CURRENT, __("action:remove_tags_from_current_items") + "\tShift+R")
+		menu.AppendSeparator()
+		
+		menu.Append(ID_APPEND_TAG_TO_FILTERED, __("action:append_tags_to_filtered_items") + "\tCtrl+Shift+W")
+		menu.Append(ID_REMOVE_TAG_FROM_FILTERED, __("action:remove_tags_from_filtered_items") + "\tCtrl+Shift+R")
+		menu.AppendSeparator()
+		
+		menu.Append(ID_APPEND_TAG_TO_ALL, __("action:append_tags_to_all_items") + "\tCtrl+W")
+		menu.Append(ID_REMOVE_TAG_FROM_ALL, __("action:remove_tags_from_all_items") + "\tCtrl+R")
+		
+		if not multiple_tags:
+			menu.Append(ID_REPLACE_TAG_IN_ALL, __("action:replace_tags_in_all_items") + "\tCtrl+L")
+		
+		# イベントハンドラのバインド
+		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_ADD_TAGS_TO_FILTER, selected_tags), id=ID_ADD_TAG_TO_FILTER)
+		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_APPEND_TAGS_TO_CURRENT, selected_tags), id=ID_APPEND_TAG_TO_CURRENT)
+		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_REMOVE_TAGS_FROM_CURRENT, selected_tags), id=ID_REMOVE_TAG_FROM_CURRENT)
+		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_APPEND_TAGS_TO_FILTERED, selected_tags), id=ID_APPEND_TAG_TO_FILTERED)
+		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_REMOVE_TAGS_FROM_FILTERED, selected_tags), id=ID_REMOVE_TAG_FROM_FILTERED)
+		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_APPEND_TAGS_TO_ALL, selected_tags), id=ID_APPEND_TAG_TO_ALL)
+		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_REMOVE_TAGS_FROM_ALL, selected_tags), id=ID_REMOVE_TAG_FROM_ALL)
+		
+		if not multiple_tags:
+			menu.Bind(wx.EVT_MENU, lambda evt: self._fire_replace_tag_event(myEVT_REPLACE_TAG_IN_ALL, selected_tags[0]), id=ID_REPLACE_TAG_IN_ALL)
+		
+		self.PopupMenu(menu, self.ScreenToClient(pos))
+		menu.Destroy()
+	
+	def _fire_tags_event(self, event_type, tags: list[str]):
+		"""TagsEventを発行します。"""
+		event = TagsEvent(event_type, self.GetId(), tags)
+		self.GetEventHandler().ProcessEvent(event)
+	
+	def _fire_replace_tag_event(self, event_type, old_tag: str):
+		"""ReplaceTagEventを発行します。"""
+		event = ReplaceTagEvent(event_type, self.GetId(), old_tag)
+		self.GetEventHandler().ProcessEvent(event)
 	
 	def on_select_all(self, event: wx.CommandEvent):
 		"""

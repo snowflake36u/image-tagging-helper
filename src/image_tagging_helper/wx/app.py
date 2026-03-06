@@ -14,7 +14,17 @@ from image_tagging_helper.models.controller import DatasetController
 from image_tagging_helper.wx.editor_widgets.all_tag_list import AllTagsList
 from image_tagging_helper.wx.editor_widgets.image_list import ImageVListBox
 from image_tagging_helper.wx.editor_widgets.image_tags_grid import ImageTagsGrid
-from image_tagging_helper.wx.events import EVT_SELECT_IN_ALL_TAGS
+from image_tagging_helper.wx.events import (
+	EVT_SELECT_IN_ALL_TAGS,
+	EVT_ADD_TAGS_TO_FILTER,
+	EVT_APPEND_TAGS_TO_CURRENT,
+	EVT_REMOVE_TAGS_FROM_CURRENT,
+	EVT_APPEND_TAGS_TO_FILTERED,
+	EVT_REMOVE_TAGS_FROM_FILTERED,
+	EVT_APPEND_TAGS_TO_ALL,
+	EVT_REMOVE_TAGS_FROM_ALL,
+	EVT_REPLACE_TAG_IN_ALL,
+)
 from image_tagging_helper.wx.preferences import PreferencesDialog
 from image_tagging_helper.wx.frame_menu import (
 	FrameMenuMixin,
@@ -113,9 +123,23 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		# メニュー項目のヘルプ文字列をステータスバーの1番目のフィールドに表示するためのイベントバインド
 		self.Bind(wx.EVT_MENU_HIGHLIGHT, self.on_menu_highlight)
 		
+		# AllTagsListからのイベントをバインド
+		self._bind_all_tags_list_events()
+		
 		# 初期フォーカスをサムネイルリストに設定
 		wx.CallAfter(self.thumbnail_list.SetFocus)
 		self._update_statusbar()
+	
+	def _bind_all_tags_list_events(self):
+		"""AllTagsListから発行されるイベントをバインドします。"""
+		self.Bind(EVT_ADD_TAGS_TO_FILTER, self.on_add_tags_to_filter)
+		self.Bind(EVT_APPEND_TAGS_TO_CURRENT, self.on_append_tags_to_current_items)
+		self.Bind(EVT_REMOVE_TAGS_FROM_CURRENT, self.on_remove_tags_from_current_items)
+		self.Bind(EVT_APPEND_TAGS_TO_FILTERED, self.on_append_tags_to_filtered_items)
+		self.Bind(EVT_REMOVE_TAGS_FROM_FILTERED, self.on_remove_tags_from_filtered_items)
+		self.Bind(EVT_APPEND_TAGS_TO_ALL, self.on_append_tags_to_all_items)
+		self.Bind(EVT_REMOVE_TAGS_FROM_ALL, self.on_remove_tags_from_all_items)
+		self.Bind(EVT_REPLACE_TAG_IN_ALL, self.on_replace_tag_in_all_items)
 	
 	def _create_path_panel(self, parent: wx.Window) -> wx.Window:
 		"""
@@ -791,70 +815,44 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		"""ImageTagsGridからのイベントを処理し、AllTagsListでタグを選択します。"""
 		self.all_tags_list.select_tags(event.tag_texts)
 	
-	def show_all_tags_context_menu(self, list_ctrl: AllTagsList, selected_tags: list[str], pos: wx.Point):
-		"""
-		AllTagsListのコンテキストメニューを表示します。
-		"""
-		menu = wx.Menu()
-		
-		# 「フィルタに追加」メニュー
-		self._append_menu_item(menu, ID_ADD_TAG_TO_FILTER, __("action:add_tag_to_filter"), "", "Shift+F")
-		menu.AppendSeparator()
-		
-		# 選択されたタグの数に応じてラベルを変更
-		multiple_tags = len(selected_tags) > 1
-		
-		# 選択中のアイテムへの操作
-		self._append_menu_item(menu, ID_APPEND_TAG_TO_CURRENT, __("action:append_tags_to_current_items"), "", "Shift+W")
-		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_CURRENT, __("action:remove_tags_from_current_items"), "", "Shift+R")
-		
-		menu.AppendSeparator()
-		
-		# フィルター済みアイテムへの操作
-		self._append_menu_item(menu, ID_APPEND_TAG_TO_FILTERED, __("action:append_tags_to_filtered_items"), "", "Ctrl+Shift+W")
-		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_FILTERED, __("action:remove_tags_from_filtered_items"), "", "Ctrl+Shift+R")
-		
-		menu.AppendSeparator()
-		
-		# すべてのアイテムへの操作
-		self._append_menu_item(menu, ID_APPEND_TAG_TO_ALL, __("action:append_tags_to_all_items"), "", "Ctrl+W")
-		self._append_menu_item(menu, ID_REMOVE_TAG_FROM_ALL, __("action:remove_tags_from_all_items"), "", "Ctrl+R")
-		
-		if not multiple_tags:
-			self._append_menu_item(menu, ID_REPLACE_TAG_IN_ALL, __("action:replace_tags_in_all_items"), "", "Ctrl+L")
-		
-		# イベントバインド
-		menu.Bind(wx.EVT_MENU, lambda evt: self.on_add_tags_to_filter(evt, selected_tags), id=ID_ADD_TAG_TO_FILTER)
-		menu.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_current_items(evt, selected_tags), id=ID_APPEND_TAG_TO_CURRENT)
-		menu.Bind(wx.EVT_MENU, lambda evt: self.on_remove_tags_from_current_items(evt, selected_tags), id=ID_REMOVE_TAG_FROM_CURRENT)
-		menu.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_filtered_items(evt, selected_tags), id=ID_APPEND_TAG_TO_FILTERED)
-		menu.Bind(wx.EVT_MENU, lambda evt: self.on_remove_tags_from_filtered_items(evt, selected_tags), id=ID_REMOVE_TAG_FROM_FILTERED)
-		menu.Bind(wx.EVT_MENU, lambda evt: self.on_append_tags_to_all_items(evt, selected_tags), id=ID_APPEND_TAG_TO_ALL)
-		menu.Bind(wx.EVT_MENU, lambda evt: self.on_remove_tags_from_all_items(evt, selected_tags), id=ID_REMOVE_TAG_FROM_ALL)
-		
-		if not multiple_tags:
-			menu.Bind(wx.EVT_MENU, lambda evt: self.on_replace_tag_in_all_items(evt, selected_tags[0]), id=ID_REPLACE_TAG_IN_ALL)
-		
-		client_pos = list_ctrl.ScreenToClient(pos)
-		list_ctrl.PopupMenu(menu, client_pos)
-		menu.Destroy()
+	def on_add_tags_to_filter(self, event):
+		self.add_tags_to_filter(event.tags)
 	
-	def on_append_tags_to_current_items(self, event: wx.CommandEvent, tags: list[str]):
+	def on_append_tags_to_current_items(self, event):
+		self.append_tags_to_current_items(event.tags)
+	
+	def on_remove_tags_from_current_items(self, event):
+		self.remove_tags_from_current_items(event.tags)
+	
+	def on_append_tags_to_filtered_items(self, event):
+		self.append_tags_to_filtered_items(event.tags)
+	
+	def on_remove_tags_from_filtered_items(self, event):
+		self.remove_tags_from_filtered_items(event.tags)
+	
+	def on_append_tags_to_all_items(self, event):
+		self.append_tags_to_all_items(event.tags)
+	
+	def on_remove_tags_from_all_items(self, event):
+		self.remove_tags_from_all_items(event.tags)
+	
+	def on_replace_tag_in_all_items(self, event):
+		self.replace_tag_in_all_items_with_dialog(event.old_tag)
+	
+	def append_tags_to_current_items(self, tags: list[str]):
 		"""選択中のアイテムにタグを追加します。"""
 		if not self.remote_controller or self.current_item_index == wx.NOT_FOUND:
 			return
-		position = self.image_tags_grid.GetGridCursorRow()
 		tags_obj = tuple(Tag(t) for t in tags)
 		self.remote_controller.append_tags(self.current_item_index, tags_obj)
 	
-	def on_remove_tags_from_current_items(self, event: wx.CommandEvent, tags: list[str]):
+	def remove_tags_from_current_items(self, tags: list[str]):
 		"""選択中のアイテムからタグを削除します。"""
 		if not self.remote_controller or self.current_item_index == wx.NOT_FOUND:
 			return
-		for tag_text in tags:
-			self.remote_controller.batch_remove_tags([self.current_item_index], (tag_text,))
+		self.remote_controller.batch_remove_tags([self.current_item_index], tags)
 	
-	def on_append_tags_to_filtered_items(self, event: wx.CommandEvent, tags: list[str]):
+	def append_tags_to_filtered_items(self, tags: list[str]):
 		"""フィルター済みアイテムにタグを追加します。"""
 		if not self.remote_controller:
 			return
@@ -862,10 +860,10 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		if not filtered_indices:
 			return
 		
-		for tag_text in tags:
-			self.remote_controller.batch_append_tags(filtered_indices, (Tag(tag_text),))
+		tags_obj = tuple(Tag(t) for t in tags)
+		self.remote_controller.batch_append_tags(filtered_indices, tags_obj)
 	
-	def on_remove_tags_from_filtered_items(self, event: wx.CommandEvent, tags: list[str]):
+	def remove_tags_from_filtered_items(self, tags: list[str]):
 		"""フィルター済みアイテムからタグを削除します。"""
 		if not self.remote_controller:
 			return
@@ -873,28 +871,26 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		if not filtered_indices:
 			return
 		
-		for tag_text in tags:
-			self.remote_controller.batch_remove_tags(filtered_indices, (tag_text,))
+		self.remote_controller.batch_remove_tags(filtered_indices, tags)
 	
-	def on_append_tags_to_all_items(self, event: wx.CommandEvent, tags: list[str]):
+	def append_tags_to_all_items(self, tags: list[str]):
 		"""すべてのアイテムにタグを追加します。"""
 		if not self.remote_controller or not self.dataset:
 			return
 		
 		all_indices = range(len(self.dataset))
-		for tag_text in tags:
-			self.remote_controller.batch_append_tags(all_indices, (Tag(tag_text),))
+		tags_obj = tuple(Tag(t) for t in tags)
+		self.remote_controller.batch_append_tags(all_indices, tags_obj)
 	
-	def on_remove_tags_from_all_items(self, event: wx.CommandEvent, tags: list[str]):
+	def remove_tags_from_all_items(self, tags: list[str]):
 		"""すべてのアイテムからタグを削除します。"""
 		if not self.remote_controller or not self.dataset:
 			return
 		
 		all_indices = range(len(self.dataset))
-		for tag_text in tags:
-			self.remote_controller.batch_remove_tags(all_indices, (tag_text,))
+		self.remote_controller.batch_remove_tags(all_indices, tags)
 	
-	def on_replace_tag_in_all_items(self, event: wx.CommandEvent, old_tag_text: str):
+	def replace_tag_in_all_items_with_dialog(self, old_tag_text: str):
 		"""すべてのアイテムでタグを置換します。"""
 		if not self.remote_controller or not self.dataset:
 			return
@@ -911,7 +907,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			all_indices = range(len(self.dataset))
 			self.remote_controller.batch_replace_tag(all_indices, old_tag_text, Tag(new_tag_text), keep_weight=True)
 	
-	def on_add_tags_to_filter(self, event: wx.CommandEvent, tags: list[str]):
+	def add_tags_to_filter(self, tags: list[str]):
 		"""
 		選択されたタグをフィルターコントロールに追加します。
 		"""

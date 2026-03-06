@@ -188,46 +188,46 @@ class FrameMenuMixin:
 		"""(ACCEL) 選択中のタグをフィルターに追加します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
-			self.on_add_tags_to_filter(event, tags)
+			self.add_tags_to_filter(event, tags)
 	
 	def on_accel_append_tags_to_current_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
 		"""(ACCEL) 選択中のアイテムにタグを追加します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
-			self.on_append_tags_to_current_items(event, tags)
+			self.append_tags_to_current_items(event, tags)
 	
 	def on_accel_remove_tags_from_current_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
 		"""(ACCEL) 選択中のアイテムからタグを削除します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
-			self.on_remove_tags_from_current_items(event, tags)
+			self.remove_tags_from_current_items(event, tags)
 	
 	def on_accel_append_tags_to_filtered_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
 		"""(ACCEL) フィルター済みアイテムにタグを追加します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
-			self.on_append_tags_to_filtered_items(event, tags)
+			self.append_tags_to_filtered_items(event, tags)
 	
 	def on_accel_remove_tags_from_filtered_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
 		"""(ACCEL) フィルター済みアイテムからタグを削除します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
-			self.on_remove_tags_from_filtered_items(event, tags)
+			self.remove_tags_from_filtered_items(event, tags)
 	
 	def on_accel_append_tags_to_all_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
 		"""(ACCEL) すべてのアイテムにタグを追加します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
-			self.on_append_tags_to_all_items(event, tags)
+			self.append_tags_to_all_items(event, tags)
 	
 	def on_accel_remove_tags_from_all_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
 		"""(ACCEL) すべてのアイテムからタグを削除します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
-			self.on_remove_tags_from_all_items(event, tags)
+			self.remove_tags_from_all_items(event, tags)
 	
 	def on_accel_replace_tag_in_all_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
 		"""(ACCEL) すべてのアイテムでタグを置換します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if len(tags) == 1:
-			self.on_replace_tag_in_all_items(event, tags[0])
+			self.replace_tag_in_all_items_with_dialog(event, tags[0])
