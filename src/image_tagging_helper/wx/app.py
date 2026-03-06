@@ -28,14 +28,6 @@ from image_tagging_helper.wx.events import (
 from image_tagging_helper.wx.preferences import PreferencesDialog
 from image_tagging_helper.wx.frame_menu import (
 	FrameMenuMixin,
-	ID_APPEND_TAG_TO_CURRENT,
-	ID_REMOVE_TAG_FROM_CURRENT,
-	ID_APPEND_TAG_TO_FILTERED,
-	ID_REMOVE_TAG_FROM_FILTERED,
-	ID_APPEND_TAG_TO_ALL,
-	ID_REMOVE_TAG_FROM_ALL,
-	ID_REPLACE_TAG_IN_ALL,
-	ID_ADD_TAG_TO_FILTER,
 )
 from image_tagging_helper.i18n import setup_translation, __
 
@@ -112,7 +104,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.focus_order = [
 			self.path_text,
 			self.filter_ctrl,
-			self.thumbnail_list,
+			self.image_list,
 			self.image_tags_grid,
 			self.all_tags_list,
 		]
@@ -127,7 +119,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self._bind_all_tags_list_events()
 		
 		# 初期フォーカスをサムネイルリストに設定
-		wx.CallAfter(self.thumbnail_list.SetFocus)
+		wx.CallAfter(self.image_list.SetFocus)
 		self._update_statusbar()
 	
 	def _bind_all_tags_list_events(self):
@@ -216,13 +208,13 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			splitter.Bind(wx.EVT_SIZE, self.on_splitter_resize)
 		
 		# 各ペインの作成
-		self._create_thumbnail_panel(self.splitter_1)
+		self._create_images_panel(self.splitter_1)
 		self._create_image_tags_panel(self.splitter_2)
 		self._create_all_tags_panel(self.splitter_2)
 		
 		# スプリッターの分割設定
 		# 全体幅1200に対して各パネル400ずつ割り当てる
-		self.splitter_1.SplitVertically(self.thumbnail_panel, self.splitter_2, 400)
+		self.splitter_1.SplitVertically(self.images_panel, self.splitter_2, 400)
 		self.splitter_2.SplitVertically(self.image_tags_panel, self.all_tags_panel, 400)
 		
 		# UI設定を復元
@@ -232,24 +224,24 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.splitter_1.SetSashGravity(0)
 		self.splitter_2.SetSashGravity(0.5)
 	
-	def _create_thumbnail_panel(self, parent: wx.Window):
+	def _create_images_panel(self, parent: wx.Window):
 		"""画像のサムネイルリストパネルを作成します。"""
-		self.thumbnail_panel = wx.Panel(parent)
-		self.thumbnail_panel.SetMinSize((SASH_MIN_WIDTH, -1))
-		self.thumbnail_toolbar = wx.ToolBar(self.thumbnail_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
-		self.thumbnail_toolbar.AddControl(wx.StaticText(self.thumbnail_toolbar, label=__("label:image_list")))
-		self.thumbnail_toolbar.AddSeparator()
-		self.thumbnail_toolbar.Realize()
+		self.images_panel = wx.Panel(parent)
+		self.images_panel.SetMinSize((SASH_MIN_WIDTH, -1))
+		self.images_toolbar = wx.ToolBar(self.images_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
+		self.images_toolbar.AddControl(wx.StaticText(self.images_toolbar, label=__("label:image_list")))
+		self.images_toolbar.AddSeparator()
+		self.images_toolbar.Realize()
 		
-		self.thumbnail_list = ImageVListBox(self.thumbnail_panel, style=wx.VSCROLL | wx.ALWAYS_SHOW_SB)
-		self.thumbnail_list.Bind(wx.EVT_LISTBOX, self.on_thumbnail_select)
-		self.thumbnail_list.Bind(wx.EVT_LISTBOX_DCLICK, self.on_thumbnail_double_click)
-		self.thumbnail_list.Bind(wx.EVT_CONTEXT_MENU, self.on_thumbnail_context_menu)
+		self.image_list = ImageVListBox(self.images_panel, style=wx.VSCROLL | wx.ALWAYS_SHOW_SB)
+		self.image_list.Bind(wx.EVT_LISTBOX, self.on_image_list_select)
+		self.image_list.Bind(wx.EVT_LISTBOX_DCLICK, self.on_image_list_double_click)
+		self.image_list.Bind(wx.EVT_CONTEXT_MENU, self.on_image_list_context_menu)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
-		sizer.Add(self.thumbnail_toolbar, 0, wx.EXPAND)
-		sizer.Add(self.thumbnail_list, 1, wx.EXPAND)
-		self.thumbnail_panel.SetSizer(sizer)
+		sizer.Add(self.images_toolbar, 0, wx.EXPAND)
+		sizer.Add(self.image_list, 1, wx.EXPAND)
+		self.images_panel.SetSizer(sizer)
 	
 	def _create_image_tags_panel(self, parent: wx.Window):
 		"""画像のタグ一覧パネルを作成します。"""
@@ -360,7 +352,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		
 		# フィルタリング実行
 		matched_indices = self.dataset.match_items(query)
-		self.thumbnail_list.set_filter(matched_indices)
+		self.image_list.set_filter(matched_indices)
 		
 		# 選択状態の更新
 		if matched_indices:
@@ -368,7 +360,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			current_item_idx = self.current_item_index
 			if current_item_idx in matched_indices:
 				# マッチした場合はその画像を選択状態にする
-				self.thumbnail_list.select_item(current_item_idx)
+				self.image_list.select_item(current_item_idx)
 			else:
 				# マッチしなかった場合は、直前の画像を選択する
 				idx = bisect.bisect_left(matched_indices, current_item_idx)
@@ -377,7 +369,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 				else:
 					new_selection = matched_indices[0]
 				
-				self.thumbnail_list.select_item(new_selection)
+				self.image_list.select_item(new_selection)
 				self.current_item_index = new_selection
 				self._update_views_for_item_selection(new_selection)
 		else:
@@ -389,12 +381,12 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 	def on_filter_cancel(self, event: wx.CommandEvent):
 		"""検索コントロールでキャンセルボタンが押されたときの処理。"""
 		self.filter_ctrl.SetValue("")
-		self.thumbnail_list.set_filter(None)
+		self.image_list.set_filter(None)
 		
 		# 選択状態の復元
 		current_item_index = self.current_item_index if self.current_item_index != wx.NOT_FOUND else 0
-		if current_item_index < self.thumbnail_list.GetItemCount():
-			self.thumbnail_list.select_item(current_item_index)
+		if current_item_index < self.image_list.GetItemCount():
+			self.image_list.select_item(current_item_index)
 			self._update_views_for_item_selection(current_item_index)
 		self._update_statusbar()
 	
@@ -542,22 +534,22 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			self.dataset.save(self.caption_ext, self.caption_format_config)
 			self._update_title()
 	
-	def on_thumbnail_select(self, event: wx.CommandEvent):
+	def on_image_list_select(self, event: wx.CommandEvent):
 		"""
 		サムネイルリストの選択が変更されたときの処理。
 		常に単一の選択を維持します。
 		"""
-		view_index = self.thumbnail_list.GetSelection()
+		view_index = self.image_list.GetSelection()
 		
 		if view_index == wx.NOT_FOUND:
 			# 選択が解除された場合、最後の選択状態に戻す
 			# ただし、フィルタリングによって選択項目が消えた場合は戻さない
 			if self.current_item_index != wx.NOT_FOUND:
 				# 現在のフィルタで表示されているか確認
-				self.thumbnail_list.select_item(self.current_item_index)
+				self.image_list.select_item(self.current_item_index)
 			return
 		
-		dataset_index = self.thumbnail_list.get_dataset_index(view_index)
+		dataset_index = self.image_list.get_dataset_index(view_index)
 		
 		# 同じアイテムが再度選択された場合は何もしない
 		if dataset_index == self.current_item_index:
@@ -566,36 +558,36 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.current_item_index = dataset_index
 		self._update_views_for_item_selection(dataset_index)
 	
-	def on_thumbnail_double_click(self, event: wx.CommandEvent):
+	def on_image_list_double_click(self, event: wx.CommandEvent):
 		"""
 		サムネイルリストの項目がダブルクリックされたときの処理。
 		選択されている画像を既定のビューアで開きます。
 		"""
-		view_index = self.thumbnail_list.GetSelection()
+		view_index = self.image_list.GetSelection()
 		if view_index == wx.NOT_FOUND:
 			return
 		
-		dataset_index = self.thumbnail_list.get_dataset_index(view_index)
+		dataset_index = self.image_list.get_dataset_index(view_index)
 		
 		# current_item_indexを更新してからon_view_imageを呼び出す
 		self.current_item_index = dataset_index
 		self.on_view_image(event)
 	
-	def on_thumbnail_context_menu(self, event: wx.ContextMenuEvent):
+	def on_image_list_context_menu(self, event: wx.ContextMenuEvent):
 		"""サムネイルリストのコンテキストメニューを表示します。"""
 		pos = event.GetPosition()
 		
 		# キーボード操作（メニューキー）の場合、posは(-1, -1)になることが多い
 		if pos == wx.DefaultPosition:
-			view_index = self.thumbnail_list.GetSelection()
+			view_index = self.image_list.GetSelection()
 		else:
 			# マウス操作の場合、クリック位置のアイテムを選択する
-			client_pos = self.thumbnail_list.ScreenToClient(pos)
-			view_index = self.thumbnail_list.VirtualHitTest(client_pos.y)
+			client_pos = self.image_list.ScreenToClient(pos)
+			view_index = self.image_list.VirtualHitTest(client_pos.y)
 			
 			if view_index != wx.NOT_FOUND:
-				self.thumbnail_list.SetSelection(view_index)
-				self.on_thumbnail_select(None)
+				self.image_list.SetSelection(view_index)
+				self.on_image_list_select(None)
 		
 		if view_index != wx.NOT_FOUND:
 			menu = wx.Menu()
@@ -606,7 +598,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			self.Bind(wx.EVT_MENU, self.on_view_image, view_image_item)
 			self.Bind(wx.EVT_MENU, self.on_open_in_folder, open_in_folder_item)
 			
-			self.thumbnail_list.PopupMenu(menu)
+			self.image_list.PopupMenu(menu)
 			menu.Destroy()
 	
 	def on_preferences(self, event: wx.CommandEvent):
@@ -776,40 +768,40 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 	
 	def on_next_image(self, event: wx.CommandEvent):
 		"""次の画像を選択します。"""
-		count = self.thumbnail_list.GetItemCount()
+		count = self.image_list.GetItemCount()
 		if count == 0:
 			return
 		
-		current = self.thumbnail_list.GetSelection()
+		current = self.image_list.GetSelection()
 		next_idx = 0
 		if current != wx.NOT_FOUND:
 			next_idx = current + 1
 		
 		if next_idx < count:
-			self.thumbnail_list.SetSelection(next_idx)
-			self.on_thumbnail_select(None)
+			self.image_list.SetSelection(next_idx)
+			self.on_image_list_select(None)
 			
-			if not self.thumbnail_list.IsVisible(next_idx):
-				self.thumbnail_list.ScrollToLine(next_idx)
+			if not self.image_list.IsVisible(next_idx):
+				self.image_list.ScrollToLine(next_idx)
 	
 	def on_prev_image(self, event: wx.CommandEvent):
 		"""前の画像を選択します。"""
-		count = self.thumbnail_list.GetItemCount()
+		count = self.image_list.GetItemCount()
 		if count == 0:
 			return
 		
-		current = self.thumbnail_list.GetSelection()
+		current = self.image_list.GetSelection()
 		if current == wx.NOT_FOUND:
 			return
 		
 		prev_idx = current - 1
 		
 		if prev_idx >= 0:
-			self.thumbnail_list.SetSelection(prev_idx)
-			self.on_thumbnail_select(None)
+			self.image_list.SetSelection(prev_idx)
+			self.on_image_list_select(None)
 			
-			if not self.thumbnail_list.IsVisible(prev_idx):
-				self.thumbnail_list.ScrollToLine(prev_idx)
+			if not self.image_list.IsVisible(prev_idx):
+				self.image_list.ScrollToLine(prev_idx)
 	
 	def on_select_in_all_tags(self, event):
 		"""ImageTagsGridからのイベントを処理し、AllTagsListでタグを選択します。"""
@@ -856,7 +848,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		"""フィルター済みアイテムにタグを追加します。"""
 		if not self.remote_controller:
 			return
-		filtered_indices = self.thumbnail_list.filtered_indices
+		filtered_indices = self.image_list.filtered_indices
 		if not filtered_indices:
 			return
 		
@@ -867,7 +859,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		"""フィルター済みアイテムからタグを削除します。"""
 		if not self.remote_controller:
 			return
-		filtered_indices = self.thumbnail_list.filtered_indices
+		filtered_indices = self.image_list.filtered_indices
 		if not filtered_indices:
 			return
 		
@@ -969,8 +961,8 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		
 		total_items = len(self.dataset)
 		
-		if self.thumbnail_list.filtered_indices is not None:
-			filtered_items = self.thumbnail_list.GetItemCount()
+		if self.image_list.filtered_indices is not None:
+			filtered_items = self.image_list.GetItemCount()
 			status_text = __("statusbar:filtered_items").format(
 				filtered_count=filtered_items,
 				total_count=total_items
@@ -1114,12 +1106,12 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.remote_controller = self.dataset.get_controller()
 		dataset = self.dataset
 		
-		self.thumbnail_list.set_dataset(dataset)
+		self.image_list.set_dataset(dataset)
 		self.image_tags_grid.set_dataset(dataset)
 		self.all_tags_list.set_dataset(dataset)
 		
 		if dataset.initialized is not None and len(dataset) > 0:
-			self.thumbnail_list.SetSelection(0)
+			self.image_list.SetSelection(0)
 			# SetSelectionはイベントを発生させないため、手動で更新処理を呼び出す
 			self.current_item_index = 0
 			self._update_views_for_item_selection(0)

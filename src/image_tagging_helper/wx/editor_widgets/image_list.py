@@ -1,4 +1,3 @@
-import os
 import threading
 import queue
 from typing import Dict, List, Optional, Set
