@@ -1,3 +1,5 @@
+from typing import Iterable, Sequence
+
 from image_tagging_helper.models.caption import Tag
 from image_tagging_helper.models.diff import (
 	DatasetDiff, AppendDiff, InsertDiff, MoveDiff, DeleteDiff, MutateTagDiff, BatchDiff
@@ -67,20 +69,20 @@ class AppendTagsAction(HistoryAction):
 	"""
 	
 	@staticmethod
-	def create(dataset, target, tags):
+	def create(dataset, target, tags: Sequence[Tag]):
 		"""
 		タグ追加アクションを生成します。
 		
 		Args:
 			dataset (Dataset): 対象データセット。
 			target (int): 対象キャプションインデックス。
-			tags (tuple[Tag, ...]): 追加するタグのリスト。
+			tags (Sequence[Tag]): 追加するタグのシーケンス。
 		"""
 		caption = dataset[target].caption
 		position = len(caption.tags)
 		ins_positions = range(position, position + len(tags))
 		forward = AppendDiff(
-			target=target, tags=tags,
+			target=target, tags=tuple(tags),
 		)
 		inverse = DeleteDiff(
 			target=target, positions=tuple(reversed(ins_positions))
@@ -93,7 +95,7 @@ class InsertTagsAction(HistoryAction):
 	"""
 	
 	@staticmethod
-	def create(dataset, target, position, tags):
+	def create(dataset, target, position, tags: Sequence[Tag]):
 		"""
 		タグ挿入アクションを生成します。
 		
@@ -101,11 +103,11 @@ class InsertTagsAction(HistoryAction):
 			dataset (Dataset): 対象データセット。
 			target (int): 対象キャプションインデックス。
 			position (int): 挿入位置。
-			tags (tuple[Tag, ...]): 挿入するタグのリスト。
+			tags (Sequence[Tag]): 挿入するタグのシーケンス。
 		"""
 		ins_positions = range(position, position + len(tags))
 		forward = InsertDiff(
-			target=target, position=position, tags=tags,
+			target=target, position=position, tags=tuple(tags),
 		)
 		inverse = DeleteDiff(
 			target=target, positions=tuple(reversed(ins_positions))
@@ -142,23 +144,23 @@ class DeleteTagsAction(HistoryAction):
 	"""
 	
 	@staticmethod
-	def create(dataset, target, positions):
+	def create(dataset, target, positions: Iterable[int]):
 		"""
 		タグ削除アクションを生成します。
 		
 		Args:
 			dataset (Dataset): 対象データセット。
 			target (int): 対象キャプションインデックス。
-			positions (tuple[int, ...]): 削除するタグの位置のリスト。
+			positions (Iterable[int]): 削除するタグの位置のイテラブル。
 		"""
-		positions = sorted(positions)
+		sorted_positions = sorted(positions)
 		caption = dataset[target].caption
-		tags = [caption.tags[i] for i in positions]
+		tags = [caption.tags[i] for i in sorted_positions]
 		forward = DeleteDiff(
-			target=target, positions=tuple(reversed(positions)),
+			target=target, positions=tuple(reversed(sorted_positions)),
 		)
 		inverse = BatchDiff(tuple(
-			InsertDiff(target, i, (tag,)) for i, tag in zip(positions, tags)
+			InsertDiff(target, i, (tag,)) for i, tag in zip(sorted_positions, tags)
 		))
 		return DeleteTagsAction(dataset, forward, inverse)
 
@@ -243,7 +245,7 @@ class BatchAppendTagAction(HistoryAction):
 	"""
 	
 	@staticmethod
-	def create(dataset, targets, tags: tuple['Tag', ...]):
+	def create(dataset, targets: Iterable[int], tags: Sequence[Tag]):
 		forward_children = []
 		inverse_children = []
 		for target_idx in targets:
@@ -274,7 +276,7 @@ class BatchRemoveTagAction(HistoryAction):
 	"""
 	
 	@staticmethod
-	def create(dataset, targets, tag_texts: tuple[str, ...]):
+	def create(dataset, targets: Iterable[int], tag_texts: Iterable[str]):
 		deletions = []
 		tag_texts_set = set(tag_texts)
 		for target_idx in targets:
@@ -303,7 +305,7 @@ class BatchReplaceTagAction(HistoryAction):
 	"""
 	
 	@staticmethod
-	def create(dataset, targets, old_tag_text, new_tag, keep_weight=False):
+	def create(dataset, targets: Iterable[int], old_tag_text, new_tag, keep_weight=False):
 		forward_children = []
 		inverse_children = []
 		for target_idx in targets:

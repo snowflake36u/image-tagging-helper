@@ -36,25 +36,25 @@ class DatasetController:
 		self.dataset = dataset
 		self.sender = sender
 	
-	def append_tags(self, target: int, tags: tuple['Tag', ...]):
+	def append_tags(self, target: int, tags: Sequence['Tag']):
 		"""
 		キャプションの末尾にタグを追加します。
 
 		Args:
 			 target: 対象キャプションのインデックス。
-			 tags: 追加するタグのタプル。
+			 tags: 追加するタグのシーケンス。
 		"""
 		action = AppendTagsAction.create(self.dataset, target, tags)
 		self.dataset.execute(action, self.sender)
 	
-	def insert_tags(self, target: int, position: int, tags: tuple['Tag', ...]):
+	def insert_tags(self, target: int, position: int, tags: Sequence['Tag']):
 		"""
 		キャプションの指定位置にタグを挿入します。
 
 		Args:
 			 target: 対象キャプションのインデックス。
 			 position: 挿入位置。
-			 tags: 挿入するタグのタプル。
+			 tags: 挿入するタグのシーケンス。
 		"""
 		action = InsertTagsAction.create(self.dataset, target, position, tags)
 		self.dataset.execute(action, self.sender)
@@ -71,13 +71,13 @@ class DatasetController:
 		action = MoveTagAction.create(self.dataset, target, old_position, new_position)
 		self.dataset.execute(action, self.sender)
 	
-	def remove_tags_at(self, target: int, positions: Sequence[int]):
+	def remove_tags_at(self, target: int, positions: Iterable[int]):
 		"""
 		キャプションからタグを削除します。
 
 		Args:
 			 target: 対象キャプションのインデックス。
-			 positions: 削除するタグの位置のタプル。
+			 positions: 削除するタグの位置のイテラブル。
 		"""
 		action = DeleteTagsAction.create(self.dataset, target, positions)
 		self.dataset.execute(action, self.sender)
@@ -115,25 +115,25 @@ class DatasetController:
 		if positions:
 			self.remove_tags_at(target, positions)
 	
-	def batch_append_tags(self, targets: Iterable[int], tags: tuple['Tag', ...]):
+	def batch_append_tags(self, targets: Iterable[int], tags: Sequence['Tag']):
 		"""
 		指定された複数のキャプションにタグを追加します。
 
 		Args:
 			 targets: 対象キャプションのインデックスのリスト。
-			 tags: 追加するタグのタプル。
+			 tags: 追加するタグのシーケンス。
 		"""
 		action = BatchAppendTagAction.create(self.dataset, targets, tags)
 		if action:
 			self.dataset.execute(action, self.sender)
 	
-	def batch_remove_tags(self, targets: Iterable[int], tag_texts: tuple[str, ...]):
+	def batch_remove_tags(self, targets: Iterable[int], tag_texts: Iterable[str]):
 		"""
 		指定された複数のキャプションから特定のタグを削除します。
 
 		Args:
 			 targets: 対象キャプションのインデックスのリスト。
-			 tag_texts: 削除するタグのテキストのタプル。
+			 tag_texts: 削除するタグのテキストのイテラブル。
 		"""
 		action = BatchRemoveTagAction.create(self.dataset, targets, tag_texts)
 		if action:
