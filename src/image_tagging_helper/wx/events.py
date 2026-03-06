@@ -47,3 +47,10 @@ class ReplaceTagEvent(wx.PyCommandEvent):
 	def __init__(self, event_type, id, old_tag: str):
 		wx.PyCommandEvent.__init__(self, eventType=event_type, id=id)
 		self.old_tag = old_tag
+
+# ImageVListBox関連のイベント
+myEVT_VIEW_IMAGE = wx.NewEventType()
+EVT_VIEW_IMAGE = wx.PyEventBinder(myEVT_VIEW_IMAGE, 0)
+
+myEVT_OPEN_IN_FOLDER = wx.NewEventType()
+EVT_OPEN_IN_FOLDER = wx.PyEventBinder(myEVT_OPEN_IN_FOLDER, 0)

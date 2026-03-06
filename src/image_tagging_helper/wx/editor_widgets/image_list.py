@@ -6,6 +6,11 @@ import bisect
 import wx
 
 from image_tagging_helper.models.dataset import Dataset, DatasetItem
+from image_tagging_helper.wx.events import (
+	myEVT_VIEW_IMAGE,
+	myEVT_OPEN_IN_FOLDER,
+)
+from image_tagging_helper.i18n import __
 
 # サムネイルの固定サイズを定義。メモリと品質のバランスを考慮して調整可能。
 THUMBNAIL_CACHE_FIXED_SIZE = (384, 384)
@@ -25,6 +30,8 @@ class ImageVListBox(wx.VListBox):
 		self.padding_h = 5
 		self.padding_v = 5
 		self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
+		self.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
+		self.Bind(wx.EVT_LISTBOX_DCLICK, self.on_double_click)
 		
 		# 非同期サムネイル生成のための準備
 		self.thumbnail_queue = queue.Queue()
@@ -152,6 +159,52 @@ class ImageVListBox(wx.VListBox):
 			# エラー発生時は、エラー用のビットマップをキャッシュするなどの対応も可能
 			# 今回はキャッシュしないでおく（次回描画時に再試行される）
 			pass
+	
+	def on_context_menu(self, event: wx.ContextMenuEvent):
+		"""サムネイルリストのコンテキストメニューを表示します。"""
+		pos = event.GetPosition()
+		
+		# キーボード操作（メニューキー）の場合、posは(-1, -1)になることが多い
+		if pos == wx.DefaultPosition:
+			view_index = self.GetSelection()
+		else:
+			# マウス操作の場合、クリック位置のアイテムを選択する
+			client_pos = self.ScreenToClient(pos)
+			view_index = self.VirtualHitTest(client_pos.y)
+			
+			if view_index != wx.NOT_FOUND:
+				self.SetSelection(view_index)
+				# 選択イベントを手動で発行して、Frame側の選択状態を更新
+				evt = wx.CommandEvent(wx.EVT_LISTBOX.typeId, self.GetId())
+				evt.SetInt(view_index)
+				wx.PostEvent(self.GetEventHandler(), evt)
+		
+		if view_index != wx.NOT_FOUND:
+			menu = wx.Menu()
+			
+			view_image_item = menu.Append(wx.ID_ANY, __("action:view_image"))
+			open_in_folder_item = menu.Append(wx.ID_ANY, __("action:open_in_folder"))
+			
+			def on_view_image(e):
+				wx.PostEvent(self, wx.PyCommandEvent(myEVT_VIEW_IMAGE, self.GetId()))
+			
+			def on_open_in_folder(e):
+				wx.PostEvent(self, wx.PyCommandEvent(myEVT_OPEN_IN_FOLDER, self.GetId()))
+			
+			self.Bind(wx.EVT_MENU, on_view_image, view_image_item)
+			self.Bind(wx.EVT_MENU, on_open_in_folder, open_in_folder_item)
+			
+			self.PopupMenu(menu)
+			menu.Destroy()
+	
+	def on_double_click(self, event: wx.CommandEvent):
+		"""
+		リスト項目がダブルクリックされたときの処理。
+		画像表示イベントを発行します。
+		"""
+		view_index = self.GetSelection()
+		if view_index != wx.NOT_FOUND:
+			wx.PostEvent(self, wx.PyCommandEvent(myEVT_VIEW_IMAGE, self.GetId()))
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""

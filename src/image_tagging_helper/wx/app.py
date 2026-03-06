@@ -24,6 +24,8 @@ from image_tagging_helper.wx.events import (
 	EVT_APPEND_TAGS_TO_ALL,
 	EVT_REMOVE_TAGS_FROM_ALL,
 	EVT_REPLACE_TAG_IN_ALL,
+	EVT_VIEW_IMAGE,
+	EVT_OPEN_IN_FOLDER,
 )
 from image_tagging_helper.wx.preferences import PreferencesDialog
 from image_tagging_helper.wx.frame_menu import (
@@ -235,8 +237,9 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		
 		self.image_list = ImageVListBox(self.images_panel, style=wx.VSCROLL | wx.ALWAYS_SHOW_SB)
 		self.image_list.Bind(wx.EVT_LISTBOX, self.on_image_list_select)
-		self.image_list.Bind(wx.EVT_LISTBOX_DCLICK, self.on_image_list_double_click)
-		self.image_list.Bind(wx.EVT_CONTEXT_MENU, self.on_image_list_context_menu)
+		# ImageVListBoxからのカスタムイベントをバインド
+		self.image_list.Bind(EVT_VIEW_IMAGE, self.on_view_image)
+		self.image_list.Bind(EVT_OPEN_IN_FOLDER, self.on_open_in_folder)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.images_toolbar, 0, wx.EXPAND)
@@ -557,49 +560,6 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		
 		self.current_item_index = dataset_index
 		self._update_views_for_item_selection(dataset_index)
-	
-	def on_image_list_double_click(self, event: wx.CommandEvent):
-		"""
-		サムネイルリストの項目がダブルクリックされたときの処理。
-		選択されている画像を既定のビューアで開きます。
-		"""
-		view_index = self.image_list.GetSelection()
-		if view_index == wx.NOT_FOUND:
-			return
-		
-		dataset_index = self.image_list.get_dataset_index(view_index)
-		
-		# current_item_indexを更新してからon_view_imageを呼び出す
-		self.current_item_index = dataset_index
-		self.on_view_image(event)
-	
-	def on_image_list_context_menu(self, event: wx.ContextMenuEvent):
-		"""サムネイルリストのコンテキストメニューを表示します。"""
-		pos = event.GetPosition()
-		
-		# キーボード操作（メニューキー）の場合、posは(-1, -1)になることが多い
-		if pos == wx.DefaultPosition:
-			view_index = self.image_list.GetSelection()
-		else:
-			# マウス操作の場合、クリック位置のアイテムを選択する
-			client_pos = self.image_list.ScreenToClient(pos)
-			view_index = self.image_list.VirtualHitTest(client_pos.y)
-			
-			if view_index != wx.NOT_FOUND:
-				self.image_list.SetSelection(view_index)
-				self.on_image_list_select(None)
-		
-		if view_index != wx.NOT_FOUND:
-			menu = wx.Menu()
-			
-			view_image_item = menu.Append(wx.ID_ANY, __("action:view_image"))
-			open_in_folder_item = menu.Append(wx.ID_ANY, __("action:open_in_folder"))
-			
-			self.Bind(wx.EVT_MENU, self.on_view_image, view_image_item)
-			self.Bind(wx.EVT_MENU, self.on_open_in_folder, open_in_folder_item)
-			
-			self.image_list.PopupMenu(menu)
-			menu.Destroy()
 	
 	def on_preferences(self, event: wx.CommandEvent):
 		"""設定ダイアログを表示します。"""
