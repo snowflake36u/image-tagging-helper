@@ -130,6 +130,74 @@ class ImageTagsGrid(wx.grid.Grid):
 				self.Navigate(wx.NAVDIR_NEXT)
 			return
 		
+		if key_code in (wx.WXK_HOME, wx.WXK_END, wx.WXK_PAGEUP, wx.WXK_PAGEDOWN):
+			if event.ShiftDown():
+				event.Skip()
+				return
+			
+			if self.GetNumberRows() == 0:
+				return
+			
+			current_row = self.GetGridCursorRow()
+			current_col = self.GetGridCursorCol()
+			new_row, new_col = current_row, current_col
+			
+			if key_code == wx.WXK_HOME:
+				if event.ControlDown():
+					new_row, new_col = 0, 0
+				else:
+					new_col = 0
+			elif key_code == wx.WXK_END:
+				last_row = self.GetNumberRows() - 1
+				last_col = self.GetNumberCols() - 1
+				if event.ControlDown():
+					new_row, new_col = last_row, last_col
+				else:
+					new_col = last_col
+			elif key_code in (wx.WXK_PAGEUP, wx.WXK_PAGEDOWN):
+				# 可視領域の最上行と最下行を取得
+				grid_win = self.GetGridWindow()
+				client_w, client_h = grid_win.GetClientSize()
+				
+				# 列の幅を考慮して、確実にセルがあるX座標を指定
+				x_coord = 0
+				if self.GetNumberCols() > 0:
+					x_coord = self.GetColSize(0) // 2
+				
+				# 最上行の座標を取得
+				# XYToCellはwx.grid.GridCellCoordsオブジェクトを返す
+				top_coords_obj = self.XYToCell(x_coord, 0)
+				top_row = top_coords_obj.GetRow()
+				
+				# 最下行の座標を取得 (少し余裕を持たせる)
+				bottom_coords_obj = self.XYToCell(x_coord, max(0, client_h))
+				bottom_row = bottom_coords_obj.GetRow()
+				
+				# top_rowが-1の場合は、表示可能な行がないか、スクロール位置がおかしい
+				# その場合は0行目とする
+				if top_row == -1:
+					top_row = 0
+				
+				# bottom_rowが-1の場合は、可視領域の最下部に行がないことを意味する
+				# その場合はグリッドの最終行とする
+				if bottom_row == -1:
+					bottom_row = self.GetNumberRows() - 1
+				
+				# ページサイズ（移動量）
+				# 可視行数に基づいて計算
+				page_size = max(1, bottom_row - top_row)
+				
+				# 現在のカーソル位置から1ページ分移動する
+				if key_code == wx.WXK_PAGEUP:
+					new_row = max(0, current_row - page_size)
+				elif key_code == wx.WXK_PAGEDOWN:
+					new_row = min(self.GetNumberRows() - 1, current_row + page_size)
+			
+			if new_row != current_row or new_col != current_col:
+				self.focus_cell(new_row, new_col)
+				self.MakeCellVisible(new_row, new_col)
+			return
+		
 		if key_code in (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT):
 			if event.ShiftDown():
 				event.Skip()
