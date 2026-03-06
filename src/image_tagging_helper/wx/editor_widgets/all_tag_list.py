@@ -204,7 +204,7 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		menu.Append(ID_REMOVE_TAG_FROM_ALL, __("action:remove_tags_from_all_items") + "\tCtrl+R")
 		
 		if not multiple_tags:
-			menu.Append(ID_REPLACE_TAG_IN_ALL, __("action:replace_tags_in_all_items") + "\tCtrl+L")
+			menu.Append(ID_REPLACE_TAG_IN_ALL, __("action:replace_tag_in_all_items") + "\tCtrl+L")
 		
 		# イベントハンドラのバインド
 		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_ADD_TAGS_TO_FILTER, selected_tags), id=ID_ADD_TAG_TO_FILTER)

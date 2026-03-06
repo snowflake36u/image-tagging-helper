@@ -28,30 +28,6 @@ msgstr ""
 msgid "title:restart_required"
 msgstr ""
 
-msgid "action:add_tag_to_filter"
-msgstr ""
-
-msgid "action:append_tags_to_current_items"
-msgstr ""
-
-msgid "action:remove_tags_from_current_items"
-msgstr ""
-
-msgid "action:append_tags_to_filtered_items"
-msgstr ""
-
-msgid "action:remove_tags_from_filtered_items"
-msgstr ""
-
-msgid "action:append_tags_to_all_items"
-msgstr ""
-
-msgid "action:remove_tags_from_all_items"
-msgstr ""
-
-msgid "action:replace_tags_in_all_items"
-msgstr ""
-
 msgid "dialog:enter_new_tag_for_replacement"
 msgstr ""
 
@@ -245,6 +221,30 @@ msgid "label:tag"
 msgstr ""
 
 msgid "label:image_count"
+msgstr ""
+
+msgid "action:add_tag_to_filter"
+msgstr ""
+
+msgid "action:append_tags_to_current_items"
+msgstr ""
+
+msgid "action:remove_tags_from_current_items"
+msgstr ""
+
+msgid "action:append_tags_to_filtered_items"
+msgstr ""
+
+msgid "action:remove_tags_from_filtered_items"
+msgstr ""
+
+msgid "action:append_tags_to_all_items"
+msgstr ""
+
+msgid "action:remove_tags_from_all_items"
+msgstr ""
+
+msgid "action:replace_tag_in_all_items"
 msgstr ""
 
 msgid "label:weight"

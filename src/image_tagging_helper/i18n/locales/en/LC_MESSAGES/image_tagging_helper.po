@@ -28,30 +28,6 @@ msgstr "Restart the application to apply the language change."
 msgid "title:restart_required"
 msgstr "Restart Required"
 
-msgid "action:add_tag_to_filter"
-msgstr "Add tags to &filter"
-
-msgid "action:append_tags_to_current_items"
-msgstr "Append tags to current items (&1)"
-
-msgid "action:remove_tags_from_current_items"
-msgstr "Remove tags from current items (&2)"
-
-msgid "action:append_tags_to_filtered_items"
-msgstr "Append tags to filtered items (&3)"
-
-msgid "action:remove_tags_from_filtered_items"
-msgstr "Remove tags from filtered items (&4)"
-
-msgid "action:append_tags_to_all_items"
-msgstr "Append tags to all items (&5)"
-
-msgid "action:remove_tags_from_all_items"
-msgstr "Remove tags from all items (&6)"
-
-msgid "action:replace_tags_in_all_items"
-msgstr "Replace tags in all items (&7)..."
-
 msgid "dialog:enter_new_tag_for_replacement"
 msgstr "Enter new tag for replacement of '{old_tag}'"
 
@@ -247,6 +223,30 @@ msgstr "Tag"
 msgid "label:image_count"
 msgstr "#images"
 
+msgid "action:add_tag_to_filter"
+msgstr "Add tags to &filter"
+
+msgid "action:append_tags_to_current_items"
+msgstr "Append tags to current items (&1)"
+
+msgid "action:remove_tags_from_current_items"
+msgstr "Remove tags from current items (&2)"
+
+msgid "action:append_tags_to_filtered_items"
+msgstr "Append tags to filtered items (&3)"
+
+msgid "action:remove_tags_from_filtered_items"
+msgstr "Remove tags from filtered items (&4)"
+
+msgid "action:append_tags_to_all_items"
+msgstr "Append tags to all items (&5)"
+
+msgid "action:remove_tags_from_all_items"
+msgstr "Remove tags from all items (&6)"
+
+msgid "action:replace_tag_in_all_items"
+msgstr "Replace tags in all items (&7)..."
+
 msgid "label:weight"
 msgstr "Weight"
 
@@ -255,3 +255,4 @@ msgstr "&Select in All Tags"
 
 #~ msgid "label:font"
 #~ msgstr "Font"
+
