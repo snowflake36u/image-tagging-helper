@@ -114,7 +114,7 @@ class FrameMenuMixin:
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:dataset"))
 		
-		view_image_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:view_image"), __("tooltip:view_image"))
+		view_image_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:open_image_in_viewer"), __("tooltip:open_image_in_viewer"))
 		open_in_folder_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:open_in_folder"), __("tooltip:open_in_folder"))
 		self.Bind(wx.EVT_MENU, self.on_view_image, view_image_menu)
 		self.Bind(wx.EVT_MENU, self.on_open_in_folder, open_in_folder_menu)

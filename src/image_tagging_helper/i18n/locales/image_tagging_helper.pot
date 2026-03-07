@@ -187,10 +187,10 @@ msgstr ""
 msgid "ui_group:dataset"
 msgstr ""
 
-msgid "action:view_image"
+msgid "action:open_image_in_viewer"
 msgstr ""
 
-msgid "tooltip:view_image"
+msgid "tooltip:open_image_in_viewer"
 msgstr ""
 
 msgid "action:open_in_folder"

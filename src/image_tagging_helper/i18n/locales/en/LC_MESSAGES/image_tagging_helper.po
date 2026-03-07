@@ -38,7 +38,9 @@ msgid "title:import_tags"
 msgstr "Import Tag Dictionary"
 
 msgid "message:failed_to_import_tags"
-msgstr "Failed to import tag dictionary file:\n{e}"
+msgstr ""
+"Failed to import tag dictionary file:\n"
+"{e}"
 
 msgid "title:error"
 msgstr "Error"
@@ -47,7 +49,9 @@ msgid "title:export_tags"
 msgstr "Export Tag Dictionary"
 
 msgid "message:failed_to_export_tags"
-msgstr "Failed to export tag dictionary file:\n{e}"
+msgstr ""
+"Failed to export tag dictionary file:\n"
+"{e}"
 
 msgid "message:restart_to_apply_language"
 msgstr "Restart the application to apply the language change."
@@ -187,11 +191,11 @@ msgstr "Sort"
 msgid "ui_group:dataset"
 msgstr "&Dataset"
 
-msgid "action:view_image"
-msgstr "&View Image"
+msgid "action:open_image_in_viewer"
+msgstr "&Open Image in Viewer"
 
-msgid "tooltip:view_image"
-msgstr "View Image"
+msgid "tooltip:open_image_in_viewer"
+msgstr "Open Image in Viewer"
 
 msgid "action:open_in_folder"
 msgstr "Open &in Folder"

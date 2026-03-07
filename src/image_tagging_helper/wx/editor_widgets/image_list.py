@@ -182,7 +182,7 @@ class ImageVListBox(wx.VListBox):
 		if view_index != wx.NOT_FOUND:
 			menu = wx.Menu()
 			
-			view_image_item = menu.Append(wx.ID_ANY, __("action:view_image"))
+			view_image_item = menu.Append(wx.ID_ANY, __("action:open_image_in_viewer"))
 			open_in_folder_item = menu.Append(wx.ID_ANY, __("action:open_in_folder"))
 			
 			def on_view_image(e):

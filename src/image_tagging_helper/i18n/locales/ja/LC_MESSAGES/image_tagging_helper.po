@@ -38,7 +38,9 @@ msgid "title:import_tags"
 msgstr "タグ辞書のインポート"
 
 msgid "message:failed_to_import_tags"
-msgstr "タグ辞書ファイルのインポートに失敗しました:\n{e}"
+msgstr ""
+"タグ辞書ファイルのインポートに失敗しました:\n"
+"{e}"
 
 msgid "title:error"
 msgstr "エラー"
@@ -47,7 +49,9 @@ msgid "title:export_tags"
 msgstr "タグ辞書のエクスポート"
 
 msgid "message:failed_to_export_tags"
-msgstr "タグ辞書ファイルのエクスポートに失敗しました:\n{e}"
+msgstr ""
+"タグ辞書ファイルのエクスポートに失敗しました:\n"
+"{e}"
 
 msgid "message:restart_to_apply_language"
 msgstr "言語の変更にはアプリの再起動が必要です。"
@@ -187,11 +191,11 @@ msgstr "並べ替え"
 msgid "ui_group:dataset"
 msgstr "データセット(&D)"
 
-msgid "action:view_image"
-msgstr "画像を表示(&V)"
+msgid "action:open_image_in_viewer"
+msgstr "画像をビューアで開く(&V)"
 
-msgid "tooltip:view_image"
-msgstr "画像を表示"
+msgid "tooltip:open_image_in_viewer"
+msgstr "画像をビューアで開く"
 
 msgid "action:open_in_folder"
 msgstr "ファイルの場所を開く(&I)"
