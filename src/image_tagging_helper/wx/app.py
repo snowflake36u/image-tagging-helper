@@ -663,10 +663,11 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 	
 	def on_import_tags(self, event: wx.CommandEvent):
 		"""タグ情報をインポートします。"""
-		wildcard = "All supported files (*.json;*.yaml;*.yml;*.md)|*.json;*.yaml;*.yml;*.md|" \
-					  "JSON files (*.json)|*.json|" \
-					  "YAML files (*.yaml;*.yml)|*.yaml;*.yml|" \
-					  "Markdown files (*.md)|*.md"
+		wildcard = '|'.join([
+			"All supported files (*.json;*.yaml;*.yml)", "*.json;*.yaml;*.yml",
+			"JSON files (*.json)", "*.json",
+			"YAML files (*.yaml;*.yml)", "*.yaml;*.yml",
+		])
 		with wx.FileDialog(self, __("title:import_tags"), wildcard=wildcard, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				path = dlg.GetPath()
@@ -675,9 +676,10 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 	
 	def on_export_tags(self, event: wx.CommandEvent):
 		"""タグ情報をエクスポートします。"""
-		wildcard = "JSON files (*.json)|*.json|" \
-					  "YAML files (*.yaml)|*.yaml|" \
-					  "Markdown files (*.md)|*.md"
+		wildcard = '|'.join([
+			"JSON files (*.json)", "*.json",
+			"YAML files (*.yaml)", "*.yaml",
+		])
 		with wx.FileDialog(self, __("title:export_tags"), wildcard=wildcard, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				path = dlg.GetPath()
