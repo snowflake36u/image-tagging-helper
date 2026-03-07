@@ -37,15 +37,15 @@ class TagSortOrder(Enum):
 	CategoryOrder = auto()
 	CategoryText = auto()
 	
-	def get_key(self, lexicon) -> Any:
+	def get_key_fn(self, lexicon) -> Any:
 		if self == TagSortOrder.TagName or lexicon is None:
-			return TagNameSortKey()
+			return TagNameSortKeyFn()
 		elif self == TagSortOrder.Count:
-			return CountSortKey()
+			return CountSortKeyFn()
 		elif self == TagSortOrder.CategoryOrder:
-			return CategoryOrderSortKey(lexicon)
+			return CategoryOrderSortKeyFn(lexicon)
 		elif self == TagSortOrder.CategoryText:
-			return CategoryTextSortKey(lexicon)
+			return CategoryTextSortKeyFn(lexicon)
 		
 		raise ValueError(f"Unknown sort order: {self}")
 	
@@ -58,22 +58,22 @@ class TagSortOrder(Enum):
 			return 2
 		return -1
 
-class TagSortKey(ABC):
+class TagSortKeyFn(ABC):
 	"""タグのソート順を定義します。"""
 	
 	def __call__(self, item) -> Any:
 		raise NotImplementedError
 
-class TagNameSortKey(TagSortKey):
+class TagNameSortKeyFn(TagSortKeyFn):
 	def __call__(self, item) -> Any:
 		return item[0]  # name
 
-class CountSortKey(TagSortKey):
+class CountSortKeyFn(TagSortKeyFn):
 	def __call__(self, item) -> Any:
 		name, count, _ = item
 		return count, name
 
-class CategoryOrderSortKey(TagSortKey):
+class CategoryOrderSortKeyFn(TagSortKeyFn):
 	def __init__(self, lexicon: TagLexicon):
 		self.lexicon = lexicon
 	
@@ -81,7 +81,7 @@ class CategoryOrderSortKey(TagSortKey):
 		name, count, _ = item
 		return self.lexicon.get_tag_order(name), name
 
-class CategoryTextSortKey(TagSortKey):
+class CategoryTextSortKeyFn(TagSortKeyFn):
 	def __init__(self, lexicon: TagLexicon):
 		self.lexicon = lexicon
 	
@@ -114,7 +114,7 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		self.tag_lexicon: TagLexicon | None = None
 		self.sort_order: TagSortOrder = TagSortOrder.TagName
 		self.sort_descending: bool = False
-		self.sort_key = self.sort_order.get_key(self.tag_lexicon)
+		self.sort_key = self.sort_order.get_key_fn(self.tag_lexicon)
 		
 		# データ保持用リスト: list[tuple[tag_text, count, category]]
 		self.item_list: list[tuple[str, int, str | None]] = []
@@ -175,7 +175,7 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		
 		sort_col = self.sort_order.get_column_index()
 		
-		self.sort_key = self.sort_order.get_key(self.tag_lexicon)
+		self.sort_key = self.sort_order.get_key_fn(self.tag_lexicon)
 		
 		# ソートインジケータの表示（wxPython 4.1+）
 		if hasattr(self, "ShowSortIndicator"):
