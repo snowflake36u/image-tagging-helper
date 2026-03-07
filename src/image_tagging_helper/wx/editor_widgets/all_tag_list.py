@@ -60,7 +60,6 @@ class TagSortOrder(Enum):
 
 class TagSortKey(ABC):
 	"""タグのソート順を定義します。"""
-	ALL: dict[int, int] = { }
 	
 	def __call__(self, item) -> Any:
 		raise NotImplementedError
@@ -90,10 +89,11 @@ class CategoryTextSortKey(TagSortKey):
 		name, count, _ = item
 		return self.lexicon.get_tag_category(name) or '', name
 
-class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSorterMixin):
+class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 	"""
 	データセット全体のタグとその出現回数を表示・管理するリストコントロール。
 	ヘッダーをクリックすることで、各列でソートが可能です。
+	仮想リストコントロールとして実装され、大量のタグを効率的に扱います。
 	"""
 	
 	def __init__(self, parent: wx.Window, *args, **kwargs):
@@ -103,22 +103,21 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		Args:
 			 parent: 親ウィンドウ。
 		"""
-		wx.ListCtrl.__init__(self, parent, *args, style=wx.LC_REPORT, **kwargs)
+		# 仮想リストスタイルを追加
+		style = kwargs.get('style', 0) | wx.LC_REPORT | wx.LC_VIRTUAL
+		kwargs['style'] = style
+		
+		wx.ListCtrl.__init__(self, parent, *args, **kwargs)
 		listmix.ListCtrlAutoWidthMixin.__init__(self)
-		
-		# ソートのためにitemDataMapを初期化
-		self.itemDataMap = { }
-		self.tag_to_item_id = { }
-		self.next_item_id = 0
-		
-		# ColumnSorterMixinを初期化（3列）
-		listmix.ColumnSorterMixin.__init__(self, 3)
 		
 		self.dataset: Dataset | None = None
 		self.tag_lexicon: TagLexicon | None = None
 		self.sort_order: TagSortOrder = TagSortOrder.TagName
 		self.sort_descending: bool = False
 		self.sort_key = self.sort_order.get_key(self.tag_lexicon)
+		
+		# データ保持用リスト: list[tuple[tag_text, count, category]]
+		self.item_list: list[tuple[str, int, str | None]] = []
 		
 		self.InsertColumn(0, __("label:tag"), width=150)
 		self.InsertColumn(1, __("label:image_count"), width=50, format=wx.LIST_FORMAT_RIGHT)
@@ -132,9 +131,17 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		# 列クリックイベントをバインド
 		self.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
 	
-	def GetListCtrl(self):
-		"""ColumnSorterMixinのためにListCtrlインスタンスを返します。"""
-		return self
+	def OnGetItemText(self, item, col):
+		"""仮想リストのアイテムテキストを取得します。"""
+		if 0 <= item < len(self.item_list):
+			data = self.item_list[item]
+			if col == 0:
+				return data[0]
+			elif col == 1:
+				return str(data[1])
+			elif col == 2:
+				return data[2] or __("label:uncategorized_symbol")
+		return ""
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""
@@ -170,9 +177,11 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		
 		self.sort_key = self.sort_order.get_key(self.tag_lexicon)
 		
-		self.RemoveSortIndicator()
-		if sort_col != -1:
-			self.ShowSortIndicator(sort_col, not descending)
+		# ソートインジケータの表示（wxPython 4.1+）
+		if hasattr(self, "ShowSortIndicator"):
+			self.RemoveSortIndicator()
+			if sort_col != -1:
+				self.ShowSortIndicator(sort_col, not descending)
 		
 		self.update_list()
 	
@@ -206,50 +215,66 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 			
 			self.set_sort_order(new_order, new_descending)
 	
-	# ColumnSorterMixinのデフォルト処理を抑制するためにSkipしない
-	
 	def update_list(self):
 		"""
 		データセット全体のタグとその出現回数をリストに表示し、現在の設定でソートします。
 		"""
 		self.Freeze()
 		try:
-			self.DeleteAllItems()
-			self.itemDataMap.clear()
-			self.tag_to_item_id.clear()
-			self.next_item_id = 0
+			# 選択状態をクリア（データが全入れ替えになるため）
+			self.clear_selection()
+			self.item_list.clear()
 			
 			if not self.dataset or len(self.dataset) == 0:
+				self.SetItemCount(0)
 				return
 			
+			lexicon = self.tag_lexicon
 			valid_tags = [
-				(t, c, self.tag_lexicon.get_tag_category(t))
+				(t, c, lexicon.get_tag_category(t) if lexicon else None)
 				for t, c in self.dataset.tag_usages.items() if t.strip()
 			]
 			
-			sorted_tags = sorted(valid_tags, key=self.sort_key, reverse=self.sort_descending)
-			
-			for tag_text, count, categ in sorted_tags:
-				self._insert_item_at(self.GetItemCount(), tag_text, count, categ)
+			self.item_list = sorted(valid_tags, key=self.sort_key, reverse=self.sort_descending)
+			self.SetItemCount(len(self.item_list))
+			self.Refresh()
 		finally:
 			self.Thaw()
 	
-	def _insert_item_at(self, index: int, tag_text: str, count: int, categ: str | None):
+	def _find_index_by_tag(self, tag_text: str) -> int:
 		"""
-		指定された位置にアイテムを挿入し、内部データを更新します。
+		タグ名からインデックスを検索します。
+		ソート順がTagNameの場合は二分探索を使用し、それ以外は線形探索を行います。
 		"""
-		item_id = self.next_item_id
-		self.next_item_id += 1
-		
-		idx = self.InsertItem(index, tag_text)
-		self.SetItem(idx, 1, str(count))
-		self.SetItem(idx, 2, categ or __("label:uncategorized_symbol"))
-		
-		self.SetItemData(idx, item_id)
-		self.itemDataMap[item_id] = (tag_text, count, categ)
-		self.tag_to_item_id[tag_text] = item_id
-		return idx
-	
+		if self.sort_order == TagSortOrder.TagName:
+			# 二分探索
+			low = 0
+			high = len(self.item_list)
+			while low < high:
+				mid = (low + high) // 2
+				mid_tag = self.item_list[mid][0]
+				
+				if mid_tag == tag_text:
+					return mid
+				
+				if not self.sort_descending:
+					if mid_tag < tag_text:
+						low = mid + 1
+					else:
+						high = mid
+				else:
+					if mid_tag > tag_text:
+						low = mid + 1
+					else:
+						high = mid
+			return -1
+		else:
+			# 線形探索
+			for i, item in enumerate(self.item_list):
+				if item[0] == tag_text:
+					return i
+			return -1
+
 	def on_tag_usage_changed(self, tag_text: str, count: int):
 		"""
 		タグの使用回数が変更されたときの処理。
@@ -258,55 +283,81 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		if not tag_text.strip():
 			return
 		
-		item_id = self.tag_to_item_id.get(tag_text)
-		found_idx = wx.NOT_FOUND
-		if item_id is not None:
-			found_idx = self.FindItem(-1, data=item_id)
+		# 現在のリストから対象タグを検索
+		found_idx = self._find_index_by_tag(tag_text)
+		
+		# 選択状態の退避
+		selected_indices = set()
+		item = self.GetFirstSelected()
+		while item != wx.NOT_FOUND:
+			selected_indices.add(item)
+			item = self.GetNextSelected(item)
+		
+		insert_idx = -1
 		
 		# 削除の場合
 		if count <= 0:
-			if found_idx != wx.NOT_FOUND:
-				self.DeleteItem(found_idx)
-				if item_id in self.itemDataMap:
-					del self.itemDataMap[item_id]
-				if tag_text in self.tag_to_item_id:
-					del self.tag_to_item_id[tag_text]
-			return
-		
-		# 更新または挿入の場合
-		categ = self.tag_lexicon.get_tag_category(tag_text)
-		new_data = (tag_text, count, categ)
-		
-		if found_idx != wx.NOT_FOUND:
-			# データが変わっていない場合は何もしない
-			old_data = self.itemDataMap.get(item_id)
-			if old_data == new_data:
-				return
+			if found_idx != -1:
+				self.item_list.pop(found_idx)
+				self.SetItemCount(len(self.item_list))
+				# 削除時はRefreshが必要
+				self.Refresh()
+		else:
+			# 更新または挿入
+			categ = self.tag_lexicon.get_tag_category(tag_text) if self.tag_lexicon else None
+			new_data = (tag_text, count, categ)
 			
-			# 削除して再挿入（ソート順を維持するため）
-			self.DeleteItem(found_idx)
-			if item_id in self.itemDataMap:
-				del self.itemDataMap[item_id]
-			if tag_text in self.tag_to_item_id:
-				del self.tag_to_item_id[tag_text]
+			if found_idx != -1:
+				# データが変わっていない場合は何もしない
+				if self.item_list[found_idx] == new_data:
+					return
+				
+				# 削除して再挿入（ソート順を維持するため）
+				self.item_list.pop(found_idx)
+			
+			# 挿入位置を検索
+			insert_idx = self._find_insert_position(new_data)
+			self.item_list.insert(insert_idx, new_data)
+			self.SetItemCount(len(self.item_list))
+			self.Refresh()
 		
-		# 挿入位置を検索
-		insert_idx = self._find_insert_position(new_data)
-		self._insert_item_at(insert_idx, tag_text, count, categ)
-	
+		# 選択状態の復元
+		new_selected_indices = set()
+		for idx in selected_indices:
+			new_idx = idx
+			if found_idx != -1:  # 削除があった
+				if idx == found_idx:
+					continue  # 削除されたアイテム
+				if idx > found_idx:
+					new_idx -= 1
+			
+			if insert_idx != -1:  # 挿入があった
+				if new_idx >= insert_idx:
+					new_idx += 1
+			
+			new_selected_indices.add(new_idx)
+		
+		# 移動したアイテムの選択状態維持（更新時のみ）
+		if found_idx != -1 and insert_idx != -1 and found_idx in selected_indices:
+			new_selected_indices.add(insert_idx)
+		
+		# 適用
+		self.clear_selection()
+		for idx in new_selected_indices:
+			self.Select(idx)
+
 	def _find_insert_position(self, new_data) -> int:
 		"""
 		二分探索を使用して、新しいアイテムを挿入すべきインデックスを検索します。
 		"""
 		low = 0
-		high = self.GetItemCount()
+		high = len(self.item_list)
 		
 		new_key = self.sort_key(new_data)
 		
 		while low < high:
 			mid = (low + high) // 2
-			item_id = self.GetItemData(mid)
-			mid_data = self.itemDataMap[item_id]
+			mid_data = self.item_list[mid]
 			mid_key = self.sort_key(mid_data)
 			
 			# 降順の場合の比較
@@ -423,8 +474,12 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		self.select_all()
 	
 	def select_all(self):
-		for i in range(self.GetItemCount()):
-			self.Select(i)
+		self.Freeze()
+		try:
+			for i in range(self.GetItemCount()):
+				self.Select(i)
+		finally:
+			self.Thaw()
 	
 	def copy_selected_tags_to_clipboard(self):
 		"""
@@ -443,8 +498,10 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 				wx.TheClipboard.Close()
 	
 	def clear_selection(self):
-		for i in range(self.GetItemCount()):
-			self.Select(i, on=False)
+		item = self.GetFirstSelected()
+		while item != wx.NOT_FOUND:
+			self.Select(item, on=False)
+			item = self.GetNextSelected(item)
 	
 	def select_tags(self, tags: set[str]):
 		"""
@@ -454,12 +511,11 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		self.clear_selection()
 		
 		first_selected_index = -1
-		for tag in tags:
-			item_index = self.FindItem(-1, tag)
-			if item_index != wx.NOT_FOUND:
-				self.Select(item_index, on=True)
+		for i, item in enumerate(self.item_list):
+			if item[0] in tags:
+				self.Select(i, on=True)
 				if first_selected_index == -1:
-					first_selected_index = item_index
+					first_selected_index = i
 		
 		if first_selected_index != -1:
 			self.EnsureVisible(first_selected_index)
