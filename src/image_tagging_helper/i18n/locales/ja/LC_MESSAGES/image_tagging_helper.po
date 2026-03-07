@@ -23,10 +23,10 @@ msgid "sort:by_count"
 msgstr "画像数"
 
 msgid "sort:by_category_order"
-msgstr "カテゴリ順"
+msgstr "カテゴリ (辞書順)"
 
 msgid "sort:by_category_text"
-msgstr "カテゴリ順 (文字列)"
+msgstr "カテゴリ (名前順)"
 
 msgid "sort:descending"
 msgstr "降順"

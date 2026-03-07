@@ -23,10 +23,10 @@ msgid "sort:by_count"
 msgstr "By Count"
 
 msgid "sort:by_category_order"
-msgstr "By Category (Order)"
+msgstr "By Category (Dictionary Order)"
 
 msgid "sort:by_category_text"
-msgstr "By Category (Text)"
+msgstr "By Category (Name Order)"
 
 msgid "sort:descending"
 msgstr "降順"

@@ -340,8 +340,8 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		# メニュー項目を追加
 		menu.Append(ID_SORT_BY_TAG_NAME, __("sort:by_tag_name"), kind=wx.ITEM_RADIO)
 		menu.Append(ID_SORT_BY_COUNT, __("sort:by_count"), kind=wx.ITEM_RADIO)
-		menu.Append(ID_SORT_BY_CATEGORY_ORDER, __("sort:by_category_order"), kind=wx.ITEM_RADIO)
 		menu.Append(ID_SORT_BY_CATEGORY_TEXT, __("sort:by_category_text"), kind=wx.ITEM_RADIO)
+		menu.Append(ID_SORT_BY_CATEGORY_ORDER, __("sort:by_category_order"), kind=wx.ITEM_RADIO)
 		
 		menu.AppendSeparator()
 		menu.Append(ID_SORT_DESCENDING, __("sort:descending"), kind=wx.ITEM_CHECK)
