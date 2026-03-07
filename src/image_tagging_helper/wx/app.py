@@ -366,8 +366,12 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.Bind(wx.EVT_MENU, self.on_sort_descending_selected, id=ID_SORT_DESCENDING)
 		
 		# ボタンの位置にメニューを表示
-		point = self.sort_button.GetPosition()
-		self.PopupMenu(menu, wx.Point(point.x, point.y + self.sort_button.GetSize().height))
+		btn_pos = self.sort_button.GetScreenPosition()
+		btn_size = self.sort_button.GetSize()
+		menu_pos = self.ScreenToClient(btn_pos)
+		menu_pos.y += btn_size.height
+		
+		self.PopupMenu(menu, menu_pos)
 		menu.Destroy()  # メニューを破棄
 	
 	def on_sort_menu_item_selected(self, event: wx.CommandEvent):
