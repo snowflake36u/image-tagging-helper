@@ -34,6 +34,12 @@ msgstr "降順"
 msgid "title:choose_a_directory"
 msgstr "Choose a Directory"
 
+msgid "title:import_tags"
+msgstr "Import Tag Dictionary"
+
+msgid "title:export_tags"
+msgstr "Export Tag Dictionary"
+
 msgid "message:restart_to_apply_language"
 msgstr "Restart the application to apply the language change."
 
@@ -75,6 +81,18 @@ msgstr "&Reload"
 
 msgid "tooltip:reload"
 msgstr "Reload"
+
+msgid "action:import_tags"
+msgstr ""
+
+msgid "tooltip:import_tags"
+msgstr ""
+
+msgid "action:export_tags"
+msgstr ""
+
+msgid "tooltip:export_tags"
+msgstr ""
 
 msgid "action:save"
 msgstr "&Save"

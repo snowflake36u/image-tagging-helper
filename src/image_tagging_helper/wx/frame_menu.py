@@ -53,6 +53,13 @@ class FrameMenuMixin:
 		
 		menu.AppendSeparator()
 		
+		import_tags_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:import_tags"), __("tooltip:import_tags"))
+		export_tags_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:export_tags"), __("tooltip:export_tags"))
+		self.Bind(wx.EVT_MENU, self.on_import_tags, import_tags_menu)
+		self.Bind(wx.EVT_MENU, self.on_export_tags, export_tags_menu)
+		
+		menu.AppendSeparator()
+		
 		save_menu = self._append_menu_item(menu, wx.ID_SAVE, __("action:save"), __("tooltip:save"), 'Ctrl+S')
 		self.Bind(wx.EVT_MENU, self.on_save, save_menu)
 		

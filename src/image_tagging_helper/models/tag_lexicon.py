@@ -1,3 +1,5 @@
+import json
+import os
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -41,6 +43,58 @@ class TagLexicon:
 		self.n_categories = n_category
 		self.categories = categories
 		self.tag_category_indices = tag_category_indices
+	
+	def get_lexicon(self) -> list[TagCategory]:
+		"""現在のタグ情報をTagCategoryのリストとして取得します。"""
+		result = []
+		for tag, cat_idx in self.tag_category_indices.items():
+			category = self.categories[cat_idx]
+			result.append(TagCategory(tag, category))
+		return result
+	
+	def load(self, path: str):
+		"""指定されたパスからJSON形式でタグ情報を読み込みます。"""
+		if not os.path.exists(path):
+			return
+		
+		try:
+			with open(path, 'r', encoding='utf-8') as f:
+				data = json.load(f)
+			
+			lexicon = []
+			if isinstance(data, list):
+				for item in data:
+					category = item.get('category')
+					tags = item.get('tags')
+					if category and isinstance(tags, list):
+						for tag in tags:
+							lexicon.append(TagCategory(tag, category))
+			
+			self.set_lexicon(lexicon)
+		except (json.JSONDecodeError, OSError):
+			pass
+	
+	def save(self, path: str):
+		"""指定されたパスにJSON形式でタグ情報を保存します。"""
+		# カテゴリごとにタグをまとめる
+		category_tags_map = [[] for _ in range(self.n_categories)]
+		for tag, cat_idx in self.tag_category_indices.items():
+			category_tags_map[cat_idx].append(tag)
+		
+		data = []
+		for i, category in enumerate(self.categories):
+			tags = category_tags_map[i]
+			tags.sort()
+			data.append({
+				'category': category,
+				'tags': tags
+			})
+		
+		try:
+			with open(path, 'w', encoding='utf-8') as f:
+				json.dump(data, f, indent=4, ensure_ascii=False)
+		except OSError:
+			pass
 	
 	def get_tag_category(self, tag_text):
 		if tag_text in self.tag_category_indices:

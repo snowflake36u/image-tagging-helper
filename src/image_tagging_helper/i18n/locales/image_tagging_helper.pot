@@ -34,6 +34,12 @@ msgstr ""
 msgid "title:choose_a_directory"
 msgstr ""
 
+msgid "title:import_tags"
+msgstr ""
+
+msgid "title:export_tags"
+msgstr ""
+
 msgid "message:restart_to_apply_language"
 msgstr ""
 
@@ -74,6 +80,18 @@ msgid "action:reload"
 msgstr ""
 
 msgid "tooltip:reload"
+msgstr ""
+
+msgid "action:import_tags"
+msgstr ""
+
+msgid "tooltip:import_tags"
+msgstr ""
+
+msgid "action:export_tags"
+msgstr ""
+
+msgid "tooltip:export_tags"
 msgstr ""
 
 msgid "action:save"

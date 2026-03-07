@@ -85,6 +85,10 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.tag_lexicon = TagLexicon()
 		self.current_item_index: int = wx.NOT_FOUND
 		
+		# タグ情報の読み込み
+		self.tag_lexicon_path = os.path.join(self.config.config_dir, 'tag_lexicon.json')
+		self.tag_lexicon.load(self.tag_lexicon_path)
+		
 		# === UIの初期化 ===
 		self._init_ui()
 		self._init_accelerators()  # FrameMenuMixinから呼び出される
@@ -527,6 +531,9 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 				event.Veto()
 				return
 		
+		# タグ情報の保存
+		self.tag_lexicon.save(self.tag_lexicon_path)
+		
 		self.save_ui_settings()
 		event.Skip()
 	
@@ -653,6 +660,21 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		if self.dataset.initialized:
 			self.dataset.save(self.caption_ext, self.caption_format_config)
 			self._update_title()
+	
+	def on_import_tags(self, event: wx.CommandEvent):
+		"""タグ情報をインポートします。"""
+		with wx.FileDialog(self, __("title:import_tags"), wildcard="JSON files (*.json)|*.json", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				path = dlg.GetPath()
+				self.tag_lexicon.load(path)
+				self.all_tags_list.set_tag_lexicon(self.tag_lexicon)
+	
+	def on_export_tags(self, event: wx.CommandEvent):
+		"""タグ情報をエクスポートします。"""
+		with wx.FileDialog(self, __("title:export_tags"), wildcard="JSON files (*.json)|*.json", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				path = dlg.GetPath()
+				self.tag_lexicon.save(path)
 	
 	def on_image_list_select(self, event: wx.CommandEvent):
 		"""
