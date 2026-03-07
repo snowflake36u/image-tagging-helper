@@ -348,7 +348,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		
 		# 現在のソート順をチェックマークで表示
 		current_sort_order = self.all_tags_list.sort_order
-		current_sort_ascending = self.all_tags_list.sort_descending
+		current_sort_descending = self.all_tags_list.sort_descending
 		
 		sort_order_to_id = {
 			TagSortOrder.TagName: ID_SORT_BY_TAG_NAME,
@@ -360,7 +360,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		if current_sort_order in sort_order_to_id:
 			menu.Check(sort_order_to_id[current_sort_order], True)
 		
-		menu.Check(ID_SORT_DESCENDING, not current_sort_ascending)
+		menu.Check(ID_SORT_DESCENDING, current_sort_descending)
 		
 		# イベントハンドラをバインド
 		self.Bind(wx.EVT_MENU, self.on_sort_menu_item_selected, id=ID_SORT_BY_TAG_NAME)
@@ -397,7 +397,6 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 	def on_sort_descending_selected(self, event: wx.CommandEvent):
 		"""降順チェックボックスが選択されたときにソート順を適用します。"""
 		is_checked = event.IsChecked()
-		# is_checkedがTrueなら降順なので、ascendingはFalse
 		self.all_tags_list.set_sort_order(self.all_tags_list.sort_order, is_checked)
 	
 	# === イベントハンドラ ===
