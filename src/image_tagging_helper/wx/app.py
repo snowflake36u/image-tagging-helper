@@ -1148,6 +1148,13 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		size = self.GetSize()
 		self.config.set('ui.window_width', size.width)
 		self.config.set('ui.window_height', size.height)
+		
+		# AllTagsListのソート設定を保存
+		self.config.set('ui.all_tags_list.sort_order', self.all_tags_list.sort_order.name)
+		self.config.set('ui.all_tags_list.sort_descending', self.all_tags_list.sort_descending)
+		
+		# パネルの表示状態を保存
+		self.config.set('ui.show_all_tags_panel', self.toggle_all_tags_menu.IsChecked())
 	
 	def load_window_size_settings(self):
 		width = self.config.get('ui.window_width', 1200)
@@ -1167,6 +1174,22 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 				self.splitter_1.SetSashPosition(s1_pos)
 			if s2_pos > 0:
 				self.splitter_2.SetSashPosition(s2_pos)
+			
+			# AllTagsListのソート設定を復元
+			sort_order_name = self.config.get('ui.all_tags_list.sort_order', TagSortOrder.TagName.name)
+			try:
+				sort_order = TagSortOrder[sort_order_name]
+			except KeyError:
+				sort_order = TagSortOrder.TagName
+			
+			sort_descending = self.config.get('ui.all_tags_list.sort_descending', False)
+			self.all_tags_list.set_sort_order(sort_order, sort_descending)
+			
+			# パネルの表示状態を復元
+			show_all_tags_panel = self.config.get('ui.show_all_tags_panel', True)
+			self.toggle_all_tags_menu.Check(show_all_tags_panel)
+			self._update_layout_visibility()
+
 		finally:
 			self.Thaw()
 	
