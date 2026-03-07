@@ -534,6 +534,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.tag_lexicon.save(self.tag_lexicon_path)
 		
 		self.save_ui_settings()
+		self.config.save()
 		event.Skip()
 	
 	def on_splitter_dclick(self, event: wx.SplitterEvent):
@@ -631,9 +632,11 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			elif ret == wx.CANCEL:
 				return
 		
-		with wx.DirDialog(self, __("title:choose_a_directory"), style=wx.DD_DEFAULT_STYLE) as dlg:
+		default_path = self.config.get('ui.last_dataset_dir', "")
+		with wx.DirDialog(self, __("title:choose_a_directory"), defaultPath=default_path, style=wx.DD_DEFAULT_STYLE) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				path = dlg.GetPath()
+				self.config.set('ui.last_dataset_dir', path)
 				self.load_dataset(path)
 	
 	def on_reload(self, event: wx.CommandEvent):
@@ -667,9 +670,11 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			"JSON files (*.json)", "*.json",
 			"YAML files (*.yaml;*.yml)", "*.yaml;*.yml",
 		])
-		with wx.FileDialog(self, __("title:import_tags"), wildcard=wildcard, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
+		default_dir = self.config.get('ui.last_import_tags_dir', "")
+		with wx.FileDialog(self, __("title:import_tags"), defaultDir=default_dir, wildcard=wildcard, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				path = dlg.GetPath()
+				self.config.set('ui.last_import_tags_dir', os.path.dirname(path))
 				try:
 					self.tag_lexicon.load(path)
 					self.all_tags_list.set_tag_lexicon(self.tag_lexicon)
@@ -686,9 +691,11 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			"JSON files (*.json)", "*.json",
 			"YAML files (*.yaml)", "*.yaml",
 		])
-		with wx.FileDialog(self, __("title:export_tags"), wildcard=wildcard, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dlg:
+		default_dir = self.config.get('ui.last_export_tags_dir', "")
+		with wx.FileDialog(self, __("title:export_tags"), defaultDir=default_dir, wildcard=wildcard, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				path = dlg.GetPath()
+				self.config.set('ui.last_export_tags_dir', os.path.dirname(path))
 				try:
 					self.tag_lexicon.save(path)
 				except Exception as e:
@@ -1141,8 +1148,6 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		size = self.GetSize()
 		self.config.set('ui.window_width', size.width)
 		self.config.set('ui.window_height', size.height)
-		
-		self.config.save()
 	
 	def load_window_size_settings(self):
 		width = self.config.get('ui.window_width', 1200)
