@@ -1,6 +1,7 @@
 import wx
 
-# カスタムイベントの定義
+# === カスタムイベント ===
+
 myEVT_SELECT_IN_ALL_TAGS = wx.NewEventType()
 EVT_SELECT_IN_ALL_TAGS = wx.PyEventBinder(myEVT_SELECT_IN_ALL_TAGS, 1)
 

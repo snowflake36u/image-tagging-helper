@@ -16,6 +16,14 @@ ID_REMOVE_TAG_FROM_ALL = wx.NewIdRef()
 ID_REPLACE_TAG_IN_ALL = wx.NewIdRef()
 ID_ADD_TAG_TO_FILTER = wx.NewIdRef()
 
+# ソートメニューID
+ID_SORT_MENU = wx.NewIdRef()
+ID_SORT_BY_TAG_NAME = wx.NewIdRef()
+ID_SORT_BY_COUNT = wx.NewIdRef()
+ID_SORT_BY_CATEGORY_ORDER = wx.NewIdRef()
+ID_SORT_BY_CATEGORY_TEXT = wx.NewIdRef()
+ID_SORT_DESCENDING = wx.NewIdRef()
+
 class FrameMenuMixin:
 	"""
 	ImageTaggingHelperFrameのメニュー関連のロジックを分離するためのMixinクラス。

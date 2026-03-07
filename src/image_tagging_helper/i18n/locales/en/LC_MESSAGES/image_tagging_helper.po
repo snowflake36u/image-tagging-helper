@@ -13,14 +13,26 @@ msgstr "Image Tags"
 msgid "label:all_tags"
 msgstr "All Tags"
 
+msgid "tooltip:sort_tags"
+msgstr "Sort Tags"
+
+msgid "sort:by_tag_name"
+msgstr "By Tag Name"
+
+msgid "sort:by_count"
+msgstr "By Count"
+
+msgid "sort:by_category_order"
+msgstr "By Category (Order)"
+
+msgid "sort:by_category_text"
+msgstr "By Category (Text)"
+
+msgid "sort:descending"
+msgstr "降順"
+
 msgid "title:choose_a_directory"
 msgstr "Choose a Directory"
-
-msgid "action:view_image"
-msgstr "&View Image"
-
-msgid "action:open_in_folder"
-msgstr "Open &in Folder"
 
 msgid "message:restart_to_apply_language"
 msgstr "Restart the application to apply the language change."
@@ -148,8 +160,14 @@ msgstr "Sort"
 msgid "ui_group:dataset"
 msgstr "&Dataset"
 
+msgid "action:view_image"
+msgstr "&View Image"
+
 msgid "tooltip:view_image"
 msgstr "View Image"
+
+msgid "action:open_in_folder"
+msgstr "Open &in Folder"
 
 msgid "tooltip:open_in_folder"
 msgstr "Open in Folder"
@@ -222,6 +240,12 @@ msgstr "Tag"
 
 msgid "label:image_count"
 msgstr "#images"
+
+msgid "label:category"
+msgstr "Category"
+
+msgid "label:uncategorized_symbol"
+msgstr "N/A"
 
 msgid "action:add_tag_to_filter"
 msgstr "Add tags to &filter"

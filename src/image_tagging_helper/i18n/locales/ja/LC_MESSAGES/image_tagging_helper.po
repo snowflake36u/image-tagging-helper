@@ -13,14 +13,26 @@ msgstr "画像のタグ"
 msgid "label:all_tags"
 msgstr "全タグ一覧"
 
+msgid "tooltip:sort_tags"
+msgstr "タグを並べ替え"
+
+msgid "sort:by_tag_name"
+msgstr "タグ名"
+
+msgid "sort:by_count"
+msgstr "画像数"
+
+msgid "sort:by_category_order"
+msgstr "カテゴリ順"
+
+msgid "sort:by_category_text"
+msgstr "カテゴリ順 (文字列)"
+
+msgid "sort:descending"
+msgstr "降順"
+
 msgid "title:choose_a_directory"
 msgstr "フォルダを選択"
-
-msgid "action:view_image"
-msgstr "画像を表示(&V)"
-
-msgid "action:open_in_folder"
-msgstr "ファイルの場所を開く(&I)"
 
 msgid "message:restart_to_apply_language"
 msgstr "言語の変更にはアプリの再起動が必要です。"
@@ -148,8 +160,14 @@ msgstr "並べ替え"
 msgid "ui_group:dataset"
 msgstr "データセット(&D)"
 
+msgid "action:view_image"
+msgstr "画像を表示(&V)"
+
 msgid "tooltip:view_image"
 msgstr "画像を表示"
+
+msgid "action:open_in_folder"
+msgstr "ファイルの場所を開く(&I)"
 
 msgid "tooltip:open_in_folder"
 msgstr "ファイルが存在するフォルダを開く"
@@ -222,6 +240,12 @@ msgstr "タグ"
 
 msgid "label:image_count"
 msgstr "画像数"
+
+msgid "label:category"
+msgstr "カテゴリ"
+
+msgid "label:uncategorized_symbol"
+msgstr "N/A"
 
 msgid "action:add_tag_to_filter"
 msgstr "フィルタにタグを追加(&F)"

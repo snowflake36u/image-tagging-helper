@@ -1,8 +1,13 @@
+from abc import ABC
+from typing import Any
+
 import wx
 import wx.lib.mixins.listctrl as listmix
+from enum import Enum, auto
 
 from image_tagging_helper.i18n import __
 from image_tagging_helper.models.dataset import Dataset
+from image_tagging_helper.models.tag_lexicon import TagLexicon
 from image_tagging_helper.wx.events import (
 	TagsEvent,
 	ReplaceTagEvent,
@@ -26,6 +31,65 @@ ID_APPEND_TAG_TO_ALL = wx.NewIdRef()
 ID_REMOVE_TAG_FROM_ALL = wx.NewIdRef()
 ID_REPLACE_TAG_IN_ALL = wx.NewIdRef()
 
+class TagSortOrder(Enum):
+	TagName = auto()
+	Count = auto()
+	CategoryOrder = auto()
+	CategoryText = auto()
+	
+	def get_key(self, lexicon) -> Any:
+		if self == TagSortOrder.TagName or lexicon is None:
+			return TagNameSortKey()
+		elif self == TagSortOrder.Count:
+			return CountSortKey()
+		elif self == TagSortOrder.CategoryOrder:
+			return CategoryOrderSortKey(lexicon)
+		elif self == TagSortOrder.CategoryText:
+			return CategoryTextSortKey(lexicon)
+		
+		raise ValueError(f"Unknown sort order: {self}")
+	
+	def get_column_index(self) -> int:
+		if self == TagSortOrder.TagName:
+			return 0
+		elif self == TagSortOrder.Count:
+			return 1
+		elif self == TagSortOrder.CategoryText:
+			return 2
+		return -1
+
+class TagSortKey(ABC):
+	"""タグのソート順を定義します。"""
+	ALL: dict[int, int] = { }
+	
+	def __call__(self, item) -> Any:
+		raise NotImplementedError
+
+class TagNameSortKey(TagSortKey):
+	def __call__(self, item) -> Any:
+		return item[0]  # name
+
+class CountSortKey(TagSortKey):
+	def __call__(self, item) -> Any:
+		name, count, _ = item
+		return count, name
+
+class CategoryOrderSortKey(TagSortKey):
+	def __init__(self, lexicon: TagLexicon):
+		self.lexicon = lexicon
+	
+	def __call__(self, item) -> Any:
+		name, count, _ = item
+		return self.lexicon.get_tag_order(name), name
+
+class CategoryTextSortKey(TagSortKey):
+	def __init__(self, lexicon: TagLexicon):
+		self.lexicon = lexicon
+	
+	def __call__(self, item) -> Any:
+		name, count, _ = item
+		return self.lexicon.get_tag_category(name) or '', name
+
 class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSorterMixin):
 	"""
 	データセット全体のタグとその出現回数を表示・管理するリストコントロール。
@@ -44,18 +108,29 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		
 		# ソートのためにitemDataMapを初期化
 		self.itemDataMap = { }
-		# ColumnSorterMixinを初期化（2列）
-		listmix.ColumnSorterMixin.__init__(self, 2)
+		self.tag_to_item_id = { }
+		self.next_item_id = 0
+		
+		# ColumnSorterMixinを初期化（3列）
+		listmix.ColumnSorterMixin.__init__(self, 3)
 		
 		self.dataset: Dataset | None = None
+		self.tag_lexicon: TagLexicon | None = None
+		self.sort_order: TagSortOrder = TagSortOrder.TagName
+		self.sort_descending: bool = False
+		self.sort_key = self.sort_order.get_key(self.tag_lexicon)
 		
 		self.InsertColumn(0, __("label:tag"), width=150)
 		self.InsertColumn(1, __("label:image_count"), width=50, format=wx.LIST_FORMAT_RIGHT)
+		self.InsertColumn(2, __("label:category"), width=150)
 		self.setResizeColumn(0)
 		
 		# コンテキストメニューイベントをバインド
 		self.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
 		self.Bind(wx.EVT_MENU, self.on_select_all, id=wx.ID_SELECTALL)
+		
+		# 列クリックイベントをバインド
+		self.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
 	
 	def GetListCtrl(self):
 		"""ColumnSorterMixinのためにListCtrlインスタンスを返します。"""
@@ -77,66 +152,176 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSor
 		
 		self.update_list()
 	
+	def set_tag_lexicon(self, tag_lexicon: TagLexicon | None):
+		"""
+		ソートに使用するTagLexiconを設定します。
+		"""
+		self.tag_lexicon = tag_lexicon
+		self.update_list()
+	
+	def set_sort_order(self, sort_order: TagSortOrder, descending: bool = False):
+		"""
+		リストのソート順を設定し、リストを更新します。
+		"""
+		self.sort_order = sort_order
+		self.sort_descending = descending
+		
+		sort_col = self.sort_order.get_column_index()
+		
+		self.sort_key = self.sort_order.get_key(self.tag_lexicon)
+		
+		self.RemoveSortIndicator()
+		if sort_col != -1:
+			self.ShowSortIndicator(sort_col, not descending)
+		
+		self.update_list()
+	
+	def on_column_click(self, event: wx.ListEvent):
+		"""
+		列ヘッダーがクリックされたときの処理。
+		ソート順を変更します。
+		"""
+		col = event.GetColumn()
+		
+		new_order = self.sort_order
+		
+		target_order = None
+		if col == 0:
+			target_order = TagSortOrder.TagName
+		elif col == 1:
+			target_order = TagSortOrder.Count
+		elif col == 2:
+			target_order = TagSortOrder.CategoryText
+		
+		if target_order:
+			if self.sort_order == target_order:
+				new_descending = not self.sort_descending
+			else:
+				new_order = target_order
+				# デフォルトのソート方向
+				if target_order == TagSortOrder.Count:
+					new_descending = True
+				else:
+					new_descending = False
+			
+			self.set_sort_order(new_order, new_descending)
+	
+	# ColumnSorterMixinのデフォルト処理を抑制するためにSkipしない
+	
 	def update_list(self):
 		"""
-		データセット全体のタグとその出現回数をリストに表示します。
+		データセット全体のタグとその出現回数をリストに表示し、現在の設定でソートします。
 		"""
-		self.DeleteAllItems()
-		self.itemDataMap.clear()
+		self.Freeze()
+		try:
+			self.DeleteAllItems()
+			self.itemDataMap.clear()
+			self.tag_to_item_id.clear()
+			self.next_item_id = 0
+			
+			if not self.dataset or len(self.dataset) == 0:
+				return
+			
+			valid_tags = [
+				(t, c, self.tag_lexicon.get_tag_category(t))
+				for t, c in self.dataset.tag_usages.items() if t.strip()
+			]
+			
+			sorted_tags = sorted(valid_tags, key=self.sort_key, reverse=self.sort_descending)
+			
+			for tag_text, count, categ in sorted_tags:
+				self._insert_item_at(self.GetItemCount(), tag_text, count, categ)
+		finally:
+			self.Thaw()
+	
+	def _insert_item_at(self, index: int, tag_text: str, count: int, categ: str | None):
+		"""
+		指定された位置にアイテムを挿入し、内部データを更新します。
+		"""
+		item_id = self.next_item_id
+		self.next_item_id += 1
 		
-		if not self.dataset or len(self.dataset) == 0:
-			return
+		idx = self.InsertItem(index, tag_text)
+		self.SetItem(idx, 1, str(count))
+		self.SetItem(idx, 2, categ or __("label:uncategorized_symbol"))
 		
-		# 空白タグを除外
-		valid_tags = [(t, c) for t, c in self.dataset.tag_usages.items() if t.strip()]
-		
-		# リストにアイテムを追加
-		for i, (tag_text, count) in enumerate(valid_tags):
-			index = self.InsertItem(self.GetItemCount(), tag_text)
-			self.SetItem(index, 1, str(count))
-			# ソート用のデータを設定
-			self.SetItemData(index, i)
-			self.itemDataMap[i] = (tag_text, count)
-		
-		# 初期ソート（タグ名、昇順）
-		self.SortListItems(0, 1)
+		self.SetItemData(idx, item_id)
+		self.itemDataMap[item_id] = (tag_text, count, categ)
+		self.tag_to_item_id[tag_text] = item_id
+		return idx
 	
 	def on_tag_usage_changed(self, tag_text: str, count: int):
 		"""
 		タグの使用回数が変更されたときの処理。
-		リスト内の該当するタグのカウントを更新、またはアイテムの追加・削除を行います。
+		リスト全体を再構築せず、適切な位置に挿入または削除を行います。
 		"""
 		if not tag_text.strip():
 			return
 		
-		# FindItemを使用して、タグ名でアイテムを検索
-		item_index = self.FindItem(-1, tag_text)
+		item_id = self.tag_to_item_id.get(tag_text)
+		found_idx = wx.NOT_FOUND
+		if item_id is not None:
+			found_idx = self.FindItem(-1, data=item_id)
 		
-		if item_index != wx.NOT_FOUND:  # アイテムが存在する場合
-			if count > 0:
-				# カウントを更新
-				self.SetItem(item_index, 1, str(count))
-				# ソート用データを更新
-				item_data_key = self.GetItemData(item_index)
-				self.itemDataMap[item_data_key] = (tag_text, count)
+		# 削除の場合
+		if count <= 0:
+			if found_idx != wx.NOT_FOUND:
+				self.DeleteItem(found_idx)
+				if item_id in self.itemDataMap:
+					del self.itemDataMap[item_id]
+				if tag_text in self.tag_to_item_id:
+					del self.tag_to_item_id[tag_text]
+			return
+		
+		# 更新または挿入の場合
+		categ = self.tag_lexicon.get_tag_category(tag_text)
+		new_data = (tag_text, count, categ)
+		
+		if found_idx != wx.NOT_FOUND:
+			# データが変わっていない場合は何もしない
+			old_data = self.itemDataMap.get(item_id)
+			if old_data == new_data:
+				return
+			
+			# 削除して再挿入（ソート順を維持するため）
+			self.DeleteItem(found_idx)
+			if item_id in self.itemDataMap:
+				del self.itemDataMap[item_id]
+			if tag_text in self.tag_to_item_id:
+				del self.tag_to_item_id[tag_text]
+		
+		# 挿入位置を検索
+		insert_idx = self._find_insert_position(new_data)
+		self._insert_item_at(insert_idx, tag_text, count, categ)
+	
+	def _find_insert_position(self, new_data) -> int:
+		"""
+		二分探索を使用して、新しいアイテムを挿入すべきインデックスを検索します。
+		"""
+		low = 0
+		high = self.GetItemCount()
+		
+		new_key = self.sort_key(new_data)
+		
+		while low < high:
+			mid = (low + high) // 2
+			item_id = self.GetItemData(mid)
+			mid_data = self.itemDataMap[item_id]
+			mid_key = self.sort_key(mid_data)
+			
+			# 降順の場合の比較
+			if self.sort_descending:
+				if mid_key > new_key:  # midの方が大きい -> newはもっと後ろ
+					low = mid + 1
+				else:
+					high = mid
 			else:
-				# アイテムを削除
-				item_data_key = self.GetItemData(item_index)
-				del self.itemDataMap[item_data_key]
-				self.DeleteItem(item_index)
-		elif count > 0:  # アイテムが存在せず、追加する必要がある場合
-			# 新しいキーを決定
-			new_key = max(self.itemDataMap.keys()) + 1 if self.itemDataMap else 0
-			# アイテムを追加
-			index = self.InsertItem(self.GetItemCount(), tag_text)
-			self.SetItem(index, 1, str(count))
-			self.SetItemData(index, new_key)
-			self.itemDataMap[new_key] = (tag_text, count)
+				if mid_key < new_key:  # midの方が小さい -> newはもっと後ろ
+					low = mid + 1
+				else:
+					high = mid
 		
-		# 現在のソート状態を維持して再ソート
-		col, asc = self.GetSortState()
-		if col != -1:
-			self.SortListItems(col, asc)
+		return low
 	
 	def apply_font(self, font: wx.Font):
 		"""

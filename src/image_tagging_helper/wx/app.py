@@ -11,7 +11,8 @@ from image_tagging_helper.core.config import Config
 from image_tagging_helper.models.caption import CaptionFormatConfig, Tag
 from image_tagging_helper.models.dataset import Dataset
 from image_tagging_helper.models.controller import DatasetController
-from image_tagging_helper.wx.editor_widgets.all_tag_list import AllTagsList
+from image_tagging_helper.models.tag_lexicon import TagLexicon
+from image_tagging_helper.wx.editor_widgets.all_tag_list import AllTagsList, TagSortOrder
 from image_tagging_helper.wx.editor_widgets.image_list import ImageVListBox
 from image_tagging_helper.wx.editor_widgets.image_tags_grid import ImageTagsGrid
 from image_tagging_helper.wx.events import (
@@ -30,6 +31,12 @@ from image_tagging_helper.wx.events import (
 from image_tagging_helper.wx.preferences import PreferencesDialog
 from image_tagging_helper.wx.frame_menu import (
 	FrameMenuMixin,
+	ID_SORT_MENU,
+	ID_SORT_BY_TAG_NAME,
+	ID_SORT_BY_COUNT,
+	ID_SORT_BY_CATEGORY_ORDER,
+	ID_SORT_BY_CATEGORY_TEXT,
+	ID_SORT_DESCENDING,
 )
 from image_tagging_helper.i18n import setup_translation, __
 
@@ -40,7 +47,11 @@ if TYPE_CHECKING:
 APP_NAME = "Image Tagging Helper"
 APP_ID = "image_tagging_helper"
 
+# アイコンリソースのパス (app.pyからの相対パス)
+ICON_SORT_LINES = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'assets', 'sort_lines.ico'))
+
 SASH_MIN_WIDTH = 120
+TOOLBAR_CONTENT_HEIGHT = 24
 STATUSBAR_PADDING = 10
 
 class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
@@ -71,6 +82,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.dataset = Dataset()
 		self.remote_controller: DatasetController | None = None
 		self.caption_format_config = CaptionFormatConfig()
+		self.tag_lexicon = TagLexicon()
 		self.current_item_index: int = wx.NOT_FOUND
 		
 		# === UIの初期化 ===
@@ -199,6 +211,11 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		"""
 		入れ子になったスプリッターウィンドウでメインレイアウトを作成します。
 		"""
+		temp_btn = wx.BitmapButton(parent, bitmap=wx.Bitmap(TOOLBAR_CONTENT_HEIGHT, TOOLBAR_CONTENT_HEIGHT))
+		# Sizerのパディング(上下2*2=4)を考慮
+		self.toolbar_min_height = temp_btn.GetBestSize().height + 4
+		temp_btn.Destroy()
+		
 		# スプリッターウィンドウの作成
 		self.splitter_1 = wx.SplitterWindow(parent)
 		self.splitter_2 = wx.SplitterWindow(self.splitter_1)
@@ -226,14 +243,27 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.splitter_1.SetSashGravity(0)
 		self.splitter_2.SetSashGravity(0.5)
 	
+	def _create_header_panel(self, parent: wx.Window, label: str) -> wx.Panel:
+		"""
+		ラベル付きの標準的なツールバーパネルを作成します。
+		"""
+		toolbar_panel = wx.Panel(parent)
+		toolbar_panel.SetMinSize((-1, self.toolbar_min_height))
+		
+		sizer = wx.BoxSizer(wx.HORIZONTAL)
+		# ラベルを左側に配置
+		label_widget = wx.StaticText(toolbar_panel, label=label)
+		sizer.Add(label_widget, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
+		
+		toolbar_panel.SetSizer(sizer)
+		return toolbar_panel
+	
 	def _create_images_panel(self, parent: wx.Window):
 		"""画像のサムネイルリストパネルを作成します。"""
 		self.images_panel = wx.Panel(parent)
 		self.images_panel.SetMinSize((SASH_MIN_WIDTH, -1))
-		self.images_toolbar = wx.ToolBar(self.images_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
-		self.images_toolbar.AddControl(wx.StaticText(self.images_toolbar, label=__("label:image_list")))
-		self.images_toolbar.AddSeparator()
-		self.images_toolbar.Realize()
+		
+		self.images_toolbar = self._create_header_panel(self.images_panel, __("label:image_list"))
 		
 		self.image_list = ImageVListBox(self.images_panel, style=wx.VSCROLL | wx.ALWAYS_SHOW_SB)
 		self.image_list.Bind(wx.EVT_LISTBOX, self.on_image_list_select)
@@ -250,10 +280,8 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		"""画像のタグ一覧パネルを作成します。"""
 		self.image_tags_panel = wx.Panel(parent)
 		self.image_tags_panel.SetMinSize((SASH_MIN_WIDTH, -1))
-		self.image_tags_toolbar = wx.ToolBar(self.image_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
-		self.image_tags_toolbar.AddControl(wx.StaticText(self.image_tags_toolbar, label=__("label:image_tags")))
-		self.image_tags_toolbar.AddSeparator()
-		self.image_tags_toolbar.Realize()
+		
+		self.image_tags_toolbar = self._create_header_panel(self.image_tags_panel, __("label:image_tags"))
 		
 		self.image_tags_grid = ImageTagsGrid(self.image_tags_panel)
 		self.image_tags_grid.Bind(EVT_SELECT_IN_ALL_TAGS, self.on_select_in_all_tags)
@@ -267,17 +295,102 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		"""データセット全体のタグ一覧パネルを作成します。"""
 		self.all_tags_panel = wx.Panel(parent)
 		self.all_tags_panel.SetMinSize((SASH_MIN_WIDTH, -1))
-		self.all_tags_toolbar = wx.ToolBar(self.all_tags_panel, style=wx.TB_HORIZONTAL | wx.TB_FLAT | wx.TB_NODIVIDER)
-		self.all_tags_toolbar.AddControl(wx.StaticText(self.all_tags_toolbar, label=__("label:all_tags")))
-		self.all_tags_toolbar.AddSeparator()
-		self.all_tags_toolbar.Realize()
+		
+		self.all_tags_toolbar = self._create_header_panel(self.all_tags_panel, __("label:all_tags"))
+		toolbar_sizer = self.all_tags_toolbar.GetSizer()
+		
+		# 伸縮可能なスペースをラベルとボタンの間に追加
+		toolbar_sizer.AddStretchSpacer(1)
+		
+		# ソートメニューボタンを追加
+		try:
+			icon_image = wx.Image(ICON_SORT_LINES, wx.BITMAP_TYPE_ICO)
+			if not icon_image.IsOk():
+				raise FileNotFoundError(f"Icon not found: {ICON_SORT_LINES}")
+			
+			icon_image = icon_image.Rescale(TOOLBAR_CONTENT_HEIGHT, TOOLBAR_CONTENT_HEIGHT, wx.IMAGE_QUALITY_HIGH)
+			sort_icon = wx.Bitmap(icon_image)
+			
+			self.sort_button = wx.BitmapButton(self.all_tags_toolbar, id=ID_SORT_MENU, bitmap=sort_icon, style=wx.BORDER_NONE)
+		except Exception:
+			self.sort_button = wx.Button(self.all_tags_toolbar, id=ID_SORT_MENU, label=__("tooltip:sort_tags"))
+		
+		toolbar_sizer.Add(self.sort_button, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 		
 		self.all_tags_list = AllTagsList(self.all_tags_panel)
+		self.all_tags_list.set_tag_lexicon(self.tag_lexicon)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.all_tags_toolbar, 0, wx.EXPAND)
 		sizer.Add(self.all_tags_list, 1, wx.EXPAND)
 		self.all_tags_panel.SetSizer(sizer)
+		
+		# ソートメニューイベントをバインド
+		self.Bind(wx.EVT_BUTTON, self.on_sort_menu_button_click, id=ID_SORT_MENU)
+	
+	def on_sort_menu_button_click(self, event: wx.CommandEvent):
+		"""ソートメニューボタンがクリックされたときにメニューを表示します。"""
+		# メニューを作成
+		menu = wx.Menu()
+		
+		# メニュー項目を追加
+		menu.Append(ID_SORT_BY_TAG_NAME, __("sort:by_tag_name"), kind=wx.ITEM_RADIO)
+		menu.Append(ID_SORT_BY_COUNT, __("sort:by_count"), kind=wx.ITEM_RADIO)
+		menu.Append(ID_SORT_BY_CATEGORY_ORDER, __("sort:by_category_order"), kind=wx.ITEM_RADIO)
+		menu.Append(ID_SORT_BY_CATEGORY_TEXT, __("sort:by_category_text"), kind=wx.ITEM_RADIO)
+		
+		menu.AppendSeparator()
+		menu.Append(ID_SORT_DESCENDING, __("sort:descending"), kind=wx.ITEM_CHECK)
+		
+		# 現在のソート順をチェックマークで表示
+		current_sort_order = self.all_tags_list.sort_order
+		current_sort_ascending = self.all_tags_list.sort_descending
+		
+		sort_order_to_id = {
+			TagSortOrder.TagName: ID_SORT_BY_TAG_NAME,
+			TagSortOrder.Count: ID_SORT_BY_COUNT,
+			TagSortOrder.CategoryOrder: ID_SORT_BY_CATEGORY_ORDER,
+			TagSortOrder.CategoryText: ID_SORT_BY_CATEGORY_TEXT,
+		}
+		
+		if current_sort_order in sort_order_to_id:
+			menu.Check(sort_order_to_id[current_sort_order], True)
+		
+		menu.Check(ID_SORT_DESCENDING, not current_sort_ascending)
+		
+		# イベントハンドラをバインド
+		self.Bind(wx.EVT_MENU, self.on_sort_menu_item_selected, id=ID_SORT_BY_TAG_NAME)
+		self.Bind(wx.EVT_MENU, self.on_sort_menu_item_selected, id=ID_SORT_BY_COUNT)
+		self.Bind(wx.EVT_MENU, self.on_sort_menu_item_selected, id=ID_SORT_BY_CATEGORY_ORDER)
+		self.Bind(wx.EVT_MENU, self.on_sort_menu_item_selected, id=ID_SORT_BY_CATEGORY_TEXT)
+		self.Bind(wx.EVT_MENU, self.on_sort_descending_selected, id=ID_SORT_DESCENDING)
+		
+		# ボタンの位置にメニューを表示
+		point = self.sort_button.GetPosition()
+		self.PopupMenu(menu, wx.Point(point.x, point.y + self.sort_button.GetSize().height))
+		menu.Destroy()  # メニューを破棄
+	
+	def on_sort_menu_item_selected(self, event: wx.CommandEvent):
+		"""ソートメニューの項目が選択されたときにソート順を適用します。"""
+		menu_id = event.GetId()
+		
+		sort_map = {
+			ID_SORT_BY_TAG_NAME: TagSortOrder.TagName,
+			ID_SORT_BY_COUNT: TagSortOrder.Count,
+			ID_SORT_BY_CATEGORY_ORDER: TagSortOrder.CategoryOrder,
+			ID_SORT_BY_CATEGORY_TEXT: TagSortOrder.CategoryText,
+		}
+		
+		if menu_id in sort_map:
+			new_sort_order = sort_map[menu_id]
+			# 昇順/降順の状態は現在の設定を維持
+			self.all_tags_list.set_sort_order(new_sort_order, self.all_tags_list.sort_descending)
+	
+	def on_sort_descending_selected(self, event: wx.CommandEvent):
+		"""降順チェックボックスが選択されたときにソート順を適用します。"""
+		is_checked = event.IsChecked()
+		# is_checkedがTrueなら降順なので、ascendingはFalse
+		self.all_tags_list.set_sort_order(self.all_tags_list.sort_order, is_checked)
 	
 	# === イベントハンドラ ===
 	
@@ -1069,6 +1182,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.image_list.set_dataset(dataset)
 		self.image_tags_grid.set_dataset(dataset)
 		self.all_tags_list.set_dataset(dataset)
+		self.all_tags_list.set_tag_lexicon(self.tag_lexicon)
 		
 		if dataset.initialized is not None and len(dataset) > 0:
 			self.image_list.SetSelection(0)

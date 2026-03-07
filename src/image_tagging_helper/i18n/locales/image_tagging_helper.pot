@@ -13,13 +13,25 @@ msgstr ""
 msgid "label:all_tags"
 msgstr ""
 
+msgid "tooltip:sort_tags"
+msgstr ""
+
+msgid "sort:by_tag_name"
+msgstr ""
+
+msgid "sort:by_count"
+msgstr ""
+
+msgid "sort:by_category_order"
+msgstr ""
+
+msgid "sort:by_category_text"
+msgstr ""
+
+msgid "sort:descending"
+msgstr ""
+
 msgid "title:choose_a_directory"
-msgstr ""
-
-msgid "action:view_image"
-msgstr ""
-
-msgid "action:open_in_folder"
 msgstr ""
 
 msgid "message:restart_to_apply_language"
@@ -148,7 +160,13 @@ msgstr ""
 msgid "ui_group:dataset"
 msgstr ""
 
+msgid "action:view_image"
+msgstr ""
+
 msgid "tooltip:view_image"
+msgstr ""
+
+msgid "action:open_in_folder"
 msgstr ""
 
 msgid "tooltip:open_in_folder"
@@ -221,6 +239,12 @@ msgid "label:tag"
 msgstr ""
 
 msgid "label:image_count"
+msgstr ""
+
+msgid "label:category"
+msgstr ""
+
+msgid "label:uncategorized_symbol"
 msgstr ""
 
 msgid "action:add_tag_to_filter"
