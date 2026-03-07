@@ -1,7 +1,49 @@
+"""
+TagLexicon File Formats
+
+# JSON の記述例
+```
+[
+	{
+		"category": "Category Name 1",
+		"tags": ["tag1", "tag2"]
+	},
+	{
+		"category": "Category Name 2",
+		"tags": ["tag3", "tag4", "tag5"]
+	},
+]
+```
+
+# YAML の記述例
+```
+Category Name 1:
+  - tag1
+  - tag2
+  
+Category Name 2:
+  - tag3
+  - tag4
+  - tag5
+```
+
+# Markdown の記述例
+```
+# Category Name 1
+- tag1
+- tag2
+
+# Category Name 2
+- tag3
+- tag4
+- tag5
+```
+"""
 import json
 import os
 from dataclasses import dataclass
 from typing import Iterable
+import yaml
 
 @dataclass
 class TagCategory:
@@ -53,10 +95,19 @@ class TagLexicon:
 		return result
 	
 	def load(self, path: str):
-		"""指定されたパスからJSON形式でタグ情報を読み込みます。"""
+		"""指定されたパスからタグ情報を読み込みます。拡張子によって形式を判断します。"""
 		if not os.path.exists(path):
 			return
 		
+		ext = os.path.splitext(path)[1].lower()
+		if ext == '.json':
+			self._load_json(path)
+		elif ext in ('.yaml', '.yml'):
+			self._load_yaml(path)
+		elif ext == '.md':
+			self._load_markdown(path)
+	
+	def _load_json(self, path: str):
 		try:
 			with open(path, 'r', encoding='utf-8') as f:
 				data = json.load(f)
@@ -74,8 +125,53 @@ class TagLexicon:
 		except (json.JSONDecodeError, OSError):
 			pass
 	
+	def _load_yaml(self, path: str):
+		try:
+			with open(path, 'r', encoding='utf-8') as f:
+				data = yaml.safe_load(f)
+			
+			lexicon = []
+			if isinstance(data, dict):
+				for category, tags in data.items():
+					if isinstance(tags, list):
+						for tag in tags:
+							lexicon.append(TagCategory(tag, category))
+			
+			self.set_lexicon(lexicon)
+		except (yaml.YAMLError, OSError):
+			pass
+	
+	def _load_markdown(self, path: str):
+		try:
+			with open(path, 'r', encoding='utf-8') as f:
+				lines = f.readlines()
+			
+			lexicon = []
+			current_category = None
+			
+			for line in lines:
+				line = line.strip()
+				if line.startswith('# '):
+					current_category = line[2:].strip()
+				elif line.startswith('- ') and current_category:
+					tag = line[2:].strip()
+					lexicon.append(TagCategory(tag, current_category))
+			
+			self.set_lexicon(lexicon)
+		except OSError:
+			pass
+
 	def save(self, path: str):
-		"""指定されたパスにJSON形式でタグ情報を保存します。"""
+		"""指定されたパスにタグ情報を保存します。拡張子によって形式を判断します。"""
+		ext = os.path.splitext(path)[1].lower()
+		if ext == '.json':
+			self._save_json(path)
+		elif ext in ('.yaml', '.yml'):
+			self._save_yaml(path)
+		elif ext == '.md':
+			self._save_markdown(path)
+	
+	def _save_json(self, path: str):
 		# カテゴリごとにタグをまとめる
 		category_tags_map = [[] for _ in range(self.n_categories)]
 		for tag, cat_idx in self.tag_category_indices.items():
@@ -93,6 +189,42 @@ class TagLexicon:
 		try:
 			with open(path, 'w', encoding='utf-8') as f:
 				json.dump(data, f, indent=4, ensure_ascii=False)
+		except OSError:
+			pass
+	
+	def _save_yaml(self, path: str):
+		# カテゴリごとにタグをまとめる
+		category_tags_map = [[] for _ in range(self.n_categories)]
+		for tag, cat_idx in self.tag_category_indices.items():
+			category_tags_map[cat_idx].append(tag)
+		
+		data = { }
+		for i, category in enumerate(self.categories):
+			tags = category_tags_map[i]
+			tags.sort()
+			data[category] = tags
+		
+		try:
+			with open(path, 'w', encoding='utf-8') as f:
+				yaml.dump(data, f, allow_unicode=True, sort_keys=False)
+		except (yaml.YAMLError, OSError):
+			pass
+	
+	def _save_markdown(self, path: str):
+		# カテゴリごとにタグをまとめる
+		category_tags_map = [[] for _ in range(self.n_categories)]
+		for tag, cat_idx in self.tag_category_indices.items():
+			category_tags_map[cat_idx].append(tag)
+		
+		try:
+			with open(path, 'w', encoding='utf-8') as f:
+				for i, category in enumerate(self.categories):
+					f.write(f'# {category}\n')
+					tags = category_tags_map[i]
+					tags.sort()
+					for tag in tags:
+						f.write(f'- {tag}\n')
+					f.write('\n')
 		except OSError:
 			pass
 	
