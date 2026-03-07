@@ -37,8 +37,17 @@ msgstr "フォルダを選択"
 msgid "title:import_tags"
 msgstr "タグ辞書のインポート"
 
+msgid "message:failed_to_import_tags"
+msgstr "タグ辞書ファイルのインポートに失敗しました:\n{e}"
+
+msgid "title:error"
+msgstr "エラー"
+
 msgid "title:export_tags"
 msgstr "タグ辞書のエクスポート"
+
+msgid "message:failed_to_export_tags"
+msgstr "タグ辞書ファイルのエクスポートに失敗しました:\n{e}"
 
 msgid "message:restart_to_apply_language"
 msgstr "言語の変更にはアプリの再起動が必要です。"

@@ -671,8 +671,15 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		with wx.FileDialog(self, __("title:import_tags"), wildcard=wildcard, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				path = dlg.GetPath()
-				self.tag_lexicon.load(path)
-				self.all_tags_list.set_tag_lexicon(self.tag_lexicon)
+				try:
+					self.tag_lexicon.load(path)
+					self.all_tags_list.set_tag_lexicon(self.tag_lexicon)
+				except Exception as e:
+					wx.MessageBox(
+						__("message:failed_to_import_tags").format(e=e),  # f"Failed to import tags:\n{e}"
+						__("title:error"),
+						wx.OK | wx.ICON_ERROR
+					)
 	
 	def on_export_tags(self, event: wx.CommandEvent):
 		"""タグ情報をエクスポートします。"""
@@ -683,8 +690,15 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		with wx.FileDialog(self, __("title:export_tags"), wildcard=wildcard, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
 				path = dlg.GetPath()
-				self.tag_lexicon.save(path)
-	
+				try:
+					self.tag_lexicon.save(path)
+				except Exception as e:
+					wx.MessageBox(
+						__("message:failed_to_export_tags").format(e=e),  #f"Failed to export tags:\n{e}",
+						__("title:error"),
+						wx.OK | wx.ICON_ERROR
+					)
+		
 	def on_image_list_select(self, event: wx.CommandEvent):
 		"""
 		サムネイルリストの選択が変更されたときの処理。

@@ -37,7 +37,16 @@ msgstr ""
 msgid "title:import_tags"
 msgstr ""
 
+msgid "message:failed_to_import_tags"
+msgstr ""
+
+msgid "title:error"
+msgstr ""
+
 msgid "title:export_tags"
+msgstr ""
+
+msgid "message:failed_to_export_tags"
 msgstr ""
 
 msgid "message:restart_to_apply_language"

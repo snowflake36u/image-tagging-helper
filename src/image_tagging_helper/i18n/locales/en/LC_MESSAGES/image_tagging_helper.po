@@ -37,8 +37,17 @@ msgstr "Choose a Directory"
 msgid "title:import_tags"
 msgstr "Import Tag Dictionary"
 
+msgid "message:failed_to_import_tags"
+msgstr "Failed to import tag dictionary file:\n{e}"
+
+msgid "title:error"
+msgstr "Error"
+
 msgid "title:export_tags"
 msgstr "Export Tag Dictionary"
+
+msgid "message:failed_to_export_tags"
+msgstr "Failed to export tag dictionary file:\n{e}"
 
 msgid "message:restart_to_apply_language"
 msgstr "Restart the application to apply the language change."
