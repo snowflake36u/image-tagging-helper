@@ -79,7 +79,7 @@ class CategoryOrderSortKeyFn(TagSortKeyFn):
 	
 	def __call__(self, item) -> Any:
 		name, count, _ = item
-		return self.lexicon.get_tag_order(name), name
+		return self.lexicon.get_tag_category_order(name), name
 
 class CategoryTextSortKeyFn(TagSortKeyFn):
 	def __init__(self, lexicon: TagLexicon):

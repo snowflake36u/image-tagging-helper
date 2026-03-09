@@ -105,7 +105,10 @@ class TagLexicon:
 		expanded_tags = []
 		for tag in tags:
 			# Find all wildcard keys in the tag
-			keys = set(re.findall(r'\{([a-zA-Z0-9_]+)\}', tag))
+			try:
+				keys = set(re.findall(r'\{([a-zA-Z0-9_]+)\}', tag))
+			except TypeError:
+				raise ValueError(f"Invalid tag format: {tag}")
 			
 			# Filter keys that exist in the wildcards dictionary
 			valid_keys = [k for k in keys if k in wildcards]
@@ -124,7 +127,7 @@ class TagLexicon:
 				expanded_tags.append(temp_tag)
 		
 		return expanded_tags
-
+	
 	def _load_json(self, path: str):
 		with open(path, 'r', encoding='utf-8') as f:
 			data = json.load(f)
@@ -168,7 +171,7 @@ class TagLexicon:
 		self.wildcards = wildcards
 		self.raw_categories = raw_categories
 		self.set_lexicon(lexicon)
-
+	
 	def save(self, path: str):
 		"""指定されたパスにタグ情報を保存します。拡張子によって形式を判断します。"""
 		ext = os.path.splitext(path)[1].lower()
@@ -203,5 +206,5 @@ class TagLexicon:
 		else:
 			return None
 	
-	def get_tag_order(self, tag_text):
+	def get_tag_category_order(self, tag_text):
 		return self.tag_category_indices.get(tag_text, self.n_categories)

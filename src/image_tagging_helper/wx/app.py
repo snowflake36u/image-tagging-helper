@@ -5,6 +5,7 @@ import bisect
 import os
 import sys
 import subprocess
+import traceback
 from typing import TYPE_CHECKING
 
 from image_tagging_helper.core.config import Config
@@ -678,9 +679,10 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 				try:
 					self.tag_lexicon.load(path)
 					self.all_tags_list.set_tag_lexicon(self.tag_lexicon)
-				except Exception as e:
+				except Exception:
+					error_msg = traceback.format_exc()
 					wx.MessageBox(
-						__("message:failed_to_import_tags").format(e=e),  # f"Failed to import tags:\n{e}"
+						__("message:failed_to_import_tags").format(e=error_msg),
 						__("title:error"),
 						wx.OK | wx.ICON_ERROR
 					)
@@ -698,9 +700,10 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 				self.config.set('ui.last_export_tags_dir', os.path.dirname(path))
 				try:
 					self.tag_lexicon.save(path)
-				except Exception as e:
+				except Exception:
+					error_msg = traceback.format_exc()
 					wx.MessageBox(
-						__("message:failed_to_export_tags").format(e=e),  #f"Failed to export tags:\n{e}",
+						__("message:failed_to_export_tags").format(e=error_msg),
 						__("title:error"),
 						wx.OK | wx.ICON_ERROR
 					)
