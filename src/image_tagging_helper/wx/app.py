@@ -481,20 +481,10 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		
 		# 選択状態の更新
 		if matched_indices:
-			# 現在選択中の画像がマッチしたか確認
-			current_item_idx = self.current_item_index
-			if current_item_idx in matched_indices:
-				# マッチした場合はその画像を選択状態にする
-				self.image_list.select_item(current_item_idx)
-			else:
-				# マッチしなかった場合は、直前の画像を選択する
-				idx = bisect.bisect_left(matched_indices, current_item_idx)
-				if idx > 0:
-					new_selection = matched_indices[idx - 1]
-				else:
-					new_selection = matched_indices[0]
-				
-				self.image_list.select_item(new_selection)
+			# 最初の表示項目を選択する
+			new_selection = matched_indices[0]
+			self.image_list.select_item(new_selection)
+			if self.current_item_index != new_selection:
 				self.current_item_index = new_selection
 				self._update_views_for_item_selection(new_selection)
 		else:
