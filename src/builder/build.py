@@ -19,9 +19,16 @@ nuitka_options = [
 	f'--output-dir={DIST_DIR}',
 	f'--output-filename={APP_NAME}',
 	'--include-package=image_tagging_helper',
-	'--include-data-dir=image_tagging_helper/i18n/locales=image_tagging_helper/i18n/locales',
 	'--lto=yes',
 ]
+
+resources = [
+	'image_tagging_helper/i18n/locales',
+	'image_tagging_helper/assets',
+]
+
+for r in resources:
+	nuitka_options.append(f'--include-data-dir={r}={r}')
 
 def build():
 	"""
