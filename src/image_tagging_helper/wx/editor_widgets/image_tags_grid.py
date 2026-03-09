@@ -19,6 +19,9 @@ class ImageTagsGrid(wx.grid.Grid):
 	"""
 	SENDER_ID = 'grid'
 	
+	# メニュー項目: 全タグ一覧で選択 (コンテキストメニュー)
+	ID_SELECT_IN_ALL_TAGS = wx.NewIdRef()
+	
 	def __init__(self, parent):
 		"""ImageTagsGridを初期化します。
 
@@ -41,7 +44,7 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.Bind(wx.EVT_MENU, self.on_paste, id=wx.ID_PASTE)
 		self.Bind(wx.EVT_MENU, self.on_delete, id=wx.ID_DELETE)
 		self.Bind(wx.EVT_MENU, self.on_select_all, id=wx.ID_SELECTALL)
-		self.Bind(wx.EVT_MENU, self.on_select_in_all_tags, id=wx.ID_ANY)
+		self.Bind(wx.EVT_MENU, self.on_select_in_all_tags, id=self.ID_SELECT_IN_ALL_TAGS)
 	
 	def _init_grid(self):
 		"""グリッドの初期設定を行います。
@@ -261,8 +264,8 @@ class ImageTagsGrid(wx.grid.Grid):
 		"""コンテキストメニューを作成して表示します。"""
 		menu = wx.Menu()
 		
-		# 全タグ一覧で選択
-		item = menu.Append(wx.ID_FIND, __("action:select_in_all_tags"))
+		# メニュー項目: 全タグ一覧で選択
+		item = menu.Append(self.ID_SELECT_IN_ALL_TAGS, __("action:select_in_all_tags"))
 		if not self.get_selected_rows():
 			item.Enable(False)
 		
