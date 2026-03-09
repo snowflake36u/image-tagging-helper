@@ -16,6 +16,7 @@ from image_tagging_helper.models.tag_lexicon import TagLexicon
 from image_tagging_helper.wx.editor_widgets.all_tag_list import AllTagsList, TagSortOrder
 from image_tagging_helper.wx.editor_widgets.image_list import ImageVListBox
 from image_tagging_helper.wx.editor_widgets.image_tags_grid import ImageTagsGrid
+from image_tagging_helper.wx.wx_widgets import FlatBitmapButton
 from image_tagging_helper.wx.events import (
 	EVT_SELECT_IN_ALL_TAGS,
 	EVT_ADD_TAGS_TO_FILTER,
@@ -316,7 +317,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			icon_image = icon_image.Rescale(TOOLBAR_CONTENT_HEIGHT, TOOLBAR_CONTENT_HEIGHT, wx.IMAGE_QUALITY_HIGH)
 			sort_icon = wx.Bitmap(icon_image)
 			
-			self.sort_button = wx.BitmapButton(self.all_tags_toolbar, id=ID_SORT_MENU, bitmap=sort_icon, style=wx.BORDER_NONE)
+			self.sort_button = FlatBitmapButton(self.all_tags_toolbar, id=ID_SORT_MENU, bitmap=sort_icon)
 		except Exception:
 			self.sort_button = wx.Button(self.all_tags_toolbar, id=ID_SORT_MENU, label=__("tooltip:sort_tags"))
 		
