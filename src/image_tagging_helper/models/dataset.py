@@ -150,7 +150,11 @@ class Dataset:
 		Args:
 			callback (callable): 削除するコールバック関数。
 		"""
-		self._diff_applied_listeners.remove(callback)
+		try:
+			self._diff_applied_listeners.remove(callback)
+		except ValueError:
+			# 登録されていないリスナーの削除は無視
+			pass
 	
 	def add_tag_usage_changed_listener(self, callback):
 		"""
@@ -168,7 +172,11 @@ class Dataset:
 		Args:
 			callback (callable): 削除するコールバック関数。
 		"""
-		self._tag_usage_changed_listeners.remove(callback)
+		try:
+			self._tag_usage_changed_listeners.remove(callback)
+		except ValueError:
+			# 登録されていないリスナーの削除は無視
+			pass
 	
 	# === 編集操作の管理 ===
 	
