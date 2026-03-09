@@ -19,6 +19,7 @@ from image_tagging_helper.wx.events import (
 	myEVT_APPEND_TAGS_TO_ALL,
 	myEVT_REMOVE_TAGS_FROM_ALL,
 	myEVT_REPLACE_TAG_IN_ALL,
+	myEVT_SELECT_TAGS_IN_IMAGE_TAGS_GRID,
 )
 
 # コンテキストメニューID
@@ -27,9 +28,10 @@ ID_APPEND_TAG_TO_CURRENT = wx.NewIdRef()
 ID_REMOVE_TAG_FROM_CURRENT = wx.NewIdRef()
 ID_APPEND_TAG_TO_FILTERED = wx.NewIdRef()
 ID_REMOVE_TAG_FROM_FILTERED = wx.NewIdRef()
-ID_APPEND_TAG_TO_ALL = wx.NewIdRef()
+ID_APPEND_TAGS_TO_ALL = wx.NewIdRef()
 ID_REMOVE_TAG_FROM_ALL = wx.NewIdRef()
 ID_REPLACE_TAG_IN_ALL = wx.NewIdRef()
+ID_SELECT_TAGS_IN_IMAGE_TAGS_GRID = wx.NewIdRef()
 
 class TagSortOrder(Enum):
 	TagName = auto()
@@ -423,6 +425,9 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		menu = wx.Menu()
 		
 		# メニュー項目の作成
+		menu.Append(ID_SELECT_TAGS_IN_IMAGE_TAGS_GRID, __("action:select_in_image_tags"))
+		menu.AppendSeparator()
+		
 		menu.Append(ID_ADD_TAG_TO_FILTER, __("action:add_tag_to_filter") + "\tShift+F")
 		menu.AppendSeparator()
 		
@@ -436,19 +441,20 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 		menu.Append(ID_REMOVE_TAG_FROM_FILTERED, __("action:remove_tags_from_filtered_items") + "\tCtrl+Shift+R")
 		menu.AppendSeparator()
 		
-		menu.Append(ID_APPEND_TAG_TO_ALL, __("action:append_tags_to_all_items") + "\tCtrl+W")
+		menu.Append(ID_APPEND_TAGS_TO_ALL, __("action:append_tags_to_all_items") + "\tCtrl+W")
 		menu.Append(ID_REMOVE_TAG_FROM_ALL, __("action:remove_tags_from_all_items") + "\tCtrl+R")
 		
 		if not multiple_tags:
 			menu.Append(ID_REPLACE_TAG_IN_ALL, __("action:replace_tag_in_all_items") + "\tCtrl+L")
 		
 		# イベントハンドラのバインド
+		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_SELECT_TAGS_IN_IMAGE_TAGS_GRID, selected_tags), id=ID_SELECT_TAGS_IN_IMAGE_TAGS_GRID)
 		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_ADD_TAGS_TO_FILTER, selected_tags), id=ID_ADD_TAG_TO_FILTER)
 		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_APPEND_TAGS_TO_CURRENT, selected_tags), id=ID_APPEND_TAG_TO_CURRENT)
 		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_REMOVE_TAGS_FROM_CURRENT, selected_tags), id=ID_REMOVE_TAG_FROM_CURRENT)
 		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_APPEND_TAGS_TO_FILTERED, selected_tags), id=ID_APPEND_TAG_TO_FILTERED)
 		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_REMOVE_TAGS_FROM_FILTERED, selected_tags), id=ID_REMOVE_TAG_FROM_FILTERED)
-		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_APPEND_TAGS_TO_ALL, selected_tags), id=ID_APPEND_TAG_TO_ALL)
+		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_APPEND_TAGS_TO_ALL, selected_tags), id=ID_APPEND_TAGS_TO_ALL)
 		menu.Bind(wx.EVT_MENU, lambda evt: self._fire_tags_event(myEVT_REMOVE_TAGS_FROM_ALL, selected_tags), id=ID_REMOVE_TAG_FROM_ALL)
 		
 		if not multiple_tags:

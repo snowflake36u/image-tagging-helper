@@ -22,11 +22,11 @@ msgstr "By Tag Name"
 msgid "sort:by_count"
 msgstr "By Count"
 
-msgid "sort:by_category_order"
-msgstr "By Category (Dictionary Order)"
-
 msgid "sort:by_category_text"
 msgstr "By Category (Name Order)"
+
+msgid "sort:by_category_order"
+msgstr "By Category (Dictionary Order)"
 
 msgid "sort:descending"
 msgstr "降順"
@@ -96,16 +96,16 @@ msgid "tooltip:reload"
 msgstr "Reload"
 
 msgid "action:import_tags"
-msgstr ""
+msgstr "&Import Tag Lexicon"
 
 msgid "tooltip:import_tags"
-msgstr ""
+msgstr "Import tag lexicon file"
 
 msgid "action:export_tags"
-msgstr ""
+msgstr "&Export Tag Lexicon"
 
 msgid "tooltip:export_tags"
-msgstr ""
+msgstr "Export tag lexicon file"
 
 msgid "action:save"
 msgstr "&Save"
@@ -277,6 +277,9 @@ msgstr "Category"
 
 msgid "label:uncategorized_symbol"
 msgstr "N/A"
+
+msgid "action:select_in_image_tags"
+msgstr "&Select in Image Tags"
 
 msgid "action:add_tag_to_filter"
 msgstr "Add tags to &filter"

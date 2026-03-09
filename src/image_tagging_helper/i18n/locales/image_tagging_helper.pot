@@ -22,10 +22,10 @@ msgstr ""
 msgid "sort:by_count"
 msgstr ""
 
-msgid "sort:by_category_order"
+msgid "sort:by_category_text"
 msgstr ""
 
-msgid "sort:by_category_text"
+msgid "sort:by_category_order"
 msgstr ""
 
 msgid "sort:descending"
@@ -272,6 +272,9 @@ msgid "label:category"
 msgstr ""
 
 msgid "label:uncategorized_symbol"
+msgstr ""
+
+msgid "action:select_in_image_tags"
 msgstr ""
 
 msgid "action:add_tag_to_filter"

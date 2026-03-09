@@ -35,6 +35,9 @@ EVT_REMOVE_TAGS_FROM_ALL = wx.PyEventBinder(myEVT_REMOVE_TAGS_FROM_ALL, 1)
 myEVT_REPLACE_TAG_IN_ALL = wx.NewEventType()
 EVT_REPLACE_TAG_IN_ALL = wx.PyEventBinder(myEVT_REPLACE_TAG_IN_ALL, 1)
 
+myEVT_SELECT_TAGS_IN_IMAGE_TAGS_GRID = wx.NewEventType()
+EVT_SELECT_TAGS_IN_IMAGE_TAGS_GRID = wx.PyEventBinder(myEVT_SELECT_TAGS_IN_IMAGE_TAGS_GRID, 1)
+
 class TagsEvent(wx.PyCommandEvent):
 	"""タグのリストをペイロードとして持つイベント"""
 	

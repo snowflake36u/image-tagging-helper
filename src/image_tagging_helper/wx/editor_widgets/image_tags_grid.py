@@ -662,3 +662,21 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.SetCellValue(position, 1, f'{new_tag.weight:.2f}')
 		
 		self.focus_cell(position, column)
+	
+	def select_tags(self, tags: set[str]):
+		"""
+		指定されたタグのセットに一致する行を選択します。
+		"""
+		self.ClearSelection()
+		
+		first_selected_row = -1
+		for row in range(self.GetNumberRows()):
+			tag_text = self.GetCellValue(row, 0)
+			if tag_text in tags:
+				self.SelectRow(row, addToSelected=True)
+				if first_selected_row == -1:
+					first_selected_row = row
+		
+		if first_selected_row != -1:
+			self.SetGridCursor(first_selected_row, 0)
+			self.MakeCellVisible(first_selected_row, 0)

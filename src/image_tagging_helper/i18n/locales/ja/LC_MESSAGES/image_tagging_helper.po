@@ -8,7 +8,7 @@ msgid "label:image_list"
 msgstr "画像一覧"
 
 msgid "label:image_tags"
-msgstr "画像のタグ"
+msgstr "画像タグ"
 
 msgid "label:all_tags"
 msgstr "全タグ一覧"
@@ -22,11 +22,11 @@ msgstr "タグ名"
 msgid "sort:by_count"
 msgstr "画像数"
 
-msgid "sort:by_category_order"
-msgstr "カテゴリ (辞書順)"
-
 msgid "sort:by_category_text"
 msgstr "カテゴリ (名前順)"
+
+msgid "sort:by_category_order"
+msgstr "カテゴリ (辞書順)"
 
 msgid "sort:descending"
 msgstr "降順"
@@ -277,6 +277,9 @@ msgstr "カテゴリ"
 
 msgid "label:uncategorized_symbol"
 msgstr "N/A"
+
+msgid "action:select_in_image_tags"
+msgstr "画像タグで選択"
 
 msgid "action:add_tag_to_filter"
 msgstr "フィルタにタグを追加(&F)"

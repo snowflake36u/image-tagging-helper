@@ -27,6 +27,7 @@ from image_tagging_helper.wx.events import (
 	EVT_APPEND_TAGS_TO_ALL,
 	EVT_REMOVE_TAGS_FROM_ALL,
 	EVT_REPLACE_TAG_IN_ALL,
+	EVT_SELECT_TAGS_IN_IMAGE_TAGS_GRID,
 	EVT_VIEW_IMAGE,
 	EVT_OPEN_IN_FOLDER,
 )
@@ -152,6 +153,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.Bind(EVT_APPEND_TAGS_TO_ALL, self.on_append_tags_to_all_items)
 		self.Bind(EVT_REMOVE_TAGS_FROM_ALL, self.on_remove_tags_from_all_items)
 		self.Bind(EVT_REPLACE_TAG_IN_ALL, self.on_replace_tag_in_all_items)
+		self.Bind(EVT_SELECT_TAGS_IN_IMAGE_TAGS_GRID, self.on_select_tags_in_image_tags_grid)
 	
 	def _create_path_panel(self, parent: wx.Window) -> wx.Window:
 		"""
@@ -952,6 +954,10 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 	
 	def on_replace_tag_in_all_items(self, event):
 		self.replace_tag_in_all_items_with_dialog(event.old_tag)
+	
+	def on_select_tags_in_image_tags_grid(self, event):
+		"""AllTagsListからのイベントを処理し、ImageTagsGridでタグを選択します。"""
+		self.image_tags_grid.select_tags(set(event.tags))
 	
 	def append_tags_to_current_items(self, tags: list[str]):
 		"""選択中のアイテムにタグを追加します。"""
