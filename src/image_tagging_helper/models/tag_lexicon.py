@@ -43,10 +43,13 @@ class TagCategory:
 class TagLexicon:
 	def __init__(self):
 		self.n_categories = 0
+		self.n_tags = 0
 		# [ category, ... ]
 		self.categories: list[str] = []
 		# { tag: category_index }
 		self.tag_category_indices: dict[str, int] = { }
+		# { tag_text: tag_index }
+		self.tag_orders: dict[str, int] = { }
 		
 		# wildcardsと展開前のタグ情報を保持する
 		self.wildcards: dict[str, list[str]] = { }
@@ -57,28 +60,36 @@ class TagLexicon:
 		tag_category_indices = { }
 		# { category: category_index }
 		category_indices: dict[str, int] = { }
+		# { tag_text: tag_index }
+		tag_orders: dict[str, int] = { }
 		
 		n_category = 0
+		order = 0
 		for item in lexicon:
-			tag, category = item.tag, item.category
+			tag_text, category = item.tag, item.category
 			
-			if tag in tag_category_indices:
+			if tag_text in tag_category_indices:
 				# 同じタグが2回以上現れた場合は無視する
 				continue
 			
 			if category in category_indices:
 				# カテゴリが既に登録されている場合はそれをそのまま設定する
-				tag_category_indices[tag] = category_indices[category]
+				tag_category_indices[tag_text] = category_indices[category]
 			else:
 				# 新しいカテゴリの場合はそれを登録する
 				categories.append(category)
 				category_indices[category] = n_category
-				tag_category_indices[tag] = n_category
+				tag_category_indices[tag_text] = n_category
 				n_category += 1
+			
+			tag_orders[tag_text] = order
+			order += 1
 		
 		self.n_categories = n_category
+		self.n_tags = order
 		self.categories = categories
 		self.tag_category_indices = tag_category_indices
+		self.tag_orders = tag_orders
 	
 	def get_lexicon(self) -> list[TagCategory]:
 		"""現在のタグ情報をTagCategoryのリストとして取得します。"""
@@ -136,19 +147,8 @@ class TagLexicon:
 			raise ValueError("Invalid JSON format: root must be a dictionary")
 		
 		wildcards = data.get('wildcards', { })
-		raw_categories = data.get('categories', { })
-		lexicon = []
-		
-		if isinstance(raw_categories, dict):
-			for category, tags in raw_categories.items():
-				if isinstance(tags, list):
-					expanded_tags = self._expand_wildcards(tags, wildcards)
-					for tag in expanded_tags:
-						lexicon.append(TagCategory(tag, category))
-		
-		self.wildcards = wildcards
-		self.raw_categories = raw_categories
-		self.set_lexicon(lexicon)
+		categories = data.get('categories', { })
+		self._build_from_object(wildcards, categories)
 	
 	def _load_yaml(self, path: str):
 		with open(path, 'r', encoding='utf-8') as f:
@@ -158,18 +158,21 @@ class TagLexicon:
 			raise ValueError("Invalid YAML format: root must be a dictionary")
 		
 		wildcards = data.get('wildcards', { })
-		raw_categories = data.get('categories', { })
+		categories = data.get('categories', { })
+		self._build_from_object(wildcards, categories)
+	
+	def _build_from_object(self, wildcards, categories):
 		lexicon = []
 		
-		if isinstance(raw_categories, dict):
-			for category, tags in raw_categories.items():
+		if isinstance(categories, dict):
+			for category, tags in categories.items():
 				if isinstance(tags, list):
 					expanded_tags = self._expand_wildcards(tags, wildcards)
 					for tag in expanded_tags:
 						lexicon.append(TagCategory(tag, category))
 		
 		self.wildcards = wildcards
-		self.raw_categories = raw_categories
+		self.raw_categories = categories
 		self.set_lexicon(lexicon)
 	
 	def save(self, path: str):
@@ -208,3 +211,6 @@ class TagLexicon:
 	
 	def get_tag_category_order(self, tag_text):
 		return self.tag_category_indices.get(tag_text, self.n_categories)
+	
+	def get_tag_order(self, tag_text):
+		return self.tag_orders.get(tag_text, self.n_tags)
