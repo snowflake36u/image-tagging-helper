@@ -32,6 +32,7 @@ class ImageVListBox(wx.VListBox):
 		self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
 		self.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
 		self.Bind(wx.EVT_LISTBOX_DCLICK, self.on_double_click)
+		self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
 		
 		# 非同期サムネイル生成のための準備
 		self.thumbnail_queue = queue.Queue()
@@ -205,6 +206,18 @@ class ImageVListBox(wx.VListBox):
 		view_index = self.GetSelection()
 		if view_index != wx.NOT_FOUND:
 			wx.PostEvent(self, wx.PyCommandEvent(myEVT_VIEW_IMAGE, self.GetId()))
+	
+	def on_key_down(self, event: wx.KeyEvent):
+		"""
+		キー押下時の処理。
+		Enterキーで画像表示イベントを発行します。
+		"""
+		if event.GetKeyCode() == wx.WXK_RETURN:
+			view_index = self.GetSelection()
+			if view_index != wx.NOT_FOUND:
+				wx.PostEvent(self, wx.PyCommandEvent(myEVT_VIEW_IMAGE, self.GetId()))
+		else:
+			event.Skip()
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""
