@@ -42,6 +42,7 @@ from image_tagging_helper.wx.frame_menu import (
 	ID_SORT_DESCENDING,
 )
 from image_tagging_helper.i18n import setup_translation, __
+from image_tagging_helper.core.apppaths import resource_path
 
 if TYPE_CHECKING:
 	from image_tagging_helper.models.diff import DatasetDiff
@@ -50,8 +51,8 @@ if TYPE_CHECKING:
 APP_NAME = "Image Tagging Helper"
 APP_ID = "image_tagging_helper"
 
-# アイコンリソースのパス (app.pyからの相対パス)
-ICON_SORT_LINES = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'assets', 'sort_lines.ico'))
+# アイコンリソースのパス
+ICON_SORT_LINES = resource_path('assets/sort_lines.ico')
 
 SASH_MIN_WIDTH = 120
 TOOLBAR_CONTENT_HEIGHT = 24
@@ -700,7 +701,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 						__("title:error"),
 						wx.OK | wx.ICON_ERROR
 					)
-		
+	
 	def on_image_list_select(self, event: wx.CommandEvent):
 		"""
 		サムネイルリストの選択が変更されたときの処理。
@@ -1189,7 +1190,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			show_all_tags_panel = self.config.get('ui.show_all_tags_panel', True)
 			self.toggle_all_tags_menu.Check(show_all_tags_panel)
 			self._update_layout_visibility()
-
+		
 		finally:
 			self.Thaw()
 	

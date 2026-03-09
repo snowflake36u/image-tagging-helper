@@ -2,6 +2,8 @@ import gettext
 import os
 from typing import Optional
 
+from image_tagging_helper.core.apppaths import resource_path
+
 _translation: Optional[gettext.NullTranslations] = None
 
 def __(message_key: str) -> str:
@@ -28,7 +30,7 @@ def setup_translation(domain: str, locales_dir: str | None = None, lang: str | N
 	global _translation
 	
 	if locales_dir is None:
-		locales_dir = os.path.join(os.path.dirname(__file__), 'locales')
+		locales_dir = resource_path('i18n/locales')
 	
 	# 1. 英語 (en) をフォールバックとしてロード
 	try:
