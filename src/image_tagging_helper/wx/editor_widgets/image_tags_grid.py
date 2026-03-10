@@ -69,6 +69,8 @@ class ImageTagsGrid(wx.grid.Grid):
 		# カテゴリ列を読み取り専用にする
 		attr = wx.grid.GridCellAttr()
 		attr.SetReadOnly(True)
+		# 読み取り専用列の背景色を変更して、視覚的に分かりやすくする
+		attr.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_3DFACE))
 		self.SetColAttr(2, attr)
 	
 	def set_tag_lexicon(self, lexicon):
