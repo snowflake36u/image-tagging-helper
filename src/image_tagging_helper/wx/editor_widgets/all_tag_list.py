@@ -81,7 +81,7 @@ class CategoryOrderSortKeyFn(TagSortKeyFn):
 	
 	def __call__(self, item) -> Any:
 		name, count, _ = item
-		return self.lexicon.get_tag_category_order(name), name
+		return self.lexicon.get_category_order_of(name), name
 
 class CategoryTextSortKeyFn(TagSortKeyFn):
 	def __init__(self, lexicon: TagLexicon):
@@ -89,7 +89,7 @@ class CategoryTextSortKeyFn(TagSortKeyFn):
 	
 	def __call__(self, item) -> Any:
 		name, count, _ = item
-		return self.lexicon.get_tag_category(name) or '', name
+		return self.lexicon.get_category_of(name) or '-', name
 
 class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 	"""
@@ -233,7 +233,7 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 			
 			lexicon = self.tag_lexicon
 			valid_tags = [
-				(t, c, lexicon.get_tag_category(t) if lexicon else None)
+				(t, c, lexicon.get_category_of(t) if lexicon else None)
 				for t, c in self.dataset.tag_usages.items() if t.strip()
 			]
 			
@@ -306,7 +306,7 @@ class AllTagsList(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 				self.Refresh()
 		else:
 			# 更新または挿入
-			categ = self.tag_lexicon.get_tag_category(tag_text) if self.tag_lexicon else None
+			categ = self.tag_lexicon.get_category_of(tag_text) if self.tag_lexicon else None
 			new_data = (tag_text, count, categ)
 			
 			if found_idx != -1:

@@ -1,7 +1,6 @@
 import wx
 import wx.grid
 import ctypes
-import bisect
 import os
 import sys
 import subprocess
@@ -301,6 +300,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.image_tags_toolbar = self._create_header_panel(self.image_tags_panel, __("label:image_tags"))
 		
 		self.image_tags_grid = ImageTagsGrid(self.image_tags_panel)
+		self.image_tags_grid.set_tag_lexicon(self.tag_lexicon)
 		self.image_tags_grid.Bind(EVT_SELECT_IN_ALL_TAGS, self.on_select_in_all_tags)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)

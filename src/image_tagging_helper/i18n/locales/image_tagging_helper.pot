@@ -91,6 +91,12 @@ msgstr ""
 msgid "tooltip:reload"
 msgstr ""
 
+msgid "action:save"
+msgstr ""
+
+msgid "tooltip:save"
+msgstr ""
+
 msgid "action:import_tags"
 msgstr ""
 
@@ -101,12 +107,6 @@ msgid "action:export_tags"
 msgstr ""
 
 msgid "tooltip:export_tags"
-msgstr ""
-
-msgid "action:save"
-msgstr ""
-
-msgid "tooltip:save"
 msgstr ""
 
 msgid "action:exit"

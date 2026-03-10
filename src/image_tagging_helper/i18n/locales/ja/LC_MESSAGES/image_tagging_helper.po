@@ -95,6 +95,12 @@ msgstr "再読み込み(&R)"
 msgid "tooltip:reload"
 msgstr "再読み込み"
 
+msgid "action:save"
+msgstr "保存(&S)"
+
+msgid "tooltip:save"
+msgstr "保存"
+
 msgid "action:import_tags"
 msgstr "タグ辞書のインポート(&I)"
 
@@ -106,12 +112,6 @@ msgstr "タグ辞書のエクスポート(&E)"
 
 msgid "tooltip:export_tags"
 msgstr "タグ辞書のエクスポート"
-
-msgid "action:save"
-msgstr "保存(&S)"
-
-msgid "tooltip:save"
-msgstr "保存"
 
 msgid "action:exit"
 msgstr "終了(&X)"
@@ -276,7 +276,7 @@ msgid "label:category"
 msgstr "カテゴリ"
 
 msgid "label:uncategorized_symbol"
-msgstr "N/A"
+msgstr "-"
 
 msgid "action:select_in_image_tags"
 msgstr "画像タグで選択"

@@ -95,6 +95,12 @@ msgstr "&Reload"
 msgid "tooltip:reload"
 msgstr "Reload"
 
+msgid "action:save"
+msgstr "&Save"
+
+msgid "tooltip:save"
+msgstr "Save"
+
 msgid "action:import_tags"
 msgstr "&Import Tag Lexicon"
 
@@ -106,12 +112,6 @@ msgstr "&Export Tag Lexicon"
 
 msgid "tooltip:export_tags"
 msgstr "Export tag lexicon file"
-
-msgid "action:save"
-msgstr "&Save"
-
-msgid "tooltip:save"
-msgstr "Save"
 
 msgid "action:exit"
 msgstr "E&xit"
@@ -276,7 +276,7 @@ msgid "label:category"
 msgstr "Category"
 
 msgid "label:uncategorized_symbol"
-msgstr "N/A"
+msgstr "-"
 
 msgid "action:select_in_image_tags"
 msgstr "&Select in Image Tags"

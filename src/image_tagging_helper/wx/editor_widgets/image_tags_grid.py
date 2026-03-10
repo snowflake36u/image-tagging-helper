@@ -9,6 +9,7 @@ from image_tagging_helper.models.diff import (
 	DatasetDiff, AppendDiff, InsertDiff, MoveDiff, DeleteDiff, MutateTagDiff, BatchDiff
 )
 from image_tagging_helper.wx.events import SelectInAllTagsEvent
+from image_tagging_helper.models.tag_lexicon import TagLexicon  # TagLexiconをインポート
 
 from image_tagging_helper.i18n import __
 
@@ -33,6 +34,7 @@ class ImageTagsGrid(wx.grid.Grid):
 		self.ui_driven_controller: DatasetController | None = None
 		self.remote_controller: DatasetController | None = None
 		self.item_index: int | None = None
+		self.tag_lexicon: TagLexicon | None = None  # TagLexiconを保持するフィールドを追加
 		
 		self._init_grid()
 		
@@ -52,15 +54,25 @@ class ImageTagsGrid(wx.grid.Grid):
 		列の作成、ラベルの設定、列幅の調整、行ラベルの非表示、
 		行サイズのドラッグ無効化、選択モードの設定を行います。
 		"""
-		self.CreateGrid(0, 2)
+		self.CreateGrid(0, 3)  # 列数を3に変更
 		self.SetColLabelValue(0, __("label:tag"))
 		self.SetColLabelValue(1, __("label:weight"))
+		self.SetColLabelValue(2, __("label:category"))  # カテゴリ列のラベルを設定
 		self.SetColSize(0, 150)
 		self.SetColSize(1, 50)
+		self.SetColSize(2, 100)  # カテゴリ列の幅を設定
 		self.SetRowLabelSize(0)
 		self.EnableDragRowSize(False)
 		# 選択モードをセル選択にする
 		self.SetSelectionMode(wx.grid.Grid.SelectCells)
+		
+		# カテゴリ列を読み取り専用にする
+		attr = wx.grid.GridCellAttr()
+		attr.SetReadOnly(True)
+		self.SetColAttr(2, attr)
+	
+	def set_tag_lexicon(self, lexicon):
+		self.tag_lexicon = lexicon
 	
 	def set_dataset(self, dataset: Dataset | None):
 		"""表示対象のデータセットを設定します。
@@ -84,6 +96,13 @@ class ImageTagsGrid(wx.grid.Grid):
 	
 	def on_cell_changed(self, evt):
 		r = evt.GetRow()
+		c = evt.GetCol()  # 変更された列を取得
+		
+		if c == 2:
+			# カテゴリ列の変更は無視する
+			evt.Skip()
+			return
+		
 		try:
 			weight = float(self.GetCellValue(r, 1))
 		except ValueError:
@@ -92,6 +111,10 @@ class ImageTagsGrid(wx.grid.Grid):
 		new_tag = Tag(
 			self.GetCellValue(r, 0), weight
 		)
+		
+		if c == 0:
+			# カテゴリ列の更新
+			self.SetCellValue(r, 2, self.get_category_of(new_tag.text))
 		
 		if self.ui_driven_controller and self.item_index is not None:
 			self.ui_driven_controller.edit_tag(self.item_index, r, new_tag)
@@ -341,11 +364,9 @@ class ImageTagsGrid(wx.grid.Grid):
 		text_rows = []
 		for r in range(min_row, max_row + 1):
 			row_data = []
+			# カテゴリ列もコピー対象に含める
 			for c in range(min_col, max_col + 1):
-				if self.IsInSelection(r, c):
-					row_data.append(self.GetCellValue(r, c))
-				else:
-					row_data.append("")
+				row_data.append(self.GetCellValue(r, c))
 			text_rows.append("\t".join(row_data))
 		
 		text = "\n".join(text_rows)
@@ -393,6 +414,7 @@ class ImageTagsGrid(wx.grid.Grid):
 				continue
 			
 			weight = 1.0
+			# 貼り付け時にカテゴリ列は無視する。タグと重みのみを考慮。
 			if len(row) > 1:
 				try:
 					weight = float(row[1])
@@ -558,6 +580,8 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.SetCellValue(i, 0, tag.text)
 			weight_str = f'{tag.weight:.2f}' if tag.weight is not None else ''
 			self.SetCellValue(i, 1, weight_str)
+			# カテゴリ列に値を設定
+			self.SetCellValue(i, 2, self.get_category_of(tag.text))
 	
 	def append_tags(self, target: int, tags: tuple[Tag, ...]):
 		"""タグを末尾に追加します。
@@ -577,6 +601,8 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.SetCellValue(row, 0, tag.text)
 			weight_str = f'{tag.weight:.2f}' if tag.weight is not None else ''
 			self.SetCellValue(row, 1, weight_str)
+			# カテゴリ列に値を設定
+			self.SetCellValue(row, 2, self.get_category_of(tag.text))
 		
 		if tags:
 			self.focus_cell(len(tags) + start_row - 1, 0)
@@ -599,6 +625,8 @@ class ImageTagsGrid(wx.grid.Grid):
 			self.SetCellValue(row, 0, tag.text)
 			weight_str = f'{tag.weight:.2f}' if tag.weight is not None else ''
 			self.SetCellValue(row, 1, weight_str)
+			# カテゴリ列に値を設定
+			self.SetCellValue(row, 2, self.get_category_of(tag.text))
 		
 		if tags:
 			self.focus_cell(len(tags) + position - 1, 0)
@@ -619,12 +647,14 @@ class ImageTagsGrid(wx.grid.Grid):
 		
 		tag_text = self.GetCellValue(old_position, 0)
 		tag_weight = self.GetCellValue(old_position, 1)
+		tag_category = self.GetCellValue(old_position, 2)  # カテゴリも取得
 		
 		self.DeleteRows(old_position, 1)
 		self.InsertRows(new_position, 1)
 		
 		self.SetCellValue(new_position, 0, tag_text)
 		self.SetCellValue(new_position, 1, tag_weight)
+		self.SetCellValue(new_position, 2, tag_category)  # カテゴリも設定
 		
 		self.focus_cell(new_position, 0)
 	
@@ -660,6 +690,8 @@ class ImageTagsGrid(wx.grid.Grid):
 		column = 0
 		if self.GetCellValue(position, 0) != new_tag.text:
 			self.SetCellValue(position, 0, new_tag.text)
+			# タグテキストが変更されたらカテゴリも更新
+			self.SetCellValue(position, 2, self.get_category_of(new_tag.text))
 		else:
 			column = 1
 			self.SetCellValue(position, 1, f'{new_tag.weight:.2f}')
@@ -683,3 +715,6 @@ class ImageTagsGrid(wx.grid.Grid):
 		if first_selected_row != -1:
 			self.SetGridCursor(first_selected_row, 0)
 			self.MakeCellVisible(first_selected_row, 0)
+	
+	def get_category_of(self, tag_text):
+		return self.tag_lexicon and self.tag_lexicon.get_category_of(tag_text) or __("label:uncategorized_symbol")

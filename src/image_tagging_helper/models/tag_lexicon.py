@@ -203,14 +203,14 @@ class TagLexicon:
 		with open(path, 'w', encoding='utf-8') as f:
 			yaml.dump(data, f, allow_unicode=True, sort_keys=False)
 	
-	def get_tag_category(self, tag_text):
+	def get_category_of(self, tag_text):
 		if tag_text in self.tag_category_indices:
 			return self.categories[self.tag_category_indices[tag_text]]
 		else:
 			return None
 	
-	def get_tag_category_order(self, tag_text):
+	def get_category_order_of(self, tag_text):
 		return self.tag_category_indices.get(tag_text, self.n_categories)
 	
-	def get_tag_order(self, tag_text):
+	def get_order_of(self, tag_text):
 		return self.tag_orders.get(tag_text, self.n_tags)
