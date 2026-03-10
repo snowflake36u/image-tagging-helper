@@ -19,6 +19,74 @@
             id="defs22">
         <inkscape:path-effect
                 effect="fillet_chamfer"
+                id="path-effect52"
+                is_visible="true"
+                lpeversion="1"
+                nodesatellites_param="F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1"
+                radius="40"
+                unit="px"
+                method="arc"
+                mode="F"
+                chamfer_steps="1"
+                flexible="false"
+                use_knot_distance="true"
+                apply_no_radius="true"
+                apply_with_radius="true"
+                only_selected="false"
+                hide_knots="false"/>
+        <inkscape:path-effect
+                effect="fillet_chamfer"
+                id="path-effect47"
+                is_visible="true"
+                lpeversion="1"
+                nodesatellites_param="F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1"
+                radius="40"
+                unit="px"
+                method="arc"
+                mode="F"
+                chamfer_steps="1"
+                flexible="false"
+                use_knot_distance="true"
+                apply_no_radius="true"
+                apply_with_radius="true"
+                only_selected="false"
+                hide_knots="false"/>
+        <inkscape:path-effect
+                effect="fillet_chamfer"
+                id="path-effect39"
+                is_visible="true"
+                lpeversion="1"
+                nodesatellites_param="F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1"
+                radius="40"
+                unit="px"
+                method="arc"
+                mode="F"
+                chamfer_steps="1"
+                flexible="false"
+                use_knot_distance="true"
+                apply_no_radius="true"
+                apply_with_radius="true"
+                only_selected="false"
+                hide_knots="false"/>
+        <inkscape:path-effect
+                effect="fillet_chamfer"
+                id="path-effect35"
+                is_visible="true"
+                lpeversion="1"
+                nodesatellites_param="F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1 @ F,0,0,1,0,4,0,1"
+                radius="40"
+                unit="px"
+                method="arc"
+                mode="F"
+                chamfer_steps="1"
+                flexible="false"
+                use_knot_distance="true"
+                apply_no_radius="true"
+                apply_with_radius="true"
+                only_selected="false"
+                hide_knots="false"/>
+        <inkscape:path-effect
+                effect="fillet_chamfer"
                 id="path-effect29"
                 is_visible="true"
                 lpeversion="1"
@@ -214,12 +282,12 @@
             inkscape:pageopacity="0.0"
             inkscape:pagecheckerboard="true"
             inkscape:deskcolor="#d1d1d1"
-            inkscape:zoom="0.25"
-            inkscape:cx="-596"
-            inkscape:cy="986"
+            inkscape:zoom="0.70710678"
+            inkscape:cx="333.04729"
+            inkscape:cy="523.25902"
             inkscape:window-width="1752"
-            inkscape:window-height="1033"
-            inkscape:window-x="10"
+            inkscape:window-height="1032"
+            inkscape:window-x="34"
             inkscape:window-y="0"
             inkscape:window-maximized="0"
             inkscape:current-layer="svg22"/>
@@ -232,7 +300,8 @@
             stroke="#1f8892"
             stroke-width="5.50697"
             id="rect3-2"
-            style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:5;stroke-dasharray:none;stroke-opacity:1"/>
+            style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:5;stroke-dasharray:none;stroke-opacity:1"
+            inkscape:label="white border"/>
     <rect
             x="6.5000052"
             y="6.5000052"
@@ -242,29 +311,33 @@
             stroke="#1f8892"
             stroke-width="5.50697"
             id="rect3"
-            style="fill:#ffffff;fill-opacity:1;stroke:#106daa;stroke-width:5;stroke-dasharray:none;stroke-opacity:1"/>
+            style="fill:none;fill-opacity:1;stroke:#ea580b;stroke-width:5;stroke-dasharray:none;stroke-opacity:1"
+            inkscape:label="frame"/>
     <g
             id="g29"
-            transform="translate(11.56325,34.375)">
+            transform="translate(11.56325,34.375)"
+            style="display:inline">
         <path
                 d="M 15.677115,2.5607376 3.0728851,13.064262 a 3.3333333,3.3333333 90 0 0 0,5.121476 L 15.677115,28.689262 A 11.0482,11.0482 19.902786 0 0 22.75,31.25 H 71 a 4,4 135 0 0 4,-4 V 4 A 4,4 45 0 0 71,0 H 22.75 a 11.0482,11.0482 160.09721 0 0 -7.072885,2.5607376 z"
-                style="opacity:1;fill:#106daa;stroke-width:3.99999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:200;paint-order:markers stroke fill"
+                style="opacity:1;fill:#ea580b;fill-opacity:1;stroke-width:3.99999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:200;paint-order:markers stroke fill"
                 id="path27"
                 inkscape:path-effect="#path-effect29"
                 inkscape:original-d="M 18.75,0 0,15.625 18.75,31.25 H 75 V 0 Z"/>
         <circle
                 style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:200;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
                 id="path28"
-                cx="18.75"
+                cx="17.18745"
                 cy="15.625"
                 r="3.125"/>
-    </g>
     <path
             style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:3.99999;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
             d="m 43,44.999995 c 34.88372,0 35,0 35,0"
-            id="path29"/>
+            id="path29"
+            transform="translate(-11.56325,-34.375)"/>
     <path
             style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
             d="m 43,54.999993 c 15.946844,0 16,0 16,0"
-            id="path30"/>
+            id="path30"
+            transform="translate(-11.56325,-34.375)"/>
+    </g>
 </svg>
