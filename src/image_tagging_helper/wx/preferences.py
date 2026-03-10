@@ -7,7 +7,11 @@ class PreferencesDialog(wx.Dialog):
 	"""設定画面のダイアログ。"""
 	
 	def __init__(self, parent, config: Config):
-		super().__init__(parent, title=__("title:preferences"))
+		super().__init__(
+			parent,
+			title=__("title:preferences"),
+			style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,  # ダイアログをリサイズ可能にする
+		)
 		self.config = config
 		self.original_lang = self.config.get('language', 'en')
 		self._init_ui()
@@ -36,7 +40,7 @@ class PreferencesDialog(wx.Dialog):
 		dlg_sizer.Add(btns, flag=wx.EXPAND | wx.ALL, border=10)
 		
 		self.SetSizer(dlg_sizer)
-		self.Fit()
+		self.SetSize((800, 600))
 		self.CenterOnParent()
 	
 	def _add_language_settings(self, parent: wx.Panel, sizer: wx.Sizer):
