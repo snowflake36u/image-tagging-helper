@@ -681,6 +681,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 				try:
 					self.tag_lexicon.load(path)
 					self.all_tags_list.set_tag_lexicon(self.tag_lexicon)
+					self.image_tags_grid.refresh_grid()
 				except Exception:
 					error_msg = traceback.format_exc()
 					wx.MessageBox(
