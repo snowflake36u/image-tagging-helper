@@ -96,7 +96,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.tag_lexicon = TagLexicon()
 		self.current_item_index: int = wx.NOT_FOUND
 		
-		# タグ情報の読み込み
+		# タグ辞書の読み込み
 		self.tag_lexicon_path = os.path.join(self.config.config_dir, 'tag_lexicon.json')
 		self.tag_lexicon.load(self.tag_lexicon_path)
 		
@@ -533,7 +533,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 				event.Veto()
 				return
 		
-		# タグ情報の保存
+		# タグ辞書の保存
 		self.tag_lexicon.save(self.tag_lexicon_path)
 		
 		self.save_ui_settings()
@@ -666,8 +666,8 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			self.dataset.save(self.caption_ext, self.caption_format_config)
 			self._update_title()
 	
-	def on_import_tags(self, event: wx.CommandEvent):
-		"""タグ情報をインポートします。"""
+	def on_import_tag_lexicon(self, event: wx.CommandEvent):
+		"""タグ辞書をインポートします。"""
 		wildcard = '|'.join([
 			"All supported files (*.json;*.yaml;*.yml)", "*.json;*.yaml;*.yml",
 			"JSON files (*.json)", "*.json",
@@ -689,8 +689,8 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 						wx.OK | wx.ICON_ERROR
 					)
 	
-	def on_export_tags(self, event: wx.CommandEvent):
-		"""タグ情報をエクスポートします。"""
+	def on_export_tag_lexicon(self, event: wx.CommandEvent):
+		"""タグ辞書をエクスポートします。"""
 		wildcard = '|'.join([
 			"JSON files (*.json)", "*.json",
 			"YAML files (*.yaml)", "*.yaml",

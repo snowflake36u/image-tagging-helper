@@ -51,7 +51,7 @@ class TagLexicon:
 		# { tag_text: tag_index }
 		self.tag_orders: dict[str, int] = { }
 		
-		# wildcardsと展開前のタグ情報を保持する
+		# wildcardsと展開前のタグ辞書を保持する
 		self.wildcards: dict[str, list[str]] = { }
 		self.raw_categories: dict[str, list[str]] = { }
 	
@@ -92,7 +92,7 @@ class TagLexicon:
 		self.tag_orders = tag_orders
 	
 	def get_lexicon(self) -> list[TagCategory]:
-		"""現在のタグ情報をTagCategoryのリストとして取得します。"""
+		"""現在のタグ辞書をTagCategoryのリストとして取得します。"""
 		result = []
 		for tag, cat_idx in self.tag_category_indices.items():
 			category = self.categories[cat_idx]
@@ -100,7 +100,7 @@ class TagLexicon:
 		return result
 	
 	def load(self, path: str):
-		"""指定されたパスからタグ情報を読み込みます。拡張子によって形式を判断します。
+		"""指定されたパスからタグ辞書を読み込みます。拡張子によって形式を判断します。
 		
 		読み込みに失敗した場合、例外を送出します。
 		"""
@@ -176,7 +176,7 @@ class TagLexicon:
 		self.set_lexicon(lexicon)
 	
 	def save(self, path: str):
-		"""指定されたパスにタグ情報を保存します。拡張子によって形式を判断します。"""
+		"""指定されたパスにタグ辞書を保存します。拡張子によって形式を判断します。"""
 		ext = os.path.splitext(path)[1].lower()
 		if ext == '.json':
 			self._save_json(path)
