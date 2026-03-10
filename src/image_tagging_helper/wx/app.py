@@ -867,15 +867,42 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		self.image_tags_grid.move_tag_down()
 	
 	def on_view_image(self, event: wx.CommandEvent):
-		"""選択されている画像を既定のビューアで開きます。"""
+		"""選択されている画像をビューアで開きます。設定に応じて既定のビューアまたはカスタムコマンドを使用します。"""
 		if self.current_item_index == wx.NOT_FOUND:
 			return
 		
 		item = self.dataset[self.current_item_index]
-		image_path = item.image_path
+		image_path = os.path.abspath(item.image_path)
 		
-		if not wx.LaunchDefaultApplication(image_path):
-			wx.LogError(f"Failed to open file: {image_path}")
+		viewer_type = self.config.get('viewer.type', 'default')
+		
+		if viewer_type == 'custom':
+			command_template = self.config.get('viewer.command', '')
+			if not command_template:
+				wx.MessageBox(
+					__("message:custom_viewer_not_configured"),
+					__("title:error"),
+					wx.OK | wx.ICON_ERROR
+				)
+				return
+			
+			try:
+				# The command is expected to have {file} as a placeholder.
+				# The user should add quotes around {file} in the command if needed.
+				command_to_run = command_template.replace('{file}', image_path)
+				
+				# Popen is non-blocking
+				subprocess.Popen(command_to_run, shell=True)
+			except Exception:
+				error_msg = traceback.format_exc()
+				wx.MessageBox(
+					__("message:failed_to_open_custom_viewer").format(e=error_msg),
+					__("title:error"),
+					wx.OK | wx.ICON_ERROR
+				)
+		else:  # 'default'
+			if not wx.LaunchDefaultApplication(image_path):
+				wx.LogError(f"Failed to open file: {image_path}")
 	
 	def on_open_in_folder(self, event: wx.CommandEvent):
 		"""選択されている画像が存在する場所をエクスプローラ等で開きます。"""

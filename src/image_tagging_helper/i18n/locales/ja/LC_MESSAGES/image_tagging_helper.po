@@ -59,6 +59,12 @@ msgstr "言語の変更にはアプリの再起動が必要です。"
 msgid "title:restart_required"
 msgstr "再起動が必要"
 
+msgid "message:custom_viewer_not_configured"
+msgstr "カスタムビューアのコマンドが設定されていません。"
+
+msgid "message:failed_to_open_custom_viewer"
+msgstr "カスタムビューアでの画像表示に失敗しました: {e}"
+
 msgid "dialog:enter_new_tag_for_replacement"
 msgstr "'{old_tag}' の置換先のタグを入力してください。"
 
@@ -265,6 +271,30 @@ msgstr "フォント設定"
 
 msgid "label:editor_font"
 msgstr "エディタ"
+
+msgid "label:image_viewer"
+msgstr "画像ビューア"
+
+msgid "viewer:default"
+msgstr "デフォルト"
+
+msgid "viewer:custom"
+msgstr "カスタム"
+
+msgid "label:viewer_type"
+msgstr "ビューア種別"
+
+msgid "label:viewer_command"
+msgstr "コマンド"
+
+msgid "button:browse"
+msgstr "参照..."
+
+msgid "hint:viewer_command"
+msgstr "画像のパスには {file} をプレースホルダとして使用してください。"
+
+msgid "title:select_viewer_executable"
+msgstr "ビューアの実行ファイルを選択"
 
 msgid "label:tag"
 msgstr "タグ"

@@ -55,6 +55,12 @@ msgstr ""
 msgid "title:restart_required"
 msgstr ""
 
+msgid "message:custom_viewer_not_configured"
+msgstr ""
+
+msgid "message:failed_to_open_custom_viewer"
+msgstr ""
+
 msgid "dialog:enter_new_tag_for_replacement"
 msgstr ""
 
@@ -260,6 +266,30 @@ msgid "label:font_settings"
 msgstr ""
 
 msgid "label:editor_font"
+msgstr ""
+
+msgid "label:image_viewer"
+msgstr ""
+
+msgid "viewer:default"
+msgstr ""
+
+msgid "viewer:custom"
+msgstr ""
+
+msgid "label:viewer_type"
+msgstr ""
+
+msgid "label:viewer_command"
+msgstr ""
+
+msgid "button:browse"
+msgstr ""
+
+msgid "hint:viewer_command"
+msgstr ""
+
+msgid "title:select_viewer_executable"
 msgstr ""
 
 msgid "label:tag"

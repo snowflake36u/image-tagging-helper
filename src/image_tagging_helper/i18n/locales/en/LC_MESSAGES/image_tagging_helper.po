@@ -59,6 +59,12 @@ msgstr "Restart the application to apply the language change."
 msgid "title:restart_required"
 msgstr "Restart Required"
 
+msgid "message:custom_viewer_not_configured"
+msgstr "Custom viewer command is not configured."
+
+msgid "message:failed_to_open_custom_viewer"
+msgstr "Failed to open image with custom viewer: {e}"
+
 msgid "dialog:enter_new_tag_for_replacement"
 msgstr "Enter new tag for replacement of '{old_tag}'"
 
@@ -265,6 +271,30 @@ msgstr "Font Settings"
 
 msgid "label:editor_font"
 msgstr "Editor"
+
+msgid "label:image_viewer"
+msgstr "Image Viewer"
+
+msgid "viewer:default"
+msgstr "Default"
+
+msgid "viewer:custom"
+msgstr "Custom"
+
+msgid "label:viewer_type"
+msgstr "Viewer Type"
+
+msgid "label:viewer_command"
+msgstr "Command"
+
+msgid "button:browse"
+msgstr "Browse..."
+
+msgid "hint:viewer_command"
+msgstr "Use {file} as a placeholder for the image path."
+
+msgid "title:select_viewer_executable"
+msgstr "Select Viewer Executable"
 
 msgid "label:tag"
 msgstr "Tag"
