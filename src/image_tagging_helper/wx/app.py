@@ -52,7 +52,8 @@ APP_NAME = "Image Tagging Helper"
 APP_ID = "image_tagging_helper"
 
 # アイコンリソースのパス
-ICON_SORT_LINES = resource_path('assets/sort_lines.ico')
+APP_ICON_PATH = resource_path('assets/app_icon.ico')
+ICON_SORT_LINES_PATH = resource_path('assets/sort_lines.ico')
 
 SASH_MIN_WIDTH = 120
 TOOLBAR_CONTENT_HEIGHT = 24
@@ -79,6 +80,13 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		# ウィンドウサイズを復元
 		window_size = self.load_window_size_settings()
 		super().__init__(parent, title=title, size=window_size)
+		
+		# アプリケーションのアイコンを設定します。
+		if os.path.exists(APP_ICON_PATH):
+			icon = wx.Icon(APP_ICON_PATH, wx.BITMAP_TYPE_ICO)
+			self.SetIcon(icon)
+		else:
+			print(f"Warning: Application icon not found at {APP_ICON_PATH}")
 		
 		# === データメンバーの初期化 ===
 		self.image_exts = ['.jpg', '.jpeg', '.png', '.webp']
@@ -313,9 +321,9 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		
 		# ソートメニューボタンを追加
 		try:
-			icon_image = wx.Image(ICON_SORT_LINES, wx.BITMAP_TYPE_ICO)
+			icon_image = wx.Image(ICON_SORT_LINES_PATH, wx.BITMAP_TYPE_ICO)
 			if not icon_image.IsOk():
-				raise FileNotFoundError(f"Icon not found: {ICON_SORT_LINES}")
+				raise FileNotFoundError(f"Icon not found: {ICON_SORT_LINES_PATH}")
 			
 			icon_image = icon_image.Rescale(TOOLBAR_CONTENT_HEIGHT, TOOLBAR_CONTENT_HEIGHT, wx.IMAGE_QUALITY_HIGH)
 			sort_icon = wx.Bitmap(icon_image)

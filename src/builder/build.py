@@ -21,6 +21,8 @@ def make_options():
 		f'--output-filename={APP_NAME}',
 		'--include-package=image_tagging_helper',
 		'--lto=yes',
+		# アプリケーションのアイコンを設定します。
+		f'--windows-icon-from-ico={PROJ_PATH / "assets_src" / "app_icon.ico"}',
 	]
 	
 	# 実行ファイルに同梱するリソース
