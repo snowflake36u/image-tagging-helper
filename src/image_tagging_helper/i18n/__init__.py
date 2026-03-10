@@ -2,7 +2,7 @@ import gettext
 import os
 from typing import Optional
 
-from image_tagging_helper.core.apppaths import resource_path
+from image_tagging_helper.core.apppaths import get_executable_dir, is_compiled, resource_path
 
 _translation: Optional[gettext.NullTranslations] = None
 
@@ -30,8 +30,13 @@ def setup_translation(domain: str, locales_dir: str | None = None, lang: str | N
 	global _translation
 	
 	if locales_dir is None:
-		locales_dir = resource_path('i18n/locales')
-	
+		if is_compiled():
+			# 実行可能ファイルの場合、実行ファイルの隣の 'locales' ディレクトリを使用
+			locales_dir = str(get_executable_dir() / 'locales')
+		else:
+			# 開発環境では、ソースツリー内の 'locales' ディレクトリを使用
+			locales_dir = resource_path('i18n/locales')
+
 	# 1. 英語 (en) をフォールバックとしてロード
 	try:
 		fallback = gettext.translation(domain, localedir=locales_dir, languages=['en'])

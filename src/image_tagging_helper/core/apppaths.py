@@ -4,25 +4,24 @@ from pathlib import Path
 # --- Private members ---
 
 # アプリケーションがNuitkaによってone-fileにバンドルされているかどうか
-_IS_FROZEN = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+# Nuitkaのonefileモードでは、sys._MEIPASSに展開先の一時フォルダが設定されるため、その存在をチェックする
+_IS_COMPILED = "__compiled__" in globals()
 
 # バンドルされたリソースのルートパス
-# - Nuitkaビルド環境: リソースが展開される一時ディレクトリ (sys._MEIPASS)
-# - 開発環境: プロジェクトの `src` ディレクトリ
-_BUNDLE_DIR = Path(sys._MEIPASS) if _IS_FROZEN else Path(__file__).parent.parent
+_BUNDLE_DIR = Path(__file__).parent.parent
 
 # 実行ファイル(.exe)が置かれているディレクトリのパス
 # - Nuitkaビルド環境: .exeファイルが存在するディレクトリ
 # - 開発環境: プロジェクトのルートディレクトリ
-_EXECUTABLE_DIR = Path(sys.executable).parent if _IS_FROZEN else Path(__file__).parent.parent.parent
+_EXECUTABLE_DIR = Path(sys.argv[0]).parent if _IS_COMPILED else Path(__file__).parent.parent.parent
 
 # --- Public functions ---
 
-def is_frozen() -> bool:
+def is_compiled() -> bool:
 	"""
 	アプリケーションがNuitkaによってone-fileにバンドルされているかどうかを返します。
 	"""
-	return _IS_FROZEN
+	return _IS_COMPILED
 
 def get_bundle_dir() -> Path:
 	"""

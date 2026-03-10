@@ -12,23 +12,49 @@ ENTRY_POINT = 'image_tagging_helper/wx/app.py'
 DIST_DIR = PROJ_PATH / 'dist'
 BUILD_DIR = 'build'
 
-# Nuitka options
-nuitka_options = [
-	'--onefile',
-	'--windows-console-mode=disable',
-	f'--output-dir={DIST_DIR}',
-	f'--output-filename={APP_NAME}',
-	'--include-package=image_tagging_helper',
-	'--lto=yes',
-]
+def make_options():
+	# Nuitka options
+	nuitka_options = [
+		'--onefile',
+		'--windows-console-mode=disable',
+		f'--output-dir={DIST_DIR}',
+		f'--output-filename={APP_NAME}',
+		'--include-package=image_tagging_helper',
+		'--lto=yes',
+	]
+	
+	# 実行ファイルに同梱するリソース
+	include_data_files = []
+	include_data_dirs = [
+		('image_tagging_helper/assets', 'image_tagging_helper/assets'),
+	]
+	include_onefile_external_data = []
+	locale_files, locale_external_data = include_locale_files()
+	include_data_files.extend(locale_files)
+	include_onefile_external_data.extend(locale_external_data)
+	
+	for src, dest in include_data_files:
+		nuitka_options.append(f'--include-data-file={src}={dest}')
+	
+	for src, dest in include_data_dirs:
+		nuitka_options.append(f'--include-data-dir={src}={dest}')
+	
+	for d in include_onefile_external_data:
+		nuitka_options.append(f'--include-onefile-external-data={d}')
+	
+	return nuitka_options
 
-resources = [
-	'image_tagging_helper/i18n/locales',
-	'image_tagging_helper/assets',
-]
-
-for r in resources:
-	nuitka_options.append(f'--include-data-dir={r}={r}')
+def include_locale_files():
+	# 翻訳ファイルの追加
+	languages = ['en', 'ja']
+	locale_files = [(
+		f'image_tagging_helper/i18n/locales/{lang}/LC_MESSAGES/*.mo',
+		f'locales/{lang}/LC_MESSAGES/'
+	) for lang in languages]
+	locale_external_data = [
+		'locales',
+	]
+	return locale_files, locale_external_data
 
 def build():
 	"""
@@ -41,6 +67,7 @@ def build():
 		shutil.rmtree(BUILD_DIR)
 	
 	print('--- Building application with Nuitka ---')
+	nuitka_options = make_options()
 	command = [
 					 'python',
 					 '-m',
