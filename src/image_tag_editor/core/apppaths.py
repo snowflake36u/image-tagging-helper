@@ -54,7 +54,7 @@ def resource_path(relative_path: str | Path) -> str:
 
 	Args:
 		 relative_path: バンドルルート(`src` ディレクトリに相当)からの相対パス。
-							 (例: 'image_tagging_helper/assets/icon.png')
+							 (例: 'image_tag_editor/assets/icon.png')
 
 	Returns:
 		 リソースへの絶対パス文字列。

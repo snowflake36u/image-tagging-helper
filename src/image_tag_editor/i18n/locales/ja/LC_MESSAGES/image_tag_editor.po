@@ -84,7 +84,7 @@ msgid "statusbar:total_items"
 msgstr "{total_count} 項目"
 
 msgid "title:app_main_window"
-msgstr "Image Tagging Helper"
+msgstr "Image Tag Editor"
 
 msgid "ui_group:file"
 msgstr "ファイル(&F)"

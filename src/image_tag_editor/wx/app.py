@@ -7,16 +7,16 @@ import subprocess
 import traceback
 from typing import TYPE_CHECKING
 
-from image_tagging_helper.core.config import Config
-from image_tagging_helper.models.caption import CaptionFormatConfig, Tag
-from image_tagging_helper.models.dataset import Dataset
-from image_tagging_helper.models.controller import DatasetController
-from image_tagging_helper.models.tag_lexicon import TagLexicon
-from image_tagging_helper.wx.editor_widgets.all_tag_list import AllTagsList, TagSortOrder
-from image_tagging_helper.wx.editor_widgets.image_list import ImageVListBox
-from image_tagging_helper.wx.editor_widgets.image_tags_grid import ImageTagsGrid
-from image_tagging_helper.wx.wx_widgets import FlatBitmapButton
-from image_tagging_helper.wx.events import (
+from image_tag_editor.core.config import Config
+from image_tag_editor.models.caption import CaptionFormatConfig, Tag
+from image_tag_editor.models.dataset import Dataset
+from image_tag_editor.models.controller import DatasetController
+from image_tag_editor.models.tag_lexicon import TagLexicon
+from image_tag_editor.wx.editor_widgets.all_tag_list import AllTagsList, TagSortOrder
+from image_tag_editor.wx.editor_widgets.image_list import ImageVListBox
+from image_tag_editor.wx.editor_widgets.image_tags_grid import ImageTagsGrid
+from image_tag_editor.wx.wx_widgets import FlatBitmapButton
+from image_tag_editor.wx.events import (
 	EVT_SELECT_IN_ALL_TAGS,
 	EVT_ADD_TAGS_TO_FILTER,
 	EVT_APPEND_TAGS_TO_CURRENT,
@@ -30,8 +30,8 @@ from image_tagging_helper.wx.events import (
 	EVT_VIEW_IMAGE,
 	EVT_OPEN_IN_FOLDER,
 )
-from image_tagging_helper.wx.preferences import PreferencesDialog
-from image_tagging_helper.wx.frame_menu import (
+from image_tag_editor.wx.preferences import PreferencesDialog
+from image_tag_editor.wx.frame_menu import (
 	FrameMenuMixin,
 	ID_SORT_MENU,
 	ID_SORT_BY_TAG_NAME,
@@ -40,15 +40,15 @@ from image_tagging_helper.wx.frame_menu import (
 	ID_SORT_BY_CATEGORY_TEXT,
 	ID_SORT_DESCENDING,
 )
-from image_tagging_helper.i18n import setup_translation, __
-from image_tagging_helper.core.apppaths import resource_path
+from image_tag_editor.i18n import setup_translation, __
+from image_tag_editor.core.apppaths import resource_path
 
 if TYPE_CHECKING:
-	from image_tagging_helper.models.diff import DatasetDiff
+	from image_tag_editor.models.diff import DatasetDiff
 
 # アプリケーションのドメイン名を設定
-APP_NAME = "Image Tagging Helper"
-APP_ID = "image_tagging_helper"
+APP_NAME = "Image Tag Editor"
+APP_ID = "image_tag_editor"
 
 # アイコンリソースのパス
 APP_ICON_PATH = resource_path('assets/app_icon.ico')
@@ -58,7 +58,7 @@ SASH_MIN_WIDTH = 120
 TOOLBAR_CONTENT_HEIGHT = 24
 STATUSBAR_PADDING = 10
 
-class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
+class ImageTagEditorFrame(wx.Frame, FrameMenuMixin):
 	"""
 	メインウィンドウのフレーム。
 	UIコンポーネントの配置とイベント処理、データセットの管理を行います。
@@ -98,7 +98,10 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 		
 		# タグ辞書の読み込み
 		self.tag_lexicon_path = os.path.join(self.config.config_dir, 'tag_lexicon.json')
-		self.tag_lexicon.load(self.tag_lexicon_path)
+		try:
+			self.tag_lexicon.load(self.tag_lexicon_path)
+		except FileNotFoundError:
+			pass
 		
 		# === UIの初期化 ===
 		self._init_ui()
@@ -611,7 +614,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 			# SplitterWindowの場合、2つの子の最小幅とサッシの幅を合計する
 			w1 = window.GetWindow1()
 			w2 = window.GetWindow2()
-			min_w = ImageTaggingHelperFrame._get_min_width(w1) + ImageTaggingHelperFrame._get_min_width(w2)
+			min_w = ImageTagEditorFrame._get_min_width(w1) + ImageTagEditorFrame._get_min_width(w2)
 			
 			if window.IsSplit():
 				min_w += window.GetSashSize()
@@ -1313,7 +1316,7 @@ class ImageTaggingHelperFrame(wx.Frame, FrameMenuMixin):
 	def launch(config: Config):
 		"""アプリケーションを起動します。"""
 		app = wx.App()
-		frame = ImageTaggingHelperFrame(None, __("title:app_main_window"), config=config)
+		frame = ImageTagEditorFrame(None, __("title:app_main_window"), config=config)
 		frame.Show()
 		app.MainLoop()
 
@@ -1334,7 +1337,7 @@ def main():
 		except (AttributeError, OSError):
 			# DPI設定に対応していないOSの場合は何もしない
 			pass
-	ImageTaggingHelperFrame.launch(config)
+	ImageTagEditorFrame.launch(config)
 
 if __name__ == "__main__":
 	main()

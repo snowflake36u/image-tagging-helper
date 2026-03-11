@@ -2,7 +2,7 @@ import gettext
 import os
 from typing import Optional
 
-from image_tagging_helper.core.apppaths import get_executable_dir, is_compiled, resource_path
+from image_tag_editor.core.apppaths import get_executable_dir, is_compiled, resource_path
 
 _translation: Optional[gettext.NullTranslations] = None
 

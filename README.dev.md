@@ -1,6 +1,6 @@
 # 開発者向けガイド
 
-このドキュメントは Image Tagging Helper の開発者向けの情報を提供します。
+このドキュメントは Image Tag Editor の開発者向けの情報を提供します。
 
 ## 国際化 (i18n) / 翻訳
 
@@ -46,13 +46,13 @@
 
 ### 翻訳ツールの使用方法
 
-翻訳ファイルの管理には、`src/image_tagging_helper/i18n/compiler.py` を使用します。
+翻訳ファイルの管理には、`src/image_tag_editor/i18n/compiler.py` を使用します。
 このツールは `pybabel` をラップしており、ソースコードからの文字列抽出、翻訳ファイルの更新、コンパイルを行います。
 
 **基本的な使い方:**
 
 ```bash
-python src/image_tagging_helper/i18n/compiler.py <app_name> <command> [options]
+python src/image_tag_editor/i18n/compiler.py <app_name> <command> [options]
 ```
 
 * **`app_name`**: 対象のアプリケーション名（ドメイン名）。必須です。
@@ -73,10 +73,10 @@ python src/image_tagging_helper/i18n/compiler.py <app_name> <command> [options]
 1. **ソースコードの変更**: `__("category:text_name")` の形式で記述。
 2. **翻訳ファイルの更新**:
 	 ```bash
-	 python src/image_tagging_helper/i18n/compiler.py <app_name> e+u
+	 python src/image_tag_editor/i18n/compiler.py <app_name> e+u
 	 ```
-3. **翻訳の編集**: 生成された `.po` ファイル (`src/image_tagging_helper/i18n/locales/<lang>/LC_MESSAGES/<app_name>.po`) を編集。
+3. **翻訳の編集**: 生成された `.po` ファイル (`src/image_tag_editor/i18n/locales/<lang>/LC_MESSAGES/<app_name>.po`) を編集。
 4. **コンパイル**:
 	 ```bash
-	 python src/image_tagging_helper/i18n/compiler.py <app_name> c
+	 python src/image_tag_editor/i18n/compiler.py <app_name> c
 	 ```

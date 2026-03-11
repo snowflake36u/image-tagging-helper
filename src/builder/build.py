@@ -7,8 +7,8 @@ from pathlib import Path
 # --- Configuration ---
 PROJ_PATH = Path(__file__).parent.parent.parent
 
-APP_NAME = 'Image Tagging Helper'
-ENTRY_POINT = 'image_tagging_helper/wx/app.py'
+APP_NAME = 'Image Tag Editor'
+ENTRY_POINT = 'image_tag_editor/wx/app.py'
 DIST_DIR = PROJ_PATH / 'dist'
 BUILD_DIR = 'build'
 
@@ -19,7 +19,7 @@ def make_options():
 		'--windows-console-mode=disable',
 		f'--output-dir={DIST_DIR}',
 		f'--output-filename={APP_NAME}',
-		'--include-package=image_tagging_helper',
+		'--include-package=image_tag_editor',
 		'--lto=yes',
 		# アプリケーションのアイコンを設定します。
 		f'--windows-icon-from-ico={PROJ_PATH / "assets_src" / "app_icon.ico"}',
@@ -28,7 +28,7 @@ def make_options():
 	# 実行ファイルに同梱するリソース
 	include_data_files = []
 	include_data_dirs = [
-		('image_tagging_helper/assets', 'image_tagging_helper/assets'),
+		('image_tag_editor/assets', 'image_tag_editor/assets'),
 	]
 	include_onefile_external_data = []
 	locale_files, locale_external_data = include_locale_files()
@@ -50,7 +50,7 @@ def include_locale_files():
 	# 翻訳ファイルの追加
 	languages = ['en', 'ja']
 	locale_files = [(
-		f'image_tagging_helper/i18n/locales/{lang}/LC_MESSAGES/*.mo',
+		f'image_tag_editor/i18n/locales/{lang}/LC_MESSAGES/*.mo',
 		f'locales/{lang}/LC_MESSAGES/'
 	) for lang in languages]
 	locale_external_data = [

@@ -4,15 +4,15 @@ import os
 import shlex
 from collections import Counter, deque
 
-from image_tagging_helper.models.caption import Caption
-from image_tagging_helper.models.diff import (
+from image_tag_editor.models.caption import Caption
+from image_tag_editor.models.diff import (
 	DatasetDiff,
 	AppendDiff, InsertDiff, MoveDiff,
 	DeleteDiff, MutateTagDiff, BatchDiff,
 )
-from image_tagging_helper.models.history_manager import HistoryManager
-from image_tagging_helper.models.history_actions import HistoryAction
-from image_tagging_helper.models.controller import DatasetController
+from image_tag_editor.models.history_manager import HistoryManager
+from image_tag_editor.models.history_actions import HistoryAction
+from image_tag_editor.models.controller import DatasetController
 
 class DatasetItem:
 	"""

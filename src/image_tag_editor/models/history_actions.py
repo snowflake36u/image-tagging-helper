@@ -1,7 +1,7 @@
 from typing import Iterable, Sequence
 
-from image_tagging_helper.models.caption import Tag
-from image_tagging_helper.models.diff import (
+from image_tag_editor.models.caption import Tag
+from image_tag_editor.models.diff import (
 	DatasetDiff, AppendDiff, InsertDiff, MoveDiff, DeleteDiff, MutateTagDiff, BatchDiff
 )
 

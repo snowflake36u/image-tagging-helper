@@ -4,16 +4,16 @@ import sys
 from pathlib import Path
 
 # パスの定数定義
-# compiler.py の場所: src/image_tagging_helper/i18n/
+# compiler.py の場所: src/image_tag_editor/i18n/
 I18N_DIR = Path(__file__).resolve().parent
 # プロジェクトルート
 PROJECT_ROOT = I18N_DIR.parent.parent.parent
-# デフォルトのロケールディレクトリ: src/image_tagging_helper/i18n/locales
+# デフォルトのロケールディレクトリ: src/image_tag_editor/i18n/locales
 DEFAULT_LOCALES_DIR = I18N_DIR / 'locales'
-# デフォルトのソースディレクトリ: src/image_tagging_helper
+# デフォルトのソースディレクトリ: src/image_tag_editor
 DEFAULT_SRC_DIR = I18N_DIR.parent
 
-APP_NAME = "image_tagging_helper"
+APP_NAME = "image_tag_editor"
 
 def run_pybabel(args: list[str], cwd: Path | None = None) -> None:
 	"""pybabelコマンドを実行するラッパー関数。"""

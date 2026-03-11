@@ -5,12 +5,12 @@ import bisect
 
 import wx
 
-from image_tagging_helper.models.dataset import Dataset, DatasetItem
-from image_tagging_helper.wx.events import (
+from image_tag_editor.models.dataset import Dataset, DatasetItem
+from image_tag_editor.wx.events import (
 	myEVT_VIEW_IMAGE,
 	myEVT_OPEN_IN_FOLDER,
 )
-from image_tagging_helper.i18n import __
+from image_tag_editor.i18n import __
 
 # サムネイルの固定サイズを定義。メモリと品質のバランスを考慮して調整可能。
 THUMBNAIL_CACHE_FIXED_SIZE = (384, 384)

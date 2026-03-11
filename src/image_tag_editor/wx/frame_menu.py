@@ -1,10 +1,10 @@
 import wx
 from typing import TYPE_CHECKING
 
-from image_tagging_helper.i18n import __
+from image_tag_editor.i18n import __
 
 if TYPE_CHECKING:
-	from image_tagging_helper.wx.app import ImageTaggingHelperFrame
+	from image_tag_editor.wx.app import ImageTagEditorFrame
 
 # 新しいメニュー項目IDを定義
 ID_APPEND_TAG_TO_CURRENT = wx.NewIdRef()
@@ -26,10 +26,10 @@ ID_SORT_DESCENDING = wx.NewIdRef()
 
 class FrameMenuMixin:
 	"""
-	ImageTaggingHelperFrameのメニュー関連のロジックを分離するためのMixinクラス。
+	ImageTagEditorFrameのメニュー関連のロジックを分離するためのMixinクラス。
 	"""
 	
-	def _init_menubar(self: 'ImageTaggingHelperFrame'):
+	def _init_menubar(self: 'ImageTagEditorFrame'):
 		"""メニューバーを初期化します。"""
 		menubar = wx.MenuBar()
 		
@@ -41,7 +41,7 @@ class FrameMenuMixin:
 		
 		self.SetMenuBar(menubar)
 	
-	def _init_file_menu(self: 'ImageTaggingHelperFrame', menubar):
+	def _init_file_menu(self: 'ImageTagEditorFrame', menubar):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:file"))
 		
@@ -68,7 +68,7 @@ class FrameMenuMixin:
 		exit_menu = self._append_menu_item(menu, wx.ID_EXIT, __("action:exit"), __("tooltip:exit"))
 		self.Bind(wx.EVT_MENU, self.on_exit, exit_menu)
 	
-	def _init_edit_menu(self: 'ImageTaggingHelperFrame', menubar):
+	def _init_edit_menu(self: 'ImageTagEditorFrame', menubar):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:edit"))
 		
@@ -110,7 +110,7 @@ class FrameMenuMixin:
 		self.Bind(wx.EVT_MENU, self.on_move_tag_up, move_tag_up_menu)
 		self.Bind(wx.EVT_MENU, self.on_move_tag_down, move_tag_down_menu)
 	
-	def _init_dataset_menu(self: 'ImageTaggingHelperFrame', menubar):
+	def _init_dataset_menu(self: 'ImageTagEditorFrame', menubar):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:dataset"))
 		
@@ -133,7 +133,7 @@ class FrameMenuMixin:
 		self.Bind(wx.EVT_MENU, self.on_filter_images_menu, filter_images_menu)
 		self.Bind(wx.EVT_MENU, self.on_filter_cancel, clear_filter_menu)
 	
-	def _init_view_menu(self: 'ImageTaggingHelperFrame', menubar):
+	def _init_view_menu(self: 'ImageTagEditorFrame', menubar):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:view"))
 		
@@ -146,7 +146,7 @@ class FrameMenuMixin:
 		fullscreen_menu = self._append_menu_item(menu, wx.ID_ANY, __("action:fullscreen"), __("tooltip:fullscreen"), 'F11')
 		self.Bind(wx.EVT_MENU, self.on_fullscreen, fullscreen_menu)
 	
-	def _init_configure_menu(self: 'ImageTaggingHelperFrame', menubar):
+	def _init_configure_menu(self: 'ImageTagEditorFrame', menubar):
 		menu = wx.Menu()
 		menubar.Append(menu, __("ui_group:configure"))
 		
@@ -162,7 +162,7 @@ class FrameMenuMixin:
 		text = f"{label}\t{accel}" if accel else label
 		return menu.Append(item_id, text, help_str, kind)
 	
-	def _init_accelerators(self: 'ImageTaggingHelperFrame'):
+	def _init_accelerators(self: 'ImageTagEditorFrame'):
 		"""アクセラレータテーブルを初期化して設定します。"""
 		accel_tbl = wx.AcceleratorTable([
 			(wx.ACCEL_SHIFT, ord('F'), ID_ADD_TAG_TO_FILTER),
@@ -186,7 +186,7 @@ class FrameMenuMixin:
 		self.Bind(wx.EVT_MENU, self.on_accel_remove_tags_from_all_items, id=ID_REMOVE_TAG_FROM_ALL)
 		self.Bind(wx.EVT_MENU, self.on_accel_replace_tag_in_all_items, id=ID_REPLACE_TAG_IN_ALL)
 	
-	def _get_selected_tags_from_all_tags_list(self: 'ImageTaggingHelperFrame') -> list[str]:
+	def _get_selected_tags_from_all_tags_list(self: 'ImageTagEditorFrame') -> list[str]:
 		"""all_tags_listで選択されているタグのリストを取得します。"""
 		selected_indices = []
 		item_index = self.all_tags_list.GetFirstSelected()
@@ -199,49 +199,49 @@ class FrameMenuMixin:
 		
 		return [self.all_tags_list.GetItemText(idx) for idx in selected_indices]
 	
-	def on_accel_add_tags_to_filter(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
+	def on_accel_add_tags_to_filter(self: 'ImageTagEditorFrame', event: wx.CommandEvent):
 		"""(ACCEL) 選択中のタグをフィルターに追加します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
 			self.add_tags_to_filter(tags)
 	
-	def on_accel_append_tags_to_current_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
+	def on_accel_append_tags_to_current_items(self: 'ImageTagEditorFrame', event: wx.CommandEvent):
 		"""(ACCEL) 選択中のアイテムにタグを追加します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
 			self.append_tags_to_current_items(tags)
 	
-	def on_accel_remove_tags_from_current_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
+	def on_accel_remove_tags_from_current_items(self: 'ImageTagEditorFrame', event: wx.CommandEvent):
 		"""(ACCEL) 選択中のアイテムからタグを削除します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
 			self.remove_tags_from_current_items(tags)
 	
-	def on_accel_append_tags_to_filtered_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
+	def on_accel_append_tags_to_filtered_items(self: 'ImageTagEditorFrame', event: wx.CommandEvent):
 		"""(ACCEL) フィルター済みアイテムにタグを追加します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
 			self.append_tags_to_filtered_items(tags)
 	
-	def on_accel_remove_tags_from_filtered_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
+	def on_accel_remove_tags_from_filtered_items(self: 'ImageTagEditorFrame', event: wx.CommandEvent):
 		"""(ACCEL) フィルター済みアイテムからタグを削除します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
 			self.remove_tags_from_filtered_items(tags)
 	
-	def on_accel_append_tags_to_all_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
+	def on_accel_append_tags_to_all_items(self: 'ImageTagEditorFrame', event: wx.CommandEvent):
 		"""(ACCEL) すべてのアイテムにタグを追加します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
 			self.append_tags_to_all_items(tags)
 	
-	def on_accel_remove_tags_from_all_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
+	def on_accel_remove_tags_from_all_items(self: 'ImageTagEditorFrame', event: wx.CommandEvent):
 		"""(ACCEL) すべてのアイテムからタグを削除します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if tags:
 			self.remove_tags_from_all_items(tags)
 	
-	def on_accel_replace_tag_in_all_items(self: 'ImageTaggingHelperFrame', event: wx.CommandEvent):
+	def on_accel_replace_tag_in_all_items(self: 'ImageTagEditorFrame', event: wx.CommandEvent):
 		"""(ACCEL) すべてのアイテムでタグを置換します。"""
 		tags = self._get_selected_tags_from_all_tags_list()
 		if len(tags) == 1:

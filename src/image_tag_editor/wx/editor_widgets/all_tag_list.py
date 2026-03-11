@@ -5,10 +5,10 @@ import wx
 import wx.lib.mixins.listctrl as listmix
 from enum import Enum, auto
 
-from image_tagging_helper.i18n import __
-from image_tagging_helper.models.dataset import Dataset
-from image_tagging_helper.models.tag_lexicon import TagLexicon
-from image_tagging_helper.wx.events import (
+from image_tag_editor.i18n import __
+from image_tag_editor.models.dataset import Dataset
+from image_tag_editor.models.tag_lexicon import TagLexicon
+from image_tag_editor.wx.events import (
 	TagsEvent,
 	ReplaceTagEvent,
 	myEVT_ADD_TAGS_TO_FILTER,
